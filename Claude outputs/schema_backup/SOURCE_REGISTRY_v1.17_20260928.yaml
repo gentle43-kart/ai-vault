@@ -1,0 +1,752 @@
+# SOURCE_REGISTRY.yaml
+# 자료 목록과 처리 방법. 원칙은 AGENTS.md, 실제 자료별 처리는 이 파일이 정한다.
+# 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
+# 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
+
+version: "1.17"
+updated: 2026-09-28
+root: "J:/AI 자료"
+
+# ── 필드 정의 ─────────────────────────────────────────────
+# id                    고유 식별자 (위키 문서 페이지의 registry_id와 연결)
+# path                  root 기준 상대경로. '/'로 끝나면 폴더(하위 포함), 아니면 파일
+# layer                 canonical_raw(3 source_raw) | normalized(1 documents_md, 2 data_csv) | instruction(4 스킬)
+# type                  law | regulation | commentary | casebook | precedent | interpretation
+#                       | meeting_minutes | statistics | guide | internal_doc | notes | instruction
+#                       | research | news
+# canonical             true = 기준본, false = 중복본
+# duplicate_of          중복본일 때 기준본 id
+# searchable            true면 search.db에 색인
+# ingest                wiki(위키로 ingest) | search_only(검색·인용만) | none
+# raw_source            대응하는 3 source_raw 경로 (없으면 빈값: 편집·취합 자료)
+# period                자료가 포괄하는 기간
+# period_use            기준본과 기간이 겹칠 때 이 자료에서 사용할 기간만 지정
+# classification        public | internal | unknown
+# classification_confirmed  사용자가 보안등급을 확인했으면 true
+# remote_allowed        true일 때만 원격(HTTP, ChatGPT) 경로로 제공
+# case_namespace        의결번호 이름공간. 형식이 같은 다른 기관 번호(예: 방통위 2010-01-001)가 방심위 번호와 섞이지 않게 한다
+# notes                 참고사항
+
+defaults:
+  canonical: true
+  searchable: true
+  classification: unknown
+  classification_confirmed: false
+  remote_allowed: false        # 기본값은 차단. 사용자가 확인한 자료만 true로 바꾼다.
+
+# 규칙
+# 1) remote_allowed: true 는 classification: public 이고 classification_confirmed: true 일 때만 허용한다.
+# 2) 파일 단위 항목은 같은 경로를 포함하는 폴더 단위 항목보다 우선한다.
+# 3) 목록에 없는 파일은 searchable: false, remote_allowed: false 로 취급하고 lint가 보고한다.
+
+sources:
+
+  # ── 법령·규정 (1 documents_md/법령_md) ────────────────────
+  - id: law_broadcast
+    path: "1 documents_md/법령_md/방송_md/"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송 관련 법령·규정·고시·해설집·사례집. 규정 4종 단행본은 제149~152호(2020-12-28) 기준이므로
+      현행 여부는 별도 확인이 필요하다.
+      법제처 등에서 받은 원본 PDF는 3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/에 두고, 변환 md는 이 폴더에 둔다.
+      개정판을 받으면 최신판 md를 이 폴더에 추가하고 종전 판 md는 덮어쓰지 않고 개정 이력용으로 보존한다(2026-09-21 사용자 결정, 2026-09-24 raw_regulation_md_latest 항목에서 옮김).
+
+  - id: commentary_2016_v2
+    path: "1 documents_md/법령_md/방송_md/▲방송심의에관한 규정 해설집(2016)_재변환.md"
+    layer: normalized
+    type: commentary
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/방송심의에관한 규정 해설집(2016).pdf"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      2026-09-21 Claude 재변환(사용자 요청). PDF 펼침면을 좌우로 나누어 추출하고 옆면 탭·가운뎃점 문제를 없앰.
+      쪽 표시 '책 N쪽 (PDF p.M)'. 줄바꿈 자리의 띄어쓰기가 일부 빠져 있음(예: '주요심의사례').
+
+  - id: commentary_2016_old
+    path: "1 documents_md/법령_md/방송_md/▲방송심의에관한 규정 해설집(2016).md"
+    layer: normalized
+    type: commentary
+    canonical: false
+    duplicate_of: commentary_2016_v2
+    searchable: false
+    ingest: none
+    classification: public
+    notes: "기존 변환본. 띄어쓰기 자리 가운뎃점(약 13,800곳)·문단 순서 뒤섞임으로 재변환본으로 대체"
+
+  - id: law_broadcast_litigation
+    path: "1 documents_md/법령_md/방송_md/▲위원회 관련 소송 현황(소송으로 심의결과 미확정 건).md"
+    layer: normalized
+    type: internal_doc
+    ingest: wiki
+    classification: internal
+    notes: "사례 페이지의 judicial_status: pending 판단 근거로 사용"
+
+  - id: law_budget
+    path: "1 documents_md/법령_md/예산_md/"
+    layer: normalized
+    type: guide
+    ingest: none
+    raw_source: "3 source_raw/법령 등_raw/예산_raw/"
+    classification: internal
+    notes: "예산·여비 업무자료. 방송심의 위키 대상 아님. ★통합본과 개별 파일이 중복될 수 있음(미확인)"
+
+  - id: law_general
+    path: "1 documents_md/법령_md/일반_md/"
+    layer: normalized
+    type: law
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/일반_raw/"
+    classification: public
+    notes: "설치법·공직선거법 등"
+
+  - id: law_general_labor
+    path: "1 documents_md/법령_md/일반_md/기타_2022 단협, 보충협약 모음.md"
+    layer: normalized
+    type: internal_doc
+    ingest: none
+    classification: internal
+
+  - id: law_general_rulebook_dup
+    path: "1 documents_md/법령_md/일반_md/★방송통신심의위원회 규정집(2024).md"
+    layer: normalized
+    type: regulation
+    canonical: false
+    duplicate_of: law_broadcast
+    searchable: false
+    ingest: none
+    classification: public
+    notes: "방송_md/▲방송통신심의위원회 규정집(2024).md 와 같은 자료로 추정(내용 대조 필요)"
+
+  - id: law_telecom
+    path: "1 documents_md/법령_md/통신_md/"
+    layer: normalized
+    type: law
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/통신_raw/"
+    classification: public
+    notes: >
+      통신심의 관련 법령·규정. 기준본 지정(2026-09-24 사용자 승인): 2023 규정집은 전체본이 기준본이고 '_제2장삭제' 판은 중복본.
+      정보통신망법은 2026.7.7. 판(법률 제21305호) 변환본을 기준본으로 하며, 변환(AGENTS.md 6.7) 후 파일 단위 항목으로 추가한다.
+      2025.10.1. 판 md 2개는 종전 판으로 검색·인용만 한다.
+      통신심의규정 최신 판(제164호, 시행 2024.7.19.)은 방송_md/▲방송통신심의위원회 규정집(2024).md(law_broadcast)에 실려 있다.
+
+  - id: telecom_rulebook_2023
+    path: "1 documents_md/법령_md/통신_md/★2023 통신심의 관련 법령 규정집.md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/통신_raw/★2023 통신심의 관련 법령 규정집.pdf"
+    period: "2023.12. 기준(통신심의규정 제116호)"
+    classification: public
+    notes: "기준본(2026-09-24 사용자 승인). 제1장 통신심의규정, 제2장 기본 법령, 제3장 정보 유형별 관련 법령 색인"
+
+  - id: telecom_rulebook_2023_dup
+    path: "1 documents_md/법령_md/통신_md/★2023 통신심의 관련 법령 규정집_제2장삭제.md"
+    layer: normalized
+    type: regulation
+    canonical: false
+    duplicate_of: telecom_rulebook_2023
+    searchable: false
+    ingest: none
+    classification: public
+    notes: "전체본에서 제2장(기본 법령)을 뺀 판. 중복본(2026-09-24 사용자 승인)"
+
+  - id: itnet_act_2026
+    path: "1 documents_md/법령_md/통신_md/정보통신망 이용촉진 및 정보보호 등에 관한 법률(법률)(제21305호)(20260707).md"
+    layer: normalized
+    type: law
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/통신_raw/정보통신망 이용촉진 및 정보보호 등에 관한 법률(법률)(제21305호)(20260707).pdf"
+    period: "시행 2026.7.7.(법률 제21305호, 2026.1.6. 일부개정)"
+    classification: public
+    notes: >
+      정보통신망법 기준본(2026-09-24 사용자 승인). 2026-09-24 Claude 변환(AGENTS.md 6.7, pdftotext 쪽별 추출, 쪽 주석 <!-- p.N -->).
+      PDF 줄바꿈이 그대로 남아 문장·단어 중간에서 줄이 나뉜 곳이 있다. 조문 번호 연속성 확인(제1조~제76조, 삭제 조 포함).
+
+  - id: notice_penalty_2026
+    path: "1 documents_md/법령_md/통신_md/(고시 제2026-22호) 불법정보 또는 허위조작정보 유통 관련 정보통신망+이용촉진+및+정보보호+등에 관한 법률 위반에 대한 과징금 부과 기준 고시.md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/통신_raw/(고시 제2026-22호) 불법정보 또는 허위조작정보 유통 관련 정보통신망+이용촉진+및+정보보호+등에 관한 법률 위반에 대한 과징금 부과 기준 고시.pdf"
+    period: "제정·시행 2026.7.7.(방송미디어통신위원회 고시 제2026-22호)"
+    classification: public
+    notes: >
+      2026-09-24 Claude 변환(AGENTS.md 6.7, pdftotext -layout 쪽별 추출, 쪽 주석). 별표 표는 공백 정렬 텍스트로 남음.
+      정보통신망법 제44조의24 과징금의 세부 기준. 시행령 제35조의11 제2항·[별표 1의4]를 인용하나 시행령은 자료창고에 없음.
+
+  - id: itnet_act_2025_lawunit
+    path: "1 documents_md/법령_md/통신_md/(현)정보통신망 이용촉진 및 정보보호 등에 관한 법률(법령단위비교_[시행 2025. 10. 1.] [법률 제21066호, 2025. 10. 1., 타법개정]).md"
+    layer: normalized
+    type: law
+    ingest: search_only
+    period: "시행 2025.10.1.(법률 제21066호)"
+    classification: public
+    notes: "정보통신망법 종전 판(법령단위비교). 기준본은 2026.7.7. 판 변환본(2026-09-24 사용자 승인)"
+
+  - id: itnet_act_2025_3dan
+    path: "1 documents_md/법령_md/통신_md/정보통신망 이용촉진 및 정보보호 등에 관한 법률(3단비교251001).md"
+    layer: normalized
+    type: law
+    ingest: search_only
+    period: "시행 2025.10.1."
+    classification: public
+    notes: "정보통신망법 종전 판(3단 비교). 기준본은 2026.7.7. 판 변환본(2026-09-24 사용자 승인)"
+
+  # ── 규정 연혁 ─────────────────────────────────────────────
+  - id: reg_history_bangsim
+    path: "2 data_csv/심의규정 연혁/"
+    layer: normalized
+    type: regulation
+    ingest: search_only
+    raw_source: ""
+    period: "제19호(2008.6.24.)~제150호(2020.12.28.), 이후 개정판은 MD로 추가"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송심의에 관한 규정 판별 전문. csv는 13개 판을 열로 나란히 수록했으나 행이 판 사이에
+      정렬되지 않았으므로 열별로 파싱한다. xlsx(Sheet1 B~N열)가 원본이고 csv와 동일하다.
+      개정판은 같은 폴더에 MD로 추가한다.
+
+  # ── 판례·유권해석 ─────────────────────────────────────────
+  - id: precedent
+    path: "1 documents_md/판례_md/"
+    layer: normalized
+    type: precedent
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/"
+    classification: public
+    notes: "notebooklm 취합파일과 판례모음(1998-2014)의 중복 여부 미확인. 원본 PDF는 방송_raw 폴더에 있음"
+
+  - id: interpretation
+    path: "1 documents_md/판례_md/▲방송심의 유권해석 등 모음(AI용).md"
+    layer: normalized
+    type: interpretation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/방송심의 유권해석 등 모음(AI용).pdf"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "편집·취합 자료. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인)"
+
+  # ── 방송심의사례집 ────────────────────────────────────────
+  - id: casebook_raw
+    path: "3 source_raw/심의사례_raw/"
+    layer: canonical_raw
+    type: casebook
+    searchable: false
+    ingest: none
+    classification: public
+    notes: >
+      방송심의사례집 원본 PDF 15개(2010~2024년, 연도별 1개). 2016년분만 이미지(스캔) PDF여서
+      텍스트 추출이 안 됨(pdftotext 결과 0자, 아래 casebook 항목 참고). 파일명 표기가
+      "방송심의사례집"/"방송심의 사례집"(2013·2016년만 띄어씀)으로 갈린다.
+
+  - id: casebook
+    path: "1 documents_md/법령_md/방송_md/■방송심의사례집(병합 2010-2024).md"
+    layer: normalized
+    type: casebook
+    ingest: wiki
+    raw_source: "3 source_raw/심의사례_raw/"
+    period: "2010~2015, 2017~2024"
+    classification: public
+    notes: >
+      15개 연도별 사례집 병합본. 2016년분(원본 존재)이 본문에서 빠져 있음(2026-09-22 확인,
+      원본이 스캔 이미지 PDF라 원 변환 과정에서 누락된 것으로 추정. OCR 표본 시험 결과
+      숫자·표 오인식이 많아 보류함). ingest 시 2016년 없음을 전제로 진행한다.
+      2015년분 절 표제가 "2014년 방송심의사례집"으로 잘못 붙어 있음(일러두기 본문은 2015년
+      데이터, 31824행 부근)도 함께 유의할 것.
+
+  # ── 방송소위 회의록 ───────────────────────────────────────
+  - id: minutes_broadcast
+    path: "1 documents_md/회의록_md/방송소위_md/제미나이 노트북용 분할본_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/방송소위/"
+    period: "2008~2026 제21차, 2013년 없음"
+    classification: public
+    notes: "2008~2010년 파일 5개는 용량이 작지만 그대로 사용(2026-09-21 사용자 결정)"
+
+  - id: minutes_broadcast_merged
+    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/방송소위_md/챗지피티용_md/"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_broadcast
+    searchable: false
+    ingest: none
+    classification: public
+    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
+
+  # ── 광고소위 회의록 ───────────────────────────────────────
+  - id: minutes_ad
+    path: "1 documents_md/회의록_md/광고소위_md/연도별 광고소위 회의록 md파일 원본_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/광고소위/"
+    period: "2009~2024, 2013·2014년 없음"
+    classification: public
+    notes: >
+      광고소위 분할본(2026-09-21 사용자 확인). 2021~2023년은 연도 통합 파일과 차수별 파일이
+      함께 있어 파일 사이 중복 가능성이 있음(색인 전 확인 필요).
+
+  - id: minutes_ad_2026
+    path: "1 documents_md/회의록_md/광고소위_md/챗지피티용_md/△2026년 광고소위 회의록 모음_01-21.md"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    period: "2026 제1~21차"
+    classification: public
+    notes: "기준본에 없는 기간이므로 예외적으로 사용"
+
+  - id: minutes_ad_merged
+    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/광고소위_md/챗지피티용_md/★광고소위 회의록_통합_2009-2024.md"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_ad
+    searchable: false
+    ingest: none
+    classification: public
+    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
+
+  # ── 전체회의 회의록 ───────────────────────────────────────
+  - id: minutes_plenary
+    path: "1 documents_md/회의록_md/전체회의_md/제미나이 노트북용 분할본_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/전체회의/"
+    period: "2008~2026 제13차"
+    classification: public
+
+  - id: minutes_plenary_merged
+    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/전체회의_md/챗지피티용_md/"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_plenary
+    searchable: false
+    ingest: none
+    classification: public
+    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
+
+  # ── 선거방송심의위원회 회의록 ─────────────────────────────
+  - id: minutes_election
+    path: "1 documents_md/회의록_md/선방위_md/제미나이 노트북용 분할본_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/선방위/"
+    period: "2002~2026"
+    classification: public
+
+  - id: minutes_election_merged_old
+    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/선방위_md/★선거방송심의위원회 회의록 모음(2002-2023).md"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_election
+    searchable: false
+    ingest: none
+    classification: public
+    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
+
+  - id: minutes_election_merged_new
+    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/선방위_md/★선거방송심의위원회 회의록 모음(2024~)_2026년 추가.md"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_election
+    searchable: false
+    ingest: none
+    classification: public
+    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지). 2026 제9회 지선 3~6차 회의록은 기준본(분할본)에 없음(문장 대조 시 이 파일에만 있는 행 610개). 같은 내용의 연도별 원본 파일 1개는 이동하지 않고 원래 폴더에 남김(minutes_election_2026으로 등록)'
+
+  - id: minutes_election_yearly
+    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_election
+    searchable: false
+    ingest: none
+    classification: public
+    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지). 단, 2026 제9회 전국동시지방선거(2026.6.3.) 3차-6차.md는 기준본에 없는 내용이라 이동하지 않고 원래 폴더(1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/)에 남김(minutes_election_2026으로 등록)'
+
+  - id: minutes_election_2026
+    path: "1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/2026 제9회 전국동시지방선거(2026.6.3.) 3차-6차.md"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    period: "2026 제9회 전국동시지방선거 선방위 제3~6차"
+    classification: public
+    notes: "기준본에 없는 기간이므로 예외적으로 사용(2026-09-26 사용자 결정)"
+
+  # ── 기타 회의록 ───────────────────────────────────────────
+  - id: minutes_kcc
+    path: "1 documents_md/회의록_md/방통위_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/방통위/"
+    period: "2010~2026"
+    classification: public
+    case_namespace: 방통위
+
+  - id: minutes_2026_temp
+    path: "1 documents_md/회의록_md/(임시) 2026년_회의록_통합(방송,광고,전체회의 01-09.11).md"
+    layer: normalized
+    type: meeting_minutes
+    searchable: false
+    ingest: none
+    period: "2026.01~09.11"
+    classification: public
+    notes: "2026년 기준본들과 중복 여부 확인 전까지 색인 제외. 기준본보다 최신 회차가 있으면 period_use로 지정"
+
+  # ── 논문·연구보고서 ───────────────────────────────────────
+  - id: research_papers
+    path: "1 documents_md/논문_md/"
+    layer: normalized
+    type: research
+    ingest: search_only
+    raw_source: ""
+    classification: unknown
+    notes: "방송심의 관련 논문·연구보고서 md 변환본. 연구자 견해이므로 인용 시 성격을 밝힌다"
+
+  - id: research_papers_merged
+    path: "../기타자료/AI 자료_보관/1 documents_md/논문_md/"
+    layer: normalized
+    type: research
+    canonical: false
+    duplicate_of: research_papers
+    searchable: false
+    ingest: none
+    classification: unknown
+    notes: >
+      위원회 내부 연구자료 병합본 8개(2014~2024, 보고서 82건). 논문_md의 개별 보고서 파일과 문장 일치율 100%(2026-09-26 대조)여서
+      중복본으로 처리하고 2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).
+      병합본 2014년의 '2014년 인터넷 불법·유해정보 실태 조사'와 '보도프로그램 공공성 평가 분석 연구' 구간에는 각각 '독일의 방송통신 내용 규제 체계',
+      '영국의 방송통신 내용 규제 체계'가 면책문 없이 이어 붙어 있었음(개별 파일은 따로 있음). 2021-2023 병합본에는 2020년 보고서 7건도 들어 있었음
+
+  - id: research_papers_misconverted
+    path: "1 documents_md/논문_md/EBS 다큐프라임-100세 쇼크_김미수.md"
+    layer: normalized
+    type: research
+    searchable: false
+    ingest: none
+    notes: "변환 오류(내용이 박종구 원고와 같음). 제외"
+
+  - id: research_papers_casebook_2020_dup
+    path: "1 documents_md/논문_md/2020 사례집.md"
+    layer: normalized
+    type: casebook
+    canonical: false
+    duplicate_of: telecom_casebook
+    searchable: false
+    ingest: none
+    period: "2020"
+    classification: public
+    notes: "통신심의 사례집 2020년판 단권 변환본. 병합본 telecom_casebook(p.224~445)과 중복. 중복본(2026-09-25 사용자 승인). ★후속 정리 대상: 모든 작업이 끝난 뒤 파일 정리"
+
+  - id: research_papers_casebook_2021_dup
+    path: "1 documents_md/논문_md/2021 사례집.md"
+    layer: normalized
+    type: casebook
+    canonical: false
+    duplicate_of: telecom_casebook
+    searchable: false
+    ingest: none
+    period: "2021"
+    classification: public
+    notes: "통신심의 사례집 2021년판 단권 변환본. 병합본 telecom_casebook(p.446~717)과 중복. 중복본(2026-09-25 사용자 승인). ★후속 정리 대상: 모든 작업이 끝난 뒤 파일 정리"
+
+  - id: research_papers_casebook_2022_dup
+    path: "1 documents_md/논문_md/2022 통신심의 사례집.md"
+    layer: normalized
+    type: casebook
+    canonical: false
+    duplicate_of: telecom_casebook
+    searchable: false
+    ingest: none
+    period: "2022"
+    classification: public
+    notes: "통신심의 사례집 2022년판 단권 변환본. 병합본 telecom_casebook(p.718~975)과 중복. 중복본(2026-09-25 사용자 승인). ★후속 정리 대상: 모든 작업이 끝난 뒤 파일 정리"
+  
+  - id: research_yearbook_2017
+    path: "1 documents_md/논문_md/2017 방송통신심의 연감.md"
+    layer: normalized
+    type: statistics
+    ingest: search_only
+    raw_source: ""
+    period: "2017"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "「2017 방송통신심의 연감」 md 변환본. 위원회 공개 발간물로 public 확정(2026-09-25 사용자 승인, 3등급). 원격 제공 허용(2026-09-28 사용자 승인, 3등급). 통신심의 쟁점 페이지의 '연감 수치' 근거(표3-2-6 5351행, 표3-2-10 5618행)"
+
+  - id: research_yearbook_2022
+    path: "1 documents_md/논문_md/2022 방송통신심의연감.md"
+    layer: normalized
+    type: statistics
+    ingest: search_only
+    raw_source: ""
+    period: "2021~2022"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "「2022 방송통신심의연감」 md 변환본. 위원회 공개 발간물로 public 확정(2026-09-25 사용자 승인, 3등급). 원격 제공 허용(2026-09-28 사용자 승인, 3등급). 통신심의 쟁점 페이지의 '연감 수치' 근거(표3-2-6 6148행, 표3-2-8 6240행, 표3-2-10 6414행)"
+
+  - id: research_yearbook_2021
+    path: "1 documents_md/논문_md/2021 방송통신심의 연감.md"
+    layer: normalized
+    type: statistics
+    searchable: false
+    ingest: none
+    raw_source: ""
+    period: "2021"
+    notes: "「2021 방송통신심의 연감」 md 변환 실패본(610바이트, 표지·목차 조각만 있음). 3 source_raw에 원본 없음. 검색 제외로 등록(2026-09-28 사용자 승인, 2등급). 원본 PDF를 넣으면 6.7절에 따라 다시 변환하고 이 항목을 고친다"
+
+  # ── 노션 추출 자료 (1 documents_md/노션_md) ──────────────
+  - id: notion_notes
+    path: "1 documents_md/노션_md/"
+    layer: normalized
+    type: notes
+    ingest: search_only
+    raw_source: ""
+    classification: internal
+    notes: >
+      Notion에서 내보낸 업무 정리·분석 노트와 학회 발표 자료(원본은 Notion, 별도 원본 파일 없음).
+      사용자가 정리한 2차 자료이므로 결론의 단독 근거로 쓰지 않고 검색·인용만 한다(사용자 확인 internal, 2026-09-23).
+      Notion 첨부 원본(PDF 등)이 생기면 3 source_raw에 별도 폴더를 두고 raw_source에 적는다.
+
+  # ── 위키 (0 wiki) ─────────────────────────────────────────
+  - id: wiki
+    path: "0 wiki/"
+    layer: curated             # AI가 작성한 위키(AGENTS.md 1절 ③)
+    type: wiki
+    ingest: none
+    raw_source: ""
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      위키 페이지. 관리용 노드(index.md, log.md, _index.md)는 색인하지 않는다.
+      페이지 머리말에 classification: internal 이 있으면 그 페이지만 원격 제외(색인기 v1.5, 2026-09-22 사용자 결정).
+      0 wiki/Clippings/는 아래 news_clippings 항목이 우선한다.
+
+  # ── 기사 클리핑 ───────────────────────────────────────────
+  - id: news_clippings
+    path: "0 wiki/Clippings/"
+    layer: normalized          # 저장 위치는 0 wiki이지만 위키 페이지가 아닌 원자료
+    type: news
+    ingest: wiki
+    raw_source: ""             # 원본은 각 파일 머리말의 source URL
+    classification: public
+    classification_confirmed: true   # 추가: 사용자가 공개 자료임을 확인
+    remote_allowed: true             # 추가: 원격(ChatGPT) 제공 허용
+    notes: "Obsidian Web Clipper 저장 기사. 비공식 외부 자료(AGENTS.md 1.1 ④). lint 형식 점검 제외"
+    
+  # ── 통계 CSV ─────────────────────────────────────────────
+  - id: stats
+    path: "2 data_csv/통계_csv/제미나이 노트북용 분할_csv/"
+    layer: normalized
+    type: statistics
+    ingest: search_only
+    raw_source: "3 source_raw/통계_raw/"
+    period: "방송심의 2012.01~2026.06, 선방위 2002~2025"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "심의의결 내역 전체. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인)"
+
+  - id: stats_2026_recent
+    path: "2 data_csv/통계_csv/쳇지피팅용 병합_csv/△26.01.-08.csv"
+    layer: normalized
+    type: statistics
+    ingest: search_only
+    period: "2026.01~08"
+    period_use: "2026.07~2026.08"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "기준본(stats)과 2026.01~06이 겹치므로 07~08월 행만 사용"
+
+  - id: stats_election_recent
+    path: "2 data_csv/통계_csv/쳇지피팅용 병합_csv/선방위 통계(02-26.7).csv"
+    layer: normalized
+    type: statistics
+    ingest: search_only
+    period: "2002~2026.07"
+    period_use: "2026.01~2026.07"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      기준본(stats)의 선방위 분할은 2025년까지이므로 집계에는 2026년 행만 사용한다.
+      다만 "심의의결 내용" 칸의 소송 결과 기재("n심 패소 확정" 등)는 기준본에 없으므로 전 기간 행을 인용할 수 있다(사용자 승인 2026-09-24).
+
+  - id: stats_merged
+    path: "2 data_csv/통계_csv/쳇지피팅용 병합_csv/"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats
+    searchable: false
+    ingest: none
+    classification: unknown
+    notes: "위 두 파일(stats_2026_recent, stats_election_recent)은 파일 단위 항목이 우선"
+
+  - id: stats_root_dup
+    path: "2 data_csv/통계_csv/2012-2017 방송심의 통계.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats
+    searchable: false
+    ingest: none
+    classification: unknown
+
+  - id: stats_root_dup2
+    path: "2 data_csv/통계_csv/2018-2025 방송심의 통계.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats
+    searchable: false
+    ingest: none
+    classification: unknown
+
+  - id: stats_root_dup3
+    path: "2 data_csv/통계_csv/선방위 통계(02-26.7).csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_election_recent
+    searchable: false
+    ingest: none
+    classification: unknown
+
+  # ── 원본 (3 source_raw) ──────────────────────────────────
+  - id: raw_all
+    path: "3 source_raw/"
+    layer: canonical_raw
+    type: law
+    searchable: false
+    ingest: none
+    classification: unknown
+    notes: >
+      PDF·HWP·XLSX 원본. 색인하지 않고, 변환본과 다를 때 최종 확인용으로만 연다.
+      하위 폴더별 보안등급은 필요할 때 파일 단위 항목으로 추가한다.
+
+  - id: raw_org
+    path: "3 source_raw/조직_raw/"
+    layer: canonical_raw
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: internal
+    notes: >
+      방송심의 외 주제(내부규정, 심의체계 개편, 법 개정, 국회 업무보고 등) 원본(사용자 확인 internal, 2026-09-23).
+      변환본은 1 documents_md에 대응 폴더를 두고 별도 id로 등록한다.
+
+  - id: raw_telecom_casebook
+    path: "3 source_raw/통신_raw/(사례집)통신심의사례집 병합(18-24).pdf"
+    layer: canonical_raw
+    type: casebook
+    searchable: false
+    ingest: none
+    period: "2018~2024"
+    classification: public
+    notes: >
+      통신심의사례집 병합본(약 115MB, 1,392쪽). 보안등급 public(2026-09-24 사용자 답변, confirmed 미기재).
+      스캔 PDF 아님(HWP발 텍스트 PDF, PScript5, 2026-09-24 확인). 파일명은 "18-24"이나 2019년판이 없고
+      2018·2020·2021·2022·2023·2024년판 6권만 들어 있음(각 권 시작 p.1, 224, 446, 718, 976, 1190). 변환본은 telecom_casebook.
+
+  - id: telecom_casebook
+    path: "1 documents_md/법령_md/통신_md/(사례집)통신심의사례집 병합(18-24).md"
+    layer: normalized
+    type: casebook
+    ingest: wiki
+    raw_source: "3 source_raw/통신_raw/(사례집)통신심의사례집 병합(18-24).pdf"
+    period: "2018, 2020~2024 (2019년판 없음)"
+    classification: public
+    notes: >
+      2026-09-24 Claude 변환(AGENTS.md 6.7, pdftotext 기본 모드 쪽별 추출, 쪽 주석 <!-- p.N -->, 60,016행).
+      -layout 모드는 쪽 옆면 세로 탭 글자가 본문 줄에 끼어들어 쓰지 않음(기본 모드에서는 탭 글자가 한 글자씩 별도 줄로 남음).
+      깨진 글자 320자(0.04%, 대부분 기호 글꼴 글머리표 U+F09F), 글자가 거의 없는 쪽 120쪽(표지·간지·그림 쪽), 표는 셀 단위 줄로 풀림. 수정하지 않음.
+      수록 사례는 의결번호·의결일이 없는 위반유형별 예시(대상정보/심의결정/심의근거/정보내용/그림)이므로 개별 의결 사례 페이지의 근거로 쓰지 않는다.
+      각 권 부록에 통신심의규정(2018~2023년판 제116호, 2024년판 제164호)과 관련 법령이 실려 있음.
+
+  - id: raw_telecom_manual
+    path: "3 source_raw/통신_raw/150126_음란선정성_분야_접속차단_관련_세부_판단기준_및_매뉴얼_-_청소년보호팀.pdf"
+    layer: canonical_raw
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: public
+    notes: >
+      파일명은 청소년보호팀 음란·선정성 접속차단 판단기준 매뉴얼(2015.1.26.)이나, 실제 내용은
+      「통신심의 현안사항 검토 - 2014년 국정감사 지적사항 중심」(통신심의국, 2014.11.20., 2014년 제3기 위원회 워크샵 자료, 25쪽)이며
+      매뉴얼이 아님(2026-09-24 사용자 확인). 원본 파일명은 2.1절 제한에 따라 바꾸지 않음. 변환본은 telecom_workshop_2014.
+      type을 guide에서 internal_doc으로 정정(①). classification internal→public(③, 2026-09-24 사용자 개별 승인 "자료 전체 public 승인"). confirmed 미기재
+
+  - id: telecom_workshop_2014
+    path: "1 documents_md/법령_md/통신_md/통신심의 현안사항 검토 - 2014년 국정감사 지적사항 중심(2014.11.20. 워크샵 자료).md"
+    layer: normalized
+    type: internal_doc
+    ingest: wiki
+    raw_source: "3 source_raw/통신_raw/150126_음란선정성_분야_접속차단_관련_세부_판단기준_및_매뉴얼_-_청소년보호팀.pdf"
+    period: "2014.11.20.(2014년 국정감사 지적사항, 통계는 2014.10.까지)"
+    classification: public
+    notes: >
+      2026-09-24 Claude 변환(AGENTS.md 6.7, pdftotext 쪽별 추출, 쪽 주석 <!-- p.N -->). 파일명은 원본 파일명 대신 사용자가 지정한 제목을 씀
+      (6.7절 2의 예외, 2026-09-24 사용자 지시. Windows 파일명 제약으로 제목의 콜론을 " - "로 바꿈).
+      굵은 제목이 두 번씩 추출된 곳(예: "통신심의 / 통신심의 현안사항 검토")과 표가 셀 단위 줄로 풀린 곳이 있음. 깨진 글자 0.
+      통신심의규정 종전 제10조 제2항(제106호 판) 문언과 당사자 신고 요건의 도입 경위(24~25쪽) 수록.
+
+  - id: raw_workflowy
+    path: "3 source_raw/기타_raw/워크플로위_26026_raw/"
+    layer: canonical_raw
+    type: notes
+    searchable: false
+    ingest: none
+    classification: internal
+
+  - id: raw_foreign
+    path: "3 source_raw/기타_raw/해외 방송규제_raw/"
+    layer: canonical_raw
+    type: guide
+    searchable: false
+    ingest: none
+    classification: public
+
+  # ── 업무 지침 (4 스킬, 프로젝트) ─────────────────────────
+  - id: instructions
+    path: "4 스킬, 프로젝트/"
+    layer: instruction
+    type: instruction
+    searchable: false
+    ingest: none
+    classification: internal
+    notes: "업무 요청 시 지침으로만 참고한다"
+
+  - id: complaint_rawdata
+    path: "4 스킬, 프로젝트/클로드 민원답변 프로젝트 기초 파일/기초자료(로데이터)/"
+    layer: instruction
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: internal
+    notes: "민원 원자료. 개인정보 포함 가능. 원격 제공 금지"

@@ -1,0 +1,23 @@
+# AI 자료창고 git 저장소 - 포함 대상: 0 wiki/, Claude outputs/, 스키마 3개, 4 스킬·프로젝트/(PDF 제외)
+
+# ── 대용량·바이너리 폴더 전체 제외 ──────────────────────────
+1 documents_md/
+2 data_csv/
+3 source_raw/
+
+# ── Obsidian 앱 설정 (PC 환경 종속) ─────────────────────────
+0 wiki/.obsidian/
+0 wiki/.obsidian.zip
+
+# ── 4 스킬, 프로젝트 안의 PDF (바이너리·대용량) ──────────────
+4 스킬, 프로젝트/**/*.pdf
+
+# ── 시스템·캐시 ──────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+.env
+Thumbs.db
+desktop.ini
