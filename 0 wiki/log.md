@@ -1674,3 +1674,8 @@ type: log
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY.yaml_v1.27_20261001.yaml
 - 검증: YAML 파싱, id 중복 없음, inbox_notes classification=public/confirmed=True/remote=True 확인
 - reindex.request 생성
+
+## [2026-10-01] schema | CLAUDE.md git 커밋 규칙 추가 | Claude Sonnet 4.6
+- git 커밋 방식A 추가: 세션 마무리 시점에 변경 사항 전체를 한 번 커밋+push
+- 등급: ②승인 후 반영. 승인 발언: "방식A로 해줘" (2026-10-01)
+- 백업: Claude outputs/schema_backup/CLAUDE.md_20261001.md
