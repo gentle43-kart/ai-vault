@@ -1,9 +1,11 @@
 # ai-vault-mcp
 
-AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.2)가 있습니다(색인기 v1.5, 검색기 v1.2).
+AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.4)가 있습니다(색인기 v1.7, 검색기 v1.2).
 
 ## 변경 이력
 
+- v1.9 (2026-10-05, Claude): mcp_server.py v1.4: 명령행 `--remote-extra-ids` 추가(환경변수보다 우선, 형식 오류 id는 표준오류로 알림). v1.8에 적었던 tunnel-client `--env` 옵션과 프로필 경로는 공식 문서에서 확인되지 않아 삭제하고, `--mcp-command` 안에 옵션을 적는 방식으로 바꿈. build_index.py v1.7: 수신함 메모 머리말 `보안등급:`이 비어 있으면 다음 줄(예: `status: 대기`)을 보안등급으로 읽던 오류 수정(정규식 `\s*` → `[ \t]*`). 보안등급이 비어 있거나 없는 메모는 classification을 `unknown`으로 기록해 `--scope all` 결과 제목에 `[unknown]`이 붙는다. 원격 제외 판정(public만 허용)은 v1.6과 같다. 기존 DB는 해당 메모가 다시 색인될 때 반영된다(전체 재색인 불필요).
+- v1.8 (2026-10-01, Claude): mcp_server.py v1.3: AIVAULT_REMOTE_EXTRA_IDS 추가(remote 범위에서 특정 registry_id 추가 허용, 기본 빈값). build_index.py v1.6: effective()가 type: inbox 파일의 보안등급 머리말 필드를 반영해 원격 허용 여부 결정. README에 tunnel-client 환경변수 전달 방법 추가.
 - v1.7 (2026-10-01, Claude): mcp_server.py v1.2: 조회 범위 선택 추가. `AIVAULT_SCOPE=all`(또는 `--scope all`)이면 remote_allowed 조건 없이 색인된 전체 자료(internal·unknown 포함)를 돌려주고, 결과 제목 앞에 `[internal]` 등 보안등급을 붙인다. 기본값(remote)은 v1.1과 같아 ChatGPT 터널 설정은 바꾸지 않는다. Claude 데스크톱 `claude_desktop_config.json`의 ai-vault env에만 `AIVAULT_SCOPE: all`을 둔다. fetch 메타데이터에 remote_allowed·scope 추가.
 - v1.6 (2026-09-22, Claude): build_index.py v1.5: 위키(0 wiki) 페이지 색인. SOURCE_REGISTRY의 type: wiki 항목이 있어야 색인됨. 관리용 노드(index.md, log.md, _index.md)는 제외. 페이지 머리말 classification이 public이 아니면(internal 등) 그 페이지만 원격 제외. 시험용 --registry 옵션 추가. mcp_server.py v1.1: 안내문에 위키 자료 성격 추가.
 - (2026-09-27, Claude) hyup_articles.py v1.0 추가. 「협찬고지 등에 관한 규칙」(구 「협찬고지에 관한 규칙」) 조문별 집계(AGENTS.md 7.1 "협찬고지규칙 통계" v1.13). Claude outputs\에만 둔다.
@@ -27,7 +29,7 @@ AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 �
 | build_index.py | SOURCE_REGISTRY.yaml에서 `searchable: true`인 자료만 읽어 `data\search.db`를 만든다(원본은 읽기만 함) |
 | search.py | search.db 조회(읽기 전용) |
 | check_index.py | 의결번호 연결 상태 점검(읽기 전용) |
-| mcp_server.py | MCP 서버(읽기 전용). 기본은 원격 허용 자료만, `AIVAULT_SCOPE=all`이면 전체 자료(Claude 데스크톱 로컬 연결용) |
+| mcp_server.py | MCP 서버(읽기 전용). 기본은 원격 허용 자료만, `AIVAULT_SCOPE=all`이면 전체 자료(Claude 데스크톱 로컬 연결용), `--remote-extra-ids`로 승인된 항목 추가 |
 | stats_articles.py | (Claude outputs\에만 있음) 통계 CSV에서 「방송심의에 관한 규정」 조문별 행 수·결과 분포·기수별 분포 집계. 위키의 통계 수치 근거 스크립트 |
 | count_article_item.py | (Claude outputs\에만 있음) 통계 CSV에서 특정 조의 호·항이 관련조항에 적힌 행을 뽑음. stats_articles.py의 조문 식별 함수 재사용, 검증값: 제27조 조 단위 777 |
 | wiki_lint.py | (Claude outputs\에만 있음, v1.1: 중복본 판정에 레지스트리 규칙 2 적용) `python wiki_lint.py [자료창고 루트] > lint.json`. 위키를 고치지 않음. 검증: 2026-09-23 lint 보고의 수치(콘텐츠 페이지 107, 조문 63, 끊긴 링크 5종)와 일치 |
@@ -99,3 +101,11 @@ python stats_articles.py --top 30
 
 - 원격으로 나가는 자료는 SOURCE_REGISTRY에서 public + classification_confirmed: true + remote_allowed: true인 항목뿐이다. 범위를 바꾸면 build_index.py를 다시 실행한다.
 - 위키(0 wiki) 페이지는 머리말 classification이 internal 등이면 원격에서 빠진다(색인 보고서 "원격 제외 위키 페이지" 절).
+- **internal 항목 추가 허용(v1.3, AGENTS.md 0절 3 예외):** `AIVAULT_REMOTE_EXTRA_IDS`에 쉼표로 구분한 registry_id를 지정하면 remote 범위에서도 해당 항목이 제공된다. 결과 제목에 `[internal]` 등 보안등급이 붙는다. 개별 승인이 없으면 비워 둔다(기본값 빈 문자열).
+  - **tunnel-client에 전달(v1.4):** OpenAI 공식 문서(Secure MCP Tunnel 안내, tunnel-client `docs/configuration.md`)에는 stdio 명령에 환경변수를 넘기는 옵션이 적혀 있지 않다(2026-10-05 확인). 그래서 값을 `--mcp-command` 문자열 안에 명령행 옵션으로 적는다. 이미 만든 프로필은 같은 `--profile` 이름으로 `init`을 다시 실행하거나 `tunnel-client init --help`로 수정 방법을 확인한 뒤 `run --profile aivault`로 재시작한다.
+    ```powershell
+    .\tunnel-client.exe init --sample sample_mcp_stdio_local --profile aivault --tunnel-id tunnel_... --mcp-command "python J:\MCP\ai-vault-mcp\mcp_server.py --remote-extra-ids notion_notes,law_broadcast_litigation,law_budget,law_general_labor"
+    ```
+  - 명령행 `--remote-extra-ids`가 환경변수 `AIVAULT_REMOTE_EXTRA_IDS`보다 우선한다. 형식이 틀린 id(영문·숫자·밑줄 외 문자)는 표준오류에 알리고 무시한다.
+  - **PowerShell에서 시험:** `python mcp_server.py --http --port 8765 --remote-extra-ids notion_notes,law_budget`
+

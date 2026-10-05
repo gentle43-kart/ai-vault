@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 검색 DB(search.db) 색인기  v1.5 (2026-09-22)
+AI 자료창고 검색 DB(search.db) 색인기  v1.7 (2026-10-05)
+
+v1.7: 수신함 머리말 '보안등급:'이 비어 있을 때 다음 줄(예: status: 대기)을 등급으로 읽던 오류 수정.
+      보안등급이 비어 있거나 없으면 classification을 unknown으로 기록한다(원격 제외 판정은 v1.6과 같음).
+v1.6: type: inbox 파일은 머리말 '보안등급'이 public일 때만 원격 허용(internal·unknown·공란은 제외).
 
 v1.5: 위키(0 wiki) 페이지 색인. SOURCE_REGISTRY의 type: wiki 항목에 해당하는 파일은
       관리용 노드(index.md, log.md, _index.md)를 빼고 색인하며, 페이지 머리말에
@@ -42,7 +46,7 @@ DEFAULT_DB = os.path.join(HERE, "data", "search.db")
 SCAN_DIRS = ("1 documents_md", "2 data_csv", "0 wiki")   # v1.5: 0 wiki 전체(@clippings 포함). 대상 여부는 레지스트리가 정한다
 WIKI_ADMIN = {"index.md", "log.md", "_index.md"}          # 위키 관리용 노드(AGENTS.md 3.3)는 색인하지 않는다
 FM_CLASS_RE = re.compile(r"^classification:\s*[\"\']?(\w+)", re.M)
-INBOX_SECCLASS_RE = re.compile(r"^보안등급:\s*(.*)", re.M)  # 수신함 메모 머리말의 보안등급 필드
+INBOX_SECCLASS_RE = re.compile(r"^보안등급:[ \t]*(.*)$", re.M)  # 수신함 메모 머리말의 보안등급 필드(v1.7: 줄바꿈을 넘지 않음)
 TEXT_EXT = {".md", ".txt"}
 CSV_EXT = {".csv"}
 MAX_CHUNK = 1800          # 조각 최대 글자 수
@@ -367,7 +371,7 @@ def insert_chunk(con, doc_id, seq, kind, meeting, case, heading, line_start, tex
 
 
 def effective(vault, rel, entry):
-    """페이지 단위 보정(v1.5/v1.6).
+    """페이지 단위 보정(v1.5/v1.6/v1.7).
     위키(type: wiki): 머리말 classification: internal 이 레지스트리보다 우선한다.
     수신함(type: inbox): 머리말 '보안등급'이 internal·unknown이거나 비어 있으면 원격 제외(AGENTS.md 6.3).
     돌려주는 값: (classification, remote_allowed)"""
@@ -390,8 +394,7 @@ def effective(vault, rel, entry):
             if sec == "public":
                 pass    # public이면 레지스트리 값(ra) 유지
             else:       # internal·unknown·공란 → 원격 제외
-                if sec:
-                    cls = sec
+                cls = sec or "unknown"   # v1.7: 공란·필드 없음은 unknown으로 표시
                 ra = False
     return cls, ra
 

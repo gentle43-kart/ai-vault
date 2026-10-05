@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 MCP 서버 v1.3 (2026-10-01) - search.db 읽기 전용 검색 서버
+AI 자료창고 MCP 서버 v1.4 (2026-10-05) - search.db 읽기 전용 검색 서버
+  v1.4: 명령행 --remote-extra-ids 추가(환경변수 AIVAULT_REMOTE_EXTRA_IDS와 같고, 명령행이 우선).
+        OpenAI tunnel-client 공식 문서에 stdio 명령으로 환경변수를 넘기는 방법이 확인되지 않아,
+        --mcp-command 문자열 안에 값을 적을 수 있게 했다. 형식이 틀린 id는 표준오류로 알리고 무시한다.
   v1.3: AIVAULT_REMOTE_EXTRA_IDS 추가. remote 범위에서도 쉼표로 구분한 registry_id 목록을
         지정하면 해당 항목을 원격 경로로 제공한다(AGENTS.md 0절 3 예외, 개별 승인 대상).
         기본값은 빈 문자열(종전 동작과 같음). 결과 제목의 [internal] 표시는 유지한다.
-        OpenAI tunnel-client 프로필에서 AIVAULT_REMOTE_EXTRA_IDS 환경변수를 넘기는 방법은
-        README의 "ChatGPT 연결" 절을 참조한다.
   v1.2: 조회 범위 선택 추가. 환경변수 AIVAULT_SCOPE=all 또는 --scope all 이면 remote_allowed 조건 없이
         색인된 전체 자료(internal·unknown 포함)를 돌려준다. 기본값(remote)은 v1.1과 같다.
         Claude 데스크톱(로컬 stdio) 설정에서만 all을 쓰고, ChatGPT 터널은 기본값(remote)을 유지한다.
@@ -22,6 +23,7 @@ AI 자료창고 MCP 서버 v1.3 (2026-10-01) - search.db 읽기 전용 검색 �
     python mcp_server.py                       # stdio, 원격 허용 자료만 (OpenAI tunnel-client --mcp-command 용)
     python mcp_server.py --scope all           # stdio, 전체 자료 (Claude 데스크톱 로컬 연결용; AIVAULT_SCOPE=all과 같음)
     python mcp_server.py --http --port 8765    # streamable HTTP, http://127.0.0.1:8765/mcp (로컬 시험용)
+    python mcp_server.py --remote-extra-ids notion_notes,law_budget   # remote 범위 + 승인된 internal 항목(v1.4)
 """
 import argparse
 import os
@@ -41,11 +43,17 @@ VAULT = os.environ.get("AIVAULT_VAULT", r"J:\AI 자료")
 MAX_LIMIT = 20
 
 # 조회 범위(v1.2). 명령행 --scope가 환경변수보다 우선한다. 모듈 로드 시점에 정해야 안내문에 반영된다.
-_argv_scope = None
-if "--scope" in sys.argv:
-    _i = sys.argv.index("--scope")
-    if _i + 1 < len(sys.argv):
-        _argv_scope = sys.argv[_i + 1]
+def _argv_value(flag):
+    """명령행 값(모듈 로드 시점에 필요한 옵션용). '--flag 값'과 '--flag=값'을 모두 받는다."""
+    for i, a in enumerate(sys.argv):
+        if a == flag and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+        if a.startswith(flag + "="):
+            return a.split("=", 1)[1]
+    return None
+
+
+_argv_scope = _argv_value("--scope")
 SCOPE = (_argv_scope or os.environ.get("AIVAULT_SCOPE", "remote")).strip().lower()
 if SCOPE not in ("remote", "all"):
     sys.exit(f"AIVAULT_SCOPE/--scope 값은 remote 또는 all이어야 합니다: {SCOPE}")
@@ -53,8 +61,13 @@ if SCOPE not in ("remote", "all"):
 # 원격 추가 허용 registry_id (v1.3, AGENTS.md 0절 3 예외, 개별 승인 대상)
 # 환경변수 AIVAULT_REMOTE_EXTRA_IDS에 쉼표로 구분한 registry_id 목록. 기본값은 빈 문자열(종전 동작).
 _VALID_ID = re.compile(r"^[a-zA-Z0-9_]+$")
-_extra_raw = os.environ.get("AIVAULT_REMOTE_EXTRA_IDS", "")
-EXTRA_IDS = [x.strip() for x in _extra_raw.split(",") if x.strip() and _VALID_ID.match(x.strip())]
+# v1.4: 명령행 --remote-extra-ids가 환경변수보다 우선한다.
+_extra_argv = _argv_value("--remote-extra-ids")
+_extra_raw = _extra_argv if _extra_argv is not None else os.environ.get("AIVAULT_REMOTE_EXTRA_IDS", "")
+_extra_all = [x.strip() for x in _extra_raw.split(",") if x.strip()]
+EXTRA_IDS = [x for x in _extra_all if _VALID_ID.match(x)]
+for _bad in sorted(set(_extra_all) - set(EXTRA_IDS)):
+    print(f"[ai-vault] 형식이 틀린 registry_id를 무시합니다: {_bad!r}", file=sys.stderr)  # stdout은 MCP 통신용
 
 if SCOPE == "all":
     SCOPE_SQL = "1 = 1"
@@ -211,6 +224,7 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--scope", choices=["remote", "all"], help="조회 범위(기본 remote). 환경변수 AIVAULT_SCOPE와 같음")
+    ap.add_argument("--remote-extra-ids", help="remote 범위에서 추가 허용할 registry_id(쉼표 구분). 환경변수 AIVAULT_REMOTE_EXTRA_IDS와 같음")
     a = ap.parse_args()
     if not os.path.exists(DB):
         sys.exit(f"DB가 없습니다: {DB}")
