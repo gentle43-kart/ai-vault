@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 검색 DB(search.db) 색인기  v1.7 (2026-10-05)
+AI 자료창고 검색 DB(search.db) 색인기  v1.8 (2026-10-05)
 
+v1.8: 색인 성공 후 PRAGMA wal_checkpoint(TRUNCATE)로 search.db-wal을 비우고 결과를 보고서에 적는다
+      (다른 연결이 DB를 열고 있으면 보류될 수 있으며, 보류되어도 오류로 보지 않는다).
+      --full은 search.db와 함께 남은 -wal·-shm 파일도 지운다(이전 DB의 WAL이 새 DB에 적용되는 것을 막음).
 v1.7: 수신함 머리말 '보안등급:'이 비어 있을 때 다음 줄(예: status: 대기)을 등급으로 읽던 오류 수정.
       보안등급이 비어 있거나 없으면 classification을 unknown으로 기록한다(원격 제외 판정은 v1.6과 같음).
 v1.6: type: inbox 파일은 머리말 '보안등급'이 public일 때만 원격 허용(internal·unknown·공란은 제외).
@@ -472,8 +475,10 @@ def main():
     reg = Registry(reg_path)
 
     os.makedirs(os.path.dirname(args.db), exist_ok=True)
-    if args.full and os.path.exists(args.db):
-        os.remove(args.db)
+    if args.full:
+        for p in (args.db, args.db + "-wal", args.db + "-shm"):   # v1.8: 남은 WAL·SHM도 함께 지움
+            if os.path.exists(p):
+                os.remove(p)
     con = sqlite3.connect(args.db)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("PRAGMA synchronous=NORMAL")
@@ -542,6 +547,13 @@ def main():
     con.execute("INSERT INTO chunks_fts(chunks_fts) VALUES('optimize')")
     con.commit()
 
+    # v1.8: WAL 파일 정리(색인 성공 시에만 실행)
+    try:
+        busy, wal_pages, done = con.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+        wal_note = "완료" if busy == 0 else f"보류(다른 연결이 사용 중, {done}/{wal_pages} 페이지 반영)"
+    except sqlite3.Error as e:
+        wal_note = f"오류: {e}"
+
     # 보고서
     stats = con.execute(
         "SELECT registry_id, COUNT(*), SUM(n_chunks), MAX(remote_allowed), SUM(remote_allowed) FROM documents GROUP BY registry_id ORDER BY registry_id"
@@ -550,7 +562,8 @@ def main():
     lines = [f"# 색인 보고서 ({datetime.now():%Y-%m-%d %H:%M})", "",
              f"- DB: `{args.db}` ({os.path.getsize(args.db)/1e6:,.1f} MB)",
              f"- 소요 시간: {elapsed:,.0f}초",
-             f"- 추가 {added} / 갱신 {updated} / 변경 없음 {unchanged} / 삭제 {removed}", "",
+             f"- 추가 {added} / 갱신 {updated} / 변경 없음 {unchanged} / 삭제 {removed}",
+             f"- WAL 정리: {wal_note}", "",
              "## 레지스트리 항목별", "", "| registry_id | 파일 수 | 조각 수 | 원격 허용 |", "|---|---|---|---|"]
     lines += [f"| {r[0]} | {r[1]} | {r[2]} | {('예' if r[4] == r[1] else f'일부({r[4]}/{r[1]})') if r[3] else '아니오'} |" for r in stats]
     held = con.execute("SELECT path, classification FROM documents WHERE type='wiki' AND remote_allowed=0").fetchall()

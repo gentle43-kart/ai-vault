@@ -1709,3 +1709,23 @@ type: log
 - 등급: ① 직접 반영(의미를 바꾸지 않는 정정). 10-01 개정 때 빠진 기록을 보충한 것이어서 판 번호는 v1.23 그대로 둠. 사용자 지시 2026-10-05 "일단 3부터 진행해줘"
 - 백업: `Claude outputs/schema_backup/AGENTS_v1.23_20261005.md`
 - 검증: 바꾼 두 문장이 파일 안에 한 번씩만 있음을 확인한 뒤 치환, 수정 전후 diff 2곳
+
+## [2026-10-05] setup | 색인기 v1.8(WAL 정리, --full 시 -wal·-shm 삭제) | claude-opus-5-5
+- 변경: build_index.py v1.8. 색인 성공 후 `PRAGMA wal_checkpoint(TRUNCATE)` 실행, 결과를 index_report.md "WAL 정리" 줄에 기록(보류되어도 exit=0). `--full`은 search.db와 함께 남은 search.db-wal·search.db-shm도 삭제. README 이력 v1.10
+- 승인: 사용자 2026-10-05 "작업 1, 2 모두 승인, 함께 고칠 사항도 포함해서 진행해줘"
+- 시험: 클라우드가 아닌 PC 셸에서 별도 시험 DB로 확인. 유휴 읽기 연결만 있으면 TRUNCATE 완료(WAL 0바이트), 읽기 트랜잭션이 열려 있으면 busy=1로 보류
+- 반영: reindex.request → 22:50 색인 exit=0, "WAL 정리: 완료", search.db-wal 513,867,032 → 0바이트. 이후 MCP search 정상
+- 동기화: J:\MCP\ai-vault-mcp(build_index.py, README.md)와 Claude outputs/(build_index.py, ai-vault-mcp_README.md, README.md), 해시 일치 확인
+- 참고: 세션 시작 시 PC 셸의 git status가 `J:\AI 자료\.git\index.lock`(0바이트)을 남겨, 사용자 삭제 권한을 받아 그 파일만 삭제함
+
+## [2026-10-05] schema | CLAUDE.md log.md 쓰기 규칙 추가, Co-Authored-By 모델명 정정 | claude-opus-5-5
+- 변경: ① "log.md는 쓰기 직전에 다시 읽고 파일 끝에 붙이기만 한다. 전체를 다시 쓰지 않는다. 다른 세션이 작업 중이면 끝난 뒤에 기록한다" 항목 추가(같은 날 덮어쓰기 사고 후속) ② 커밋 규칙의 `Co-Authored-By: Claude Sonnet 4.6` 고정 표기를 `{사용한 모델명}`으로 바꾸고 예시 추가
+- 등급: ② 승인 후 반영. 승인 2026-10-05, 사용자 발언 "작업 1, 2 모두 승인, 함께 고칠 사항도 포함해서 진행해줘"
+- 백업: `Claude outputs/schema_backup/CLAUDE_20261005.md`
+- 검증: 바꾼 문장이 파일 안에 한 번씩만 있음을 확인한 뒤 치환, 수정 전후 diff 2곳
+
+## [2026-10-05] schema | CLAUDE.md git 규칙 개정(커밋은 Claude, push는 몰아서) | claude-opus-5-5
+- 변경: "세션 마무리 시점에 커밋+push" → "세션 마무리 시점에 Claude가 PC 셸에서 직접 커밋(`git -c core.autocrlf=true`, 그 세션에서 고친 파일만 add). push는 하지 않고, 미push 커밋이 한 저장소에 10개 이상이거나 가장 오래된 미push 커밋이 7일을 넘으면 세션 종료 때 사용자에게 push를 권함"
+- 등급: ② 승인 후 반영. 사용자 지시 2026-10-05 "커밋도 니가 처리해주면 좋겠어. git 푸쉬는 내용이 많이 쌓이면 적당한 때 니가 알려줘". 기준(10개·7일)은 Claude가 정한 값이며 사용자가 바꿀 수 있음
+- 백업: `Claude outputs/schema_backup/CLAUDE_20261005_2.md`
+- 참고: ai-vault-mcp 커밋 26e0171·078ad9a 메시지의 "---full"·"---remote-extra-ids"는 오타가 아니라 PowerShell에서 git에 인수를 넘길 때 하이픈이 하나 늘어난 것으로 보임(같은 현상 2회). 이후 커밋은 PC 셸에서 하므로 해당 없음
