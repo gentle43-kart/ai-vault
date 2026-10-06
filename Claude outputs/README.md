@@ -1,9 +1,10 @@
 # ai-vault-mcp
 
-AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.5)가 있습니다(색인기 v1.8, 검색기 v1.2).
+AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.6)가 있습니다(색인기 v1.8, 검색기 v1.2).
 
 ## 변경 이력
 
+- v1.12 (2026-10-06, Claude): mcp_server.py v1.6: `search`·`search_case` 응답에 `total`(일치하는 전체 조각 수)·`returned`·`offset`·`limit`·`truncated`를 추가하고, `offset` 인자(기본 0)로 이어서 조회할 수 있게 했다. 도구 설명에 limit 최대 20(초과분은 잘림)과 truncated 확인 안내를 넣었다. `results` 항목과 순서는 v1.5와 같다(offset 이어 조회가 흔들리지 않도록 동점은 chunk_id로 정렬). 상한 20(MAX_LIMIT)은 그대로. 배경: 20건 상한에서 잘린 위키 검색 결과를 "일치 항목 전체"로 오판한 사례. total은 페이지 수가 아니라 조각 수다. DB·색인 변경 없음.
 - v1.11 (2026-10-06, Claude): mcp_server.py v1.5: `search`에 선택 인자 `kind`(자료 묶음)와 `registry_id`(정확한 id 목록) 추가. 둘 다 기본값은 빈 값이며 생략하면 v1.4와 결과가 같다. 값은 SQL에 직접 넣지 않고 `?` 매개변수로 넘기고, 틀린 값은 오류로 사용 가능한 값을 알려 준다. kind 묶음은 SOURCE_REGISTRY의 type을 기준으로 한다(보안등급·법령 여부 기준이 아님). `search_case`는 의결번호로 이미 좁혀지므로 바꾸지 않았다. DB·색인 변경 없음(재색인 불필요).
 - v1.10 (2026-10-05, Claude): build_index.py v1.8: 색인 성공 후 `PRAGMA wal_checkpoint(TRUNCATE)`로 `search.db-wal`을 비우고, 결과를 `index_report.md`의 "WAL 정리" 줄에 적는다(완료/보류/오류). MCP 서버 등 다른 연결이 읽기 중이면 보류될 수 있으며, 보류되어도 exit=0이다. 다음 색인 때 다시 시도한다. `--full`은 `search.db`와 함께 남은 `search.db-wal`·`search.db-shm`도 지운다(이전 DB의 WAL이 새 DB에 적용되어 손상되는 것을 막음). DB 구조 변경 없음(전체 재색인 불필요).
 - v1.9 (2026-10-05, Claude): mcp_server.py v1.4: 명령행 `--remote-extra-ids` 추가(환경변수보다 우선, 형식 오류 id는 표준오류로 알림). v1.8에 적었던 tunnel-client `--env` 옵션과 프로필 경로는 공식 문서에서 확인되지 않아 삭제하고, `--mcp-command` 안에 옵션을 적는 방식으로 바꿈. build_index.py v1.7: 수신함 메모 머리말 `보안등급:`이 비어 있으면 다음 줄(예: `status: 대기`)을 보안등급으로 읽던 오류 수정(정규식 `\s*` → `[ \t]*`). 보안등급이 비어 있거나 없는 메모는 classification을 `unknown`으로 기록해 `--scope all` 결과 제목에 `[unknown]`이 붙는다. 원격 제외 판정(public만 허용)은 v1.6과 같다. 기존 DB는 해당 메모가 다시 색인될 때 반영된다(전체 재색인 불필요).
@@ -86,7 +87,7 @@ python stats_articles.py --top 30
 
 ## 검색 범위 좁히기 (mcp_server.py v1.5)
 
-`search(query, limit, kind, registry_id)`에서 `kind`와 `registry_id`는 선택이며, 생략하면 전체를 찾습니다. 회의록(약 6만 조각)·논문(약 3만 조각)에 결과가 묻힐 때 씁니다.
+`search(query, limit, kind, registry_id, offset)`에서 `kind`와 `registry_id`는 선택이며, 생략하면 전체를 찾습니다. 회의록(약 6만 조각)·논문(약 3만 조각)에 결과가 묻힐 때 씁니다.
 
 | kind | 대응하는 type (SOURCE_REGISTRY 기준) | 자료 |
 |---|---|---|
@@ -100,6 +101,7 @@ python stats_articles.py --top 30
 | news | news | 기사 |
 | internal | internal_doc, notes, inbox | 내부·메모류 |
 
+- 응답의 `total`은 일치하는 전체 조각 수, `returned`는 이번에 돌려준 수, `truncated`가 true면 더 남아 있다는 뜻입니다. 한 번에 최대 20건이므로 전체가 필요하면 `offset`을 20씩 올려 이어서 조회합니다(v1.6). 결과가 limit보다 적게 나와도 전체라는 보장은 없으니 `total`과 비교합니다.
 - 여러 개는 `|` 또는 쉼표로 잇습니다(예: `wiki|law`). `registry_id`는 정확한 id를 쉼표로 적습니다(예: `law_broadcast,law_general`). 둘을 같이 주면 둘 다 만족하는 것만 나옵니다.
 - 묶음은 type 기준이라 보안등급과 무관합니다. 공개 범위는 서버의 조회 범위(remote/all)가 따로 정하며, 예를 들어 remote에서 `kind=internal`은 0건입니다.
 - `layer`는 값이 normalized·curated 둘뿐이라 인자로 만들지 않았습니다.

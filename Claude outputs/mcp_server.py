@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 MCP 서버 v1.5 (2026-10-06) - search.db 읽기 전용 검색 서버
+AI 자료창고 MCP 서버 v1.6 (2026-10-06) - search.db 읽기 전용 검색 서버
+  v1.6: search·search_case 응답에 total(일치하는 전체 조각 수)·returned·offset·limit·truncated 추가,
+        offset 인자 추가(이어서 조회), 도구 설명에 limit 상한(MAX_LIMIT 20)과 잘림 확인 안내 추가.
+        results 항목은 v1.5와 같다. offset 기본값 0이면 v1.5와 같은 결과가 나온다.
+        배경: 20건 상한에서 잘린 결과를 "일치 항목 전체"로 오판한 사례(2026-10-06).
   v1.5: search에 선택 인자 kind(자료 묶음), registry_id(정확한 id 목록) 추가. 둘 다 기본값은 빈 값이며,
         생략하면 v1.4와 결과가 같다. 값은 SQL에 직접 넣지 않고 매개변수로 넘긴다. search_case는 바꾸지 않았다.
   v1.4: 명령행 --remote-extra-ids 추가(환경변수 AIVAULT_REMOTE_EXTRA_IDS와 같고, 명령행이 우선).
@@ -104,6 +108,12 @@ KINDS = {
 }
 
 
+def _page(results, total, offset, limit):
+    """응답에 붙일 쪽 정보. truncated가 true면 일치 항목이 더 남아 있으니 offset을 올려 이어서 조회해야 한다."""
+    return {"results": results, "total": total, "returned": len(results), "offset": offset, "limit": limit,
+            "truncated": offset + len(results) < total}
+
+
 def _scope_filter(kind, registry_id):
     """kind·registry_id를 (SQL 조각 목록, 매개변수 목록)으로 바꾼다. 값은 모두 ? 매개변수로 넘긴다."""
     where, params = [], []
@@ -187,7 +197,7 @@ def _title(r):
 
 
 @mcp.tool(annotations=RO, structured_output=True)
-def search(query: str, limit: int = 10, kind: str = "", registry_id: str = "") -> dict[str, Any]:
+def search(query: str, limit: int = 10, kind: str = "", registry_id: str = "", offset: int = 0) -> dict[str, Any]:
     """자료창고 검색. 공백으로 나눈 단어를 모두 포함하는 조각을 찾는다(3글자 이상은 색인, 2글자 이하는 전체 훑기).
     결과의 id를 fetch에 넘기면 조각 전문을 볼 수 있다.
     범위 좁히기(선택, 생략하면 전체): 회의록·논문이 많아 결과가 묻힐 때 쓴다.
@@ -195,8 +205,13 @@ def search(query: str, limit: int = 10, kind: str = "", registry_id: str = "") -
       cases(사례집·판례·해석례) / guide(지침·해설집) / news(기사) / internal(내부·메모류).
       '|' 또는 쉼표로 여러 개 가능(예: "wiki|law").
     - registry_id: 정확한 자료 id를 쉼표로 구분(예: "law_broadcast,law_general"). kind와 같이 주면 둘 다 만족하는 것만 찾는다.
-    조회 범위(서버 설정)를 넘는 자료는 지정해도 나오지 않는다. 값이 틀리면 오류로 사용 가능한 값을 알려 준다."""
+    조회 범위(서버 설정)를 넘는 자료는 지정해도 나오지 않는다. 값이 틀리면 오류로 사용 가능한 값을 알려 준다.
+    한 번에 돌려주는 건수: limit 기본 10, 최대 20(더 크게 줘도 20건에서 잘린다). 결과가 상위 일부일 수 있으므로
+    응답의 total(일치하는 전체 조각 수)·returned·truncated를 반드시 확인한다. truncated가 true이면
+    일치 항목이 더 있으니, "전체"를 말하려면 offset을 returned만큼 올려 가며 이어서 조회한다(예: offset=20, 40...).
+    결과가 limit보다 적게 나왔다고 해서 전체라는 뜻은 아니다. total과 비교해 판단한다."""
     limit = max(1, min(int(limit), MAX_LIMIT))
+    offset = max(0, int(offset))
     match, shorts = fts_query(query or "")
     where, params = [SCOPE_SQL], []
     f_where, f_params = _scope_filter(kind, registry_id)
@@ -209,15 +224,17 @@ def search(query: str, limit: int = 10, kind: str = "", registry_id: str = "") -
         where.append("instr(chunks_fts.text, ?) > 0")
         params.append(s)
     if not match and not shorts:
-        return {"results": []}
-    order = "bm25(chunks_fts)" if match else "c.chunk_id"
-    sql = f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start
-              FROM chunks_fts JOIN chunks c ON c.chunk_id = chunks_fts.rowid
+        return _page([], 0, offset, limit)
+    # offset으로 이어 조회해도 순서가 흔들리지 않도록 chunk_id를 보조 정렬 키로 둔다.
+    order = "bm25(chunks_fts), c.chunk_id" if match else "c.chunk_id"
+    base = f"""FROM chunks_fts JOIN chunks c ON c.chunk_id = chunks_fts.rowid
               JOIN documents d ON d.doc_id = c.doc_id
-              WHERE {' AND '.join(where)} ORDER BY {order} LIMIT ?"""
+              WHERE {' AND '.join(where)}"""
     with _con() as con:
-        rows = con.execute(sql, params + [limit]).fetchall()
-    return {"results": [{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)} for r in rows]}
+        total = con.execute(f"SELECT COUNT(*) {base}", params).fetchone()[0]
+        rows = con.execute(f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start
+                              {base} ORDER BY {order} LIMIT ? OFFSET ?""", params + [limit, offset]).fetchall()
+    return _page([{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)} for r in rows], total, offset, limit)
 
 
 @mcp.tool(annotations=RO, structured_output=True)
@@ -251,19 +268,24 @@ def fetch(id: str) -> dict[str, Any]:
 
 
 @mcp.tool(annotations=RO, structured_output=True)
-def search_case(case_no: str, limit: int = 20) -> dict[str, Any]:
-    """의결번호(예: 2016-방송-08-0066, 제2020-08-0064호)로 자료 조각을 찾는다(조회 범위는 서버 설정을 따른다)."""
+def search_case(case_no: str, limit: int = 20, offset: int = 0) -> dict[str, Any]:
+    """의결번호(예: 2016-방송-08-0066, 제2020-08-0064호)로 자료 조각을 찾는다(조회 범위는 서버 설정을 따른다).
+    limit 최대 20(초과분은 잘림). 응답의 total·returned·truncated를 확인하고, truncated가 true이면 offset을 올려 이어서 조회한다."""
     c = parse_case(case_no or "")
     if not c:
         raise ValueError("의결번호 형식을 인식하지 못했습니다. 예: 2026-방송-02-0003")
     _, prefix, na, nb = c
     limit = max(1, min(int(limit), MAX_LIMIT))
+    offset = max(0, int(offset))
+    where = f"{SCOPE_SQL} AND c.case_prefix = ? AND c.num_from <= ? AND c.num_to >= ?"
     with _con() as con:
+        total = con.execute(f"""SELECT COUNT(*) FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
+                               WHERE {where}""", (prefix, nb, na)).fetchone()[0]
         rows = con.execute(f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start
                               FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
-                              WHERE {SCOPE_SQL} AND c.case_prefix = ? AND c.num_from <= ? AND c.num_to >= ?
-                              ORDER BY c.kind DESC, d.path, c.seq LIMIT ?""", (prefix, nb, na, limit)).fetchall()
-    return {"results": [{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)} for r in rows]}
+                              WHERE {where}
+                              ORDER BY c.kind DESC, d.path, c.seq LIMIT ? OFFSET ?""", (prefix, nb, na, limit, offset)).fetchall()
+    return _page([{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)} for r in rows], total, offset, limit)
 
 
 def main():

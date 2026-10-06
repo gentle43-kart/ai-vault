@@ -1737,3 +1737,11 @@ type: log
 - 시험(실제 search.db mode=ro, scope remote·all 각각): (a) 근로기준법·선거방송 범위·객관성·심의·제 5개 검색어에서 인자 생략 결과가 v1.4와 동일, (b) 위키만·법령만·회의록만·`wiki|law`·`kind+registry_id` 지정 결과 확인(remote에서 kind=internal은 0건, all에서는 [internal] 자료 표시), (c) 알 수 없는 kind·형식 틀린 registry_id는 오류와 허용 값 안내, 존재하지 않는 registry_id는 0건. mode=ro 쓰기 시도는 거부됨. DB·색인 변경 없음(reindex.request 불필요)
 - 후속 과제: law_budget ★통합본·개별 파일 중복(레지스트리 문제, SOURCE_REGISTRY notes "미확인")은 코워크에서 처리. 이번 범위 제외
 - 동기화: J:\MCP\ai-vault-mcp(mcp_server.py, README.md)와 Claude outputs/(mcp_server.py, ai-vault-mcp_README.md, README.md), mcp_server.py·README 해시 일치 확인(Claude outputs/README.md는 사본 전용 줄이 있어 같은 줄만 추가)
+
+## [2026-10-06] setup | ai-vault MCP 서버 v1.6(응답 total·truncated, offset 인자, limit 상한 안내) | claude-sonnet-5-5
+- 변경: mcp_server.py v1.6. `search`·`search_case` 응답에 `total`(일치 조각 수)·`returned`·`offset`·`limit`·`truncated` 추가, `offset` 인자(기본 0) 추가, 도구 설명에 limit 최대 20·잘림·truncated 확인·offset 이어 조회 안내. 상한 MAX_LIMIT 20은 변경 없음. README 이력 v1.12
+- 배경: 위키 "객관성" 검색에서 limit 30을 요청해 20건이 나오자 "일치 항목 전체"로 오판(실제 위키 일치 조각 157개). 상한 20은 최초 커밋(63134ad)부터 있던 코드 기본값이며 별도 승인 기록 없음
+- 승인: 사용자 2026-10-06 "메타정보·offset·도구 설명 3가지 반영해줘". search_case에도 같은 메타정보·offset을 적용(같은 오판 방지, 결과 목록은 그대로)
+- 시험(실제 search.db mode=ro, scope remote·all): 인자 생략 시 results가 v1.5와 동일(7개 조합), kind=wiki "객관성" all 범위 total 157(앞서 센 값과 일치)·remote 94, offset 20씩 이어 조회해 합계=total·중복 없음, limit=30은 20으로 제한, 범위를 넘는 offset은 0건, 음수 offset은 0 처리, search_case 정상. 짧은 검색어(전체 훑기) total 계산은 약 1.6초
+- 참고: total은 페이지 수가 아니라 조각 수다. DB·색인 변경 없음
+- 동기화: J:\MCP\ai-vault-mcp(mcp_server.py, README.md)와 Claude outputs/(mcp_server.py, ai-vault-mcp_README.md, README.md), mcp_server.py·README 해시 일치 확인
