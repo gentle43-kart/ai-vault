@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 MCP 서버 v1.9 (2026-10-06) - search.db 읽기 전용 검색 서버
+AI 자료창고 MCP 서버 v1.10 (2026-10-06) - search.db 읽기 전용 검색 서버
+  v1.10: 세대 없는 숫자 id의 fetch 허용을 끝냈다(사용자 결정 2026-10-06, 이유: 17:56 운영 DB 전체 재구축으로 그 전 숫자 id는 같은 조각을 보장하지 못함).
+        DB에 gen 열이 있으면 숫자 id는 조각을 돌려주지 않고 '옛 형식 id' 오류를 낸다. metadata.id_checked는 호환을 위해 유지한다(gen 열이 있는 DB에서는 항상 true).
   v1.9: 조회 id를 '세대:chunk_id'(예: 57:123456)로 바꿨다. 세대(chunks.gen)는 조각이 DB에 들어간 색인 세대라서, 재색인으로
         바뀐 조각의 옛 id는 fetch가 오류로 알린다(종전에는 오류 없이 다른 조각이 나올 수 있었다). 옛 형식의 숫자 id는 받아 주되
         metadata.id_checked=false를 붙인다(전환 기간). fetch metadata에 csv_row(CSV일 때)를 추가했고, line은 파일의 실제 줄이다.
@@ -274,8 +276,7 @@ _ID_RE = re.compile(r"^\s*(?:(\d+)\s*:\s*)?(\d+)\s*$")
 @mcp.tool(annotations=RO, structured_output=True)
 def fetch(id: str) -> dict[str, Any]:
     """search·search_case 결과의 id('세대:번호' 형식)로 조각 전문과 출처(파일 경로·줄 번호·자료 종류)를 가져온다.
-    재색인으로 내용이 바뀐 조각의 옛 id는 오류로 알리니 다시 검색한다. 옛 형식의 숫자 id는 받아 주지만
-    세대를 확인할 수 없어 metadata.id_checked가 false로 나온다."""
+    재색인으로 내용이 바뀐 조각의 옛 id와 세대 없는 숫자 id(옛 형식)는 오류로 알리니 search·search_case로 다시 검색한다."""
     m = _ID_RE.match(str(id) if id is not None else "")
     if not m:
         raise ValueError("id는 search 결과의 id(예: '57:123456')여야 합니다.")
@@ -283,6 +284,8 @@ def fetch(id: str) -> dict[str, Any]:
     cid = int(m.group(2))
     with closing(_con()) as con:
         gcol = _gen_col(con)
+        if gen is None and gcol.startswith("c.gen"):
+            raise ValueError("옛 형식 id입니다. search·search_case로 다시 검색해 '세대:번호' id를 쓰세요.")
         extra = ", c.csv_row" if gcol.startswith("c.gen") else ", NULL AS csv_row"
         r = con.execute(f"""SELECT c.chunk_id, {gcol}{extra}, c.meeting, c.case_no, c.heading, c.line_start,
                                   d.path, d.registry_id, d.type, d.layer, d.classification, d.remote_allowed, f.text
