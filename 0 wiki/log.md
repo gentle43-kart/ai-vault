@@ -1806,3 +1806,13 @@ type: log
 - 시험(search.db mode=ro, scope all·remote): '방통위:2012-03-0021' 13조각(방통위만), '2012-03-0021' 19조각(방심위 6+방통위 13, 기관 표시), 기존 번호 2016-방송-08-0066·제2020-08-0064호·2023-방송-46-0516·2019-방송-01-0001~0003·2026-방송-02-0003과 search·fetch 결과는 v1.6과 동일. DB·색인 변경 없음(재색인 불필요)
 - 동기화: Claude outputs/mcp_server.py·ai-vault-mcp_README.md·README.md를 MCP 폴더 원본과 SHA-256 일치 확인(build_index.py도 일치). MCP 저장소 커밋 64a11e6. Claude 데스크톱 재시작 필요
 - 커밋: Claude Code가 수행(J:\MCP\ai-vault-mcp 64a11e6, J:\AI 자료는 이 항목과 사본 동기화)
+
+## [2026-10-06] setup | 색인기 v1.9·v1.10(증분 판정·보안 머리말 YAML 판정), wiki_lint v1.3, telecom_stats 종료 코드 | Claude Sonnet 5.5
+- 근거: 외부 점검 보고서(LLM위키_점검보고_2026-10-06) 6·11번과 lint·telecom_stats 보완 지적. 코드 수정은 Claude Code 인계분(1단계 이후 2단계 작업 4~6)
+- 색인기 v1.9(보고서 6번): documents에 parser_version·policy_hash·struct_hash 추가(기존 DB는 실행 때 ALTER). mtime·size가 같아도 PARSER_VERSION·type·period_use·case_namespace가 바뀌면 재색인, 보안등급·layer·원격 허용·registry_id만 바뀌면 documents 행만 갱신. 해시 없는 옛 행은 DB 저장값으로 이전 해시를 복원해 비교(전체 재색인 없음). 효과: 수신함 「영국 민원처리 기간 기준 관련.md」 unknown → internal
+- 색인기 v1.10(보고서 11번): effective()가 머리말을 YAML로 읽고 값을 public|internal|unknown으로 검증, 읽기 실패·허용 외 값은 원격 제외(fail-closed). DB의 위키·수신함 435건 판정은 v1.9와 차이 0(internal 25건)
+- wiki_lint v1.3: aliases 링크 해석, 내부·중복본 판정을 색인기 Registry.match와 같은 규칙으로, 위키 전체 sources 로컬 경로 검사 결과를 broken_sources로 출력(있으면 종료 코드 1). telecom_stats --verify는 불일치 시 종료 코드 1
+- 시험: ① DB 사본(스크래치)에서 컬럼 추가·2회차 전부 변경 없음, 레지스트리 사본으로 layer 변경 → 메타만·case_namespace 변경 → 재색인 ② 현재 위키 lint 결과가 이전과 같고 깨진 출처 0, 임시 자료창고에 넣은 시험 오류(깨진 출처 2페이지·별칭 링크·내부 폴더 출처)는 검출 ③ telecom_stats --verify 전체 모두 일치 exit 0, 일부 연도만 읽게 한 시험은 exit 1 ④ 깨진 YAML·닫히지 않은 머리말·허용 외 값 시험 파일은 원격 제외
+- 실제 반영: reindex.request 3회. 17:10 메타데이터만 갱신 1300(해시 채움, 조각 124,443 그대로, quick_check ok), 17:15·17:20 변경 없음 1300, 모두 exit=0
+- 동기화: Claude outputs의 build_index.py·mcp_server.py·ai-vault-mcp_README.md·README.md를 MCP 원본과 SHA-256 일치 확인. MCP 저장소 커밋 813d511(v1.9), 6c652aa(v1.10)
+- 커밋: Claude Code가 수행(J:\AI 자료는 이 항목과 Claude outputs의 wiki_lint.py·telecom_stats.py·사본)

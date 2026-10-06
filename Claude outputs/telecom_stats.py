@@ -10,6 +10,7 @@
   python telecom_stats.py --topic 해킹・바이러스           주제 칸이 같은 행을 연도 x 심의결정으로 집계
   python telecom_stats.py --law "통신비밀보호법"          관련법령 칸이 같은 행
   python telecom_stats.py --kw "헌혈증" --years 2012-2014  정보명·키워드·처리비고에서 정규식 검색(마스킹된 행은 못 찾는다)
+--verify는 불일치가 있으면 종료 코드 1, 모두 일치하면 0을 돌려준다(v1.1, 2026-10-06).
 --topic, --law, --kw 는 함께 주면 모두 만족하는 행만 센다. 정보명·URL·신청자명은 출력하지 않는다.
 """
 import argparse, collections, csv, os, re, sys
@@ -75,7 +76,7 @@ def main():
             ok &= sel[k] == v
             print("  %s=%s: %d (기대 %d)" % (k[0], k[1], sel[k], v))
         print("검증 결과:", "모두 일치" if ok else "불일치 있음")
-        return
+        sys.exit(0 if ok else 1)   # v1.1: 불일치면 종료 코드 1(스크립트·자동 점검에서 실패로 잡히도록)
     rx = re.compile(a.kw) if a.kw else None
     table = collections.defaultdict(collections.Counter)
     for y in parse_years(a.years):

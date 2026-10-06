@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 검색 DB(search.db) 색인기  v1.8 (2026-10-05)
+AI 자료창고 검색 DB(search.db) 색인기  v1.10 (2026-10-06)
+
+v1.10: 보안 머리말 판정(보고서 11번). effective()가 위키·수신함 머리말을 정규식이 아닌 YAML로 읽고(read_frontmatter),
+      classification·보안등급 값을 public|internal|unknown으로 검증한다. 머리말 YAML이 깨졌거나 닫히지 않았거나
+      허용 값이 아니면 원격에서 제외하고(fail-closed) classification을 unknown으로 기록한다. 머리말이 아예 없는 위키 페이지와
+      classification 필드가 없는 위키 페이지는 종전처럼 레지스트리 값을 따른다. 정상 머리말의 판정 결과는 v1.9와 같다.
+      조각 내용은 바뀌지 않으므로 PARSER_VERSION은 올리지 않는다(분류 변경은 증분 판정이 메타데이터 갱신으로 반영).
+
+v1.9: 증분 판정 보완(보고서 6번). documents에 parser_version·policy_hash·struct_hash를 저장한다.
+      파일(mtime·size)이 같아도 파서 버전(PARSER_VERSION), period_use·case_namespace·type이 바뀌면 다시 색인하고,
+      보안등급·layer·원격 허용·registry_id만 바뀌면 조각은 두고 documents 행만 고친다(메타데이터 갱신).
+      기존 DB는 컬럼을 자동으로 추가하며, 값이 없는 옛 행은 DB에 저장된 값으로 이전 해시를 복원해 비교한다(재색인 없음).
+      파서 동작(조각 나누기·의결번호·CSV 해석)을 바꾸면 PARSER_VERSION을 올려야 전체가 다시 색인된다.
 
 v1.8: 색인 성공 후 PRAGMA wal_checkpoint(TRUNCATE)로 search.db-wal을 비우고 결과를 보고서에 적는다
       (다른 연결이 DB를 열고 있으면 보류될 수 있으며, 보류되어도 오류로 보지 않는다).
@@ -48,10 +60,10 @@ DEFAULT_DB = os.path.join(HERE, "data", "search.db")
 # 색인 대상 최상위 폴더. 0 wiki/@clippings(2026-09-30 이전 Clippings·_clippings)는 위키가 아닌 원자료 수신함(AGENTS.md 2절, v1.4 추가)
 SCAN_DIRS = ("1 documents_md", "2 data_csv", "0 wiki")   # v1.5: 0 wiki 전체(@clippings 포함). 대상 여부는 레지스트리가 정한다
 WIKI_ADMIN = {"index.md", "log.md", "_index.md"}          # 위키 관리용 노드(AGENTS.md 3.3)는 색인하지 않는다
-FM_CLASS_RE = re.compile(r"^classification:\s*[\"\']?(\w+)", re.M)
-INBOX_SECCLASS_RE = re.compile(r"^보안등급:[ \t]*(.*)$", re.M)  # 수신함 메모 머리말의 보안등급 필드(v1.7: 줄바꿈을 넘지 않음)
+SECURITY_VALUES = ("public", "internal", "unknown")   # v1.10: 머리말 보안등급 허용 값
 TEXT_EXT = {".md", ".txt"}
 CSV_EXT = {".csv"}
+PARSER_VERSION = "1.9"    # 조각 나누기·의결번호·CSV 해석을 바꿀 때 올린다(올리면 다음 증분 색인에서 전체 재색인)
 MAX_CHUNK = 1800          # 조각 최대 글자 수
 MIN_CHUNK = 200           # 이보다 짧은 조각은 다음 조각과 합친다
 
@@ -327,7 +339,8 @@ CREATE TABLE IF NOT EXISTS documents(
   path TEXT UNIQUE, registry_id TEXT, type TEXT, layer TEXT,
   classification TEXT, remote_allowed INTEGER,
   mtime REAL, size INTEGER, sha1 TEXT, encoding TEXT,
-  n_chunks INTEGER, note TEXT, indexed_at TEXT);
+  n_chunks INTEGER, note TEXT, indexed_at TEXT,
+  parser_version TEXT, policy_hash TEXT, struct_hash TEXT);
 CREATE TABLE IF NOT EXISTS chunks(
   chunk_id INTEGER PRIMARY KEY,
   doc_id INTEGER, seq INTEGER, kind TEXT,
@@ -352,6 +365,27 @@ def check_sqlite():
         sys.exit(f"SQLite {sqlite3.sqlite_version}은 trigram 검색을 지원하지 않습니다(3.34 이상 필요). Python을 업데이트하세요.")
 
 
+def policy_hash(cls, typ, layer, period_use, ns, ra):
+    """공개 조건·분류 값의 지문. 바뀌면 documents 행을 갱신해야 한다."""
+    s = "\x1f".join("" if v is None else str(v) for v in (cls, typ, layer, period_use, ns, int(ra)))
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16]
+
+
+def struct_hash(typ, period_use, ns):
+    """조각 내용을 바꾸는 설정의 지문. 바뀌면 파일을 다시 색인해야 한다(type은 CSV 해석 방식을 정한다)."""
+    s = "\x1f".join("" if v is None else str(v) for v in (typ, period_use, ns))
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16]
+
+
+def migrate_documents(con):
+    """v1.9: 기존 DB의 documents에 증분 판정용 컬럼을 추가한다(이미 있으면 아무것도 하지 않음)."""
+    have = {r[1] for r in con.execute("PRAGMA table_info(documents)")}
+    for c in ("parser_version", "policy_hash", "struct_hash"):
+        if c not in have:
+            con.execute(f"ALTER TABLE documents ADD COLUMN {c} TEXT")
+    con.commit()
+
+
 def delete_doc(con, doc_id):
     ids = [r[0] for r in con.execute("SELECT chunk_id FROM chunks WHERE doc_id=?", (doc_id,))]
     con.executemany("DELETE FROM chunks_fts WHERE rowid=?", [(i,) for i in ids])
@@ -373,32 +407,64 @@ def insert_chunk(con, doc_id, seq, kind, meeting, case, heading, line_start, tex
     return cid
 
 
+def read_frontmatter(path):
+    """머리말(--- 사이)을 YAML로 읽는다. (dict, 오류문자열|None). 머리말이 없으면 ({}, None).
+    머리말이 시작됐는데 닫히지 않았거나 YAML이 깨졌거나 매핑이 아니면 오류 문자열을 돌려준다."""
+    try:
+        with open(path, encoding="utf-8-sig", errors="replace") as f:
+            head = f.read(65536)
+    except OSError as e:
+        return {}, f"읽기 실패: {e}"
+    head = head.replace("\r\n", "\n")
+    if not head.startswith("---"):
+        return {}, None
+    m = re.match(r"---[ \t]*\n(.*?)\n---[ \t]*(?:\n|$)", head, re.S)
+    if not m:
+        return {}, "머리말이 닫히지 않음"
+    try:
+        data = yaml.safe_load(m.group(1))
+    except yaml.YAMLError as e:
+        return {}, f"YAML 오류: {str(e).splitlines()[0] if str(e) else e}"
+    if data is None:
+        return {}, None
+    if not isinstance(data, dict):
+        return {}, "머리말이 매핑이 아님"
+    return data, None
+
+
 def effective(vault, rel, entry):
-    """페이지 단위 보정(v1.5/v1.6/v1.7).
+    """페이지 단위 보정(v1.5/v1.6/v1.7/v1.10).
     위키(type: wiki): 머리말 classification: internal 이 레지스트리보다 우선한다.
     수신함(type: inbox): 머리말 '보안등급'이 internal·unknown이거나 비어 있으면 원격 제외(AGENTS.md 6.3).
+    v1.10: 머리말을 정규식이 아닌 YAML로 읽고 값은 public|internal|unknown만 허용한다.
+      머리말을 읽지 못하거나(YAML 오류·닫히지 않음) 허용 값이 아니면 원격에서 제외하고(fail-closed) classification은 unknown으로 기록한다.
     돌려주는 값: (classification, remote_allowed)"""
     cls, ra = entry.get("classification"), bool(entry["remote_allowed"])
     entry_type = entry.get("type")
     if entry_type in ("wiki", "inbox"):
-        try:
-            with open(os.path.join(vault, rel), encoding="utf-8-sig", errors="replace") as f:
-                head = f.read(4000)
-        except OSError:
-            head = ""
-        fm = head.split("\n---", 1)[0] if head.startswith("---") else ""
+        fm, err = read_frontmatter(os.path.join(vault, rel))
+        if err:
+            return "unknown", False
         if entry_type == "wiki":
-            m = FM_CLASS_RE.search(fm)
-            if m and m.group(1) != "public":
-                cls, ra = m.group(1), False     # internal·unknown 등 public이 아니면 원격 제외
+            if "classification" in fm:
+                v = fm["classification"]
+                v = "" if v is None else str(v).strip()
+                if v not in SECURITY_VALUES:
+                    return "unknown", False
+                if v != "public":
+                    return v, False      # internal·unknown은 원격 제외
+            # 필드가 없으면 레지스트리 값 유지
         else:  # inbox: 머리말 '보안등급' 필드 기준
-            m = INBOX_SECCLASS_RE.search(fm)
-            sec = m.group(1).strip().strip("\"'") if m else ""
-            if sec == "public":
+            v = fm.get("보안등급")
+            v = "" if v is None else str(v).strip()
+            if v == "public":
                 pass    # public이면 레지스트리 값(ra) 유지
-            else:       # internal·unknown·공란 → 원격 제외
-                cls = sec or "unknown"   # v1.7: 공란·필드 없음은 unknown으로 표시
-                ra = False
+            elif v in ("", "unknown"):
+                cls, ra = "unknown", False   # 공란·필드 없음은 unknown으로 표시(v1.7)
+            elif v == "internal":
+                cls, ra = "internal", False
+            else:
+                cls, ra = "unknown", False   # 허용 값이 아님: fail-closed
     return cls, ra
 
 
@@ -408,11 +474,14 @@ def index_file(con, vault, rel, entry, stat):
     sha1 = hashlib.sha1(text.encode("utf-8")).hexdigest()
     cls, ra = effective(vault, rel, entry)
     cur = con.execute(
-        "INSERT INTO documents(path,registry_id,type,layer,classification,remote_allowed,mtime,size,sha1,encoding,indexed_at)"
-        " VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO documents(path,registry_id,type,layer,classification,remote_allowed,mtime,size,sha1,encoding,indexed_at,"
+        "parser_version,policy_hash,struct_hash) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (rel, entry["id"], entry.get("type"), entry.get("layer"), cls,
          int(ra), stat.st_mtime, stat.st_size, sha1, enc,
-         datetime.now().isoformat(timespec="seconds")))
+         datetime.now().isoformat(timespec="seconds"),
+         PARSER_VERSION,
+         policy_hash(cls, entry.get("type"), entry.get("layer"), entry.get("period_use"), entry.get("case_namespace"), ra),
+         struct_hash(entry.get("type"), entry.get("period_use"), entry.get("case_namespace"))))
     doc_id = cur.lastrowid
     ext = os.path.splitext(rel)[1].lower()
     n, note = 0, ""
@@ -487,10 +556,11 @@ def main():
         con.close()
         sys.exit("DB 구조가 바뀌었습니다(v1.1). 'python build_index.py --full'로 다시 만들어 주세요.")
     con.executescript(SCHEMA)
+    migrate_documents(con)
 
     t0 = time.time()
     seen, unlisted, report = set(), [], []
-    added = updated = unchanged = removed = 0
+    added = updated = unchanged = removed = meta_only = 0
 
     targets = []
     for top in SCAN_DIRS:
@@ -515,12 +585,31 @@ def main():
     for k, (rel, entry) in enumerate(targets, 1):
         seen.add(rel)
         st = os.stat(os.path.join(args.vault, rel))
-        row = con.execute("SELECT doc_id, mtime, size, registry_id, remote_allowed FROM documents WHERE path=?",
-                          (rel,)).fetchone()
-        if row and row[1] == st.st_mtime and row[2] == st.st_size \
-                and row[3] == entry["id"] and row[4] == int(effective(args.vault, rel, entry)[1]):
-            unchanged += 1
-            continue
+        row = con.execute("SELECT doc_id, mtime, size, registry_id, classification, remote_allowed, type, layer,"
+                          " parser_version, policy_hash, struct_hash FROM documents WHERE path=?", (rel,)).fetchone()
+        if row and row[1] == st.st_mtime and row[2] == st.st_size:
+            doc_id, o_rid, o_cls, o_ra, o_type, o_layer, o_pv, o_ph, o_sh = row[0], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]
+            pu, ns, typ = entry.get("period_use"), entry.get("case_namespace"), entry.get("type")
+            cls, ra = effective(args.vault, rel, entry)
+            new_ph, new_sh = policy_hash(cls, typ, entry.get("layer"), pu, ns, ra), struct_hash(typ, pu, ns)
+            # 옛 행(v1.8 이하 DB)은 해시가 없다: 저장된 값으로 이전 해시를 복원하고, 파서 버전은 현재와 같다고 본다
+            if o_ph is None or o_sh is None:
+                o_ph = policy_hash(o_cls, o_type, o_layer, pu, ns, o_ra)
+                o_sh = struct_hash(o_type, pu, ns)
+            if o_pv is None:
+                o_pv = PARSER_VERSION
+            if o_pv == PARSER_VERSION and o_sh == new_sh:
+                if o_ph == new_ph and o_rid == entry["id"] and row[8] is not None and row[9] is not None:
+                    unchanged += 1
+                    continue
+                # 본문·구조는 그대로이고 공개 조건 등만 바뀜: 조각은 두고 documents 행만 고친다
+                con.execute("UPDATE documents SET registry_id=?, type=?, layer=?, classification=?, remote_allowed=?,"
+                            " parser_version=?, policy_hash=?, struct_hash=? WHERE doc_id=?",
+                            (entry["id"], typ, entry.get("layer"), cls, int(ra), PARSER_VERSION, new_ph, new_sh, doc_id))
+                con.commit()
+                meta_only += 1
+                print(f"[{k}/{total}] (메타데이터만 갱신) {rel}", flush=True)
+                continue
         if row:
             delete_doc(con, row[0])
             updated += 1
@@ -562,7 +651,7 @@ def main():
     lines = [f"# 색인 보고서 ({datetime.now():%Y-%m-%d %H:%M})", "",
              f"- DB: `{args.db}` ({os.path.getsize(args.db)/1e6:,.1f} MB)",
              f"- 소요 시간: {elapsed:,.0f}초",
-             f"- 추가 {added} / 갱신 {updated} / 변경 없음 {unchanged} / 삭제 {removed}",
+             f"- 추가 {added} / 갱신 {updated} / 메타데이터만 갱신 {meta_only} / 변경 없음 {unchanged} / 삭제 {removed}",
              f"- WAL 정리: {wal_note}", "",
              "## 레지스트리 항목별", "", "| registry_id | 파일 수 | 조각 수 | 원격 허용 |", "|---|---|---|---|"]
     lines += [f"| {r[0]} | {r[1]} | {r[2]} | {('예' if r[4] == r[1] else f'일부({r[4]}/{r[1]})') if r[3] else '아니오'} |" for r in stats]
