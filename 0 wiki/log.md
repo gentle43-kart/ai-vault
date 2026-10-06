@@ -1853,3 +1853,12 @@ type: log
 - 정제본 색인: `reindex.request`(17:57) → 18:00 스케줄러 실행 try 1/3 exit=0, 추가 8·변경 없음 1,300·실패 0(DB 문서 1,308, 정제본 6,087조각, 세대 2). DB의 모든 문서 mtime·size가 파일과 일치. 마무리 회귀(mode=ro): 원격 범위는 기존 번호 5종 search_case 결과·`search`건수가 교체 전과 동일, 전체 범위는 정제본이 추가된 상위 집합(예: 2023-방송-46-0516 15→18건)
 - 후속: Claude 데스크톱 재시작(서버 종료 상태이므로 재시작 전까지 ai-vault 검색 도구가 끊겨 있음). 재시작하면 MCP 서버 v1.9(id `세대:chunk_id`, 기관 별칭, 연결 닫기)가 적용됨. 옛 서버의 숫자 id는 전환 기간 동안 `fetch`가 받아 줌
 - 커밋: Claude Code가 수행(J:\AI 자료는 SOURCE_REGISTRY.yaml·CLAUDE.md·schema_backup 2개·이 항목)
+
+## [2026-10-06] schema | SOURCE_REGISTRY v1.32(방송소위 회의결과 정제본 보안등급 public 확인), 검색 DB 옛 백업·잔여 파일 정리 | Claude Opus 5.5 (코워크)
+- 승인(③등급, 항목 지정): 사용자 2026-10-06 "새로 등록한 정제본은 public로 하면 돼"
+- SOURCE_REGISTRY v1.31 → v1.32: `minutes_broadcast_results_refined`에 `classification: public`, `classification_confirmed: true`를 새로 적음. notes 끝의 "보안등급은 기본값(unknown, 원격 차단)"을 "보안등급은 public(사용자 확인 2026-10-06). 원격 허용은 적지 않음(기본값 false)"으로 바꿈. `remote_allowed`는 승인 범위 밖이라 적지 않음(원격 제공은 별도 개별 승인 대상)
+- 검증: YAML 파싱, id 70개 중복 0, 대상 path 존재, 바꾼 문장이 대상 블록 안에 한 번만 있음. 백업: `Claude outputs/schema_backup/SOURCE_REGISTRY_v1.31_20261006.yaml`
+- 색인: reindex.request(18:09) → 18:10 스케줄러 try 1/3 exit=0, 메타데이터만 갱신 8·변경 없음 1,300·실패 0, 세대 3. MCP fetch('2:130113') 결과 classification public, remote_allowed false, id_checked true(조각 id 유지)
+- 정리(사용자 지시 "search.db.bak_20260928c 지워줘", "정리할 작은 파일도 니가 처리해줘"): `J:\MCP\ai-vault-mcp\data\search.db.bak_20260928c`(0.93GB)와 `data\.fuse_hidden…` 3개(각 32KB) 삭제. `search.db.bak_20261006_1756`은 보관(새 DB를 며칠 써 본 뒤 사용자가 삭제 여부 결정). 위 setup 항목에 적힌 `J:\MCP\ai-vault-mcp\Claude outputs\` 설계안 파일은 정리 시점에 이미 없었음(설계안 사본은 코워크 대화에 남아 있음. AGENTS.md 2절상 `Claude outputs/`에는 스크립트·README만 두므로 자료창고로 옮기지 않음)
+- 커밋 대상(J:\AI 자료, Claude Code가 커밋): `SOURCE_REGISTRY.yaml`, `Claude outputs/schema_backup/SOURCE_REGISTRY_v1.31_20261006.yaml`, `0 wiki/log.md`. J:\MCP\ai-vault-mcp는 변경 없음(삭제한 파일은 git 추적 대상이 아님)
+- 커밋 메시지 초안: `schema: SOURCE_REGISTRY v1.32(방송소위 회의결과 정제본 보안등급 public 확인), 검색 DB 옛 백업 정리 기록`
