@@ -3,7 +3,7 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.30"
+version: "1.29"
 updated: 2026-10-06
 root: "J:/AI 자료"
 
@@ -310,16 +310,6 @@ sources:
     ingest: none
     classification: public
     notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
-
-  - id: minutes_broadcast_results
-    path: "1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과/"
-    layer: normalized
-    type: meeting_minutes
-    searchable: false
-    ingest: none
-    raw_source: ""
-    period: "2018~2024, 2026(2025 없음)"
-    notes: "방송소위 회의결과 목록(안건별 의결번호·방송사·프로그램·방송일시·논의내용·소위 논의결과 표결·적용조항). 표가 한 칸씩 줄로 풀려 있고 의결번호가 줄바꿈으로 끊겨(예: '제2023-방송' / '-46-0516호') 의결번호 검색이 되지 않으므로 이 판은 색인 제외. 안건 1건을 한 단위로 정제한 새 변환본을 만든 뒤 그 변환본을 검색 대상으로 등록한다(사용자 결정 2026-10-06). 최종 의결 내용·조항은 stats(통계 CSV), 결정 사유는 minutes_broadcast(회의록)가 우선이고, 이 자료의 고유 정보는 소위 단계 결과·표결 분포·의견진술 등 처리 경과이다"
 
   # ── 광고소위 회의록 ───────────────────────────────────────
   - id: minutes_ad
