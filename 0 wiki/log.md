@@ -1844,3 +1844,12 @@ type: log
 - 주의: 교체 전에는 `reindex.request`를 만들지 않는다(색인기 v1.12의 PARSER_VERSION이 달라 옛 DB 전체가 제자리 재색인되어 `.new`와 어긋남)
 - 동기화: Claude outputs의 build_index.py·mcp_server.py·README 2개를 MCP 원본과 SHA-256 일치 확인. MCP 저장소 커밋 e0643a7, aadeb6d
 - 커밋: Claude Code가 수행(MCP 저장소 e0643a7·aadeb6d, J:\AI 자료는 이 항목·사본·refine_subcommittee_results.py)
+
+## [2026-10-06] schema | SOURCE_REGISTRY v1.31(방송소위 회의결과 정제본 등록), CLAUDE.md 색인 실패 처리 규칙 추가, 운영 DB 교체 완료 | Claude Sonnet 5.5
+- 승인: 사용자 2026-10-06, 질문에 대한 답변 "등록", "추가", "제가 서버 프로세스 종료 후 교체"
+- SOURCE_REGISTRY v1.30 → v1.31(①등급, 새 id 추가): `minutes_broadcast_results_refined`(`1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과_정제본/`, searchable true, ingest search_only, type meeting_minutes, 보안등급은 기본값 unknown·원격 차단, classification·classification_confirmed·remote_allowed는 적지 않음). `minutes_broadcast_results` notes에 정제본 id 문장만 추가(검색 제외·경로 등 값은 그대로). 검증: YAML 파싱, id 70개 중복 0, 새 path 존재, 같은 path 항목 1개. 백업: `Claude outputs/schema_backup/SOURCE_REGISTRY_v1.30_20261006.yaml`. 작업 중 notes를 여러 줄 문자열로 적어 YAML이 깨지는 사고가 한 번 있었고, 백업에서 즉시 복원한 뒤 한 줄 문자열로 다시 반영함
+- CLAUDE.md(②등급): 색인 요청 문단에 "색인 실패 시 reindex.running으로 남아 5분 간격 최대 3회 재시도, 3회 실패하면 reindex.failed로 멈춤, reindex.failed가 있으면 reindex.request를 만들기 전에 data\index_failed.txt의 원인부터 확인하고 사용자에게 알린다" 추가. 백업: `Claude outputs/schema_backup/CLAUDE_20261006_4.md`
+- 운영 DB 교체(색인기 v1.12 `--swap-only`): 17:47 `--full` 재구축본(1,300파일, 124,443조각)이 교체 단계에서 Claude 데스크톱의 mcp_server.py 프로세스 2개(PID 13580, 8264, 부모 Claude 데스크톱)에 막혀 있어, 사용자 승인으로 그 두 프로세스만 종료한 뒤 17:56 교체함. 이전 DB는 `data\search.db.bak_20261006_1756`(1.5GB)로 보관, `search.db.bak_20260928c`(0.93GB)와 함께 삭제 여부는 사용자가 결정. 교체 후 DB: 930MB, WAL 모드, quick_check ok, 세대 1
+- 정제본 색인: `reindex.request`(17:57) → 18:00 스케줄러 실행 try 1/3 exit=0, 추가 8·변경 없음 1,300·실패 0(DB 문서 1,308, 정제본 6,087조각, 세대 2). DB의 모든 문서 mtime·size가 파일과 일치. 마무리 회귀(mode=ro): 원격 범위는 기존 번호 5종 search_case 결과·`search`건수가 교체 전과 동일, 전체 범위는 정제본이 추가된 상위 집합(예: 2023-방송-46-0516 15→18건)
+- 후속: Claude 데스크톱 재시작(서버 종료 상태이므로 재시작 전까지 ai-vault 검색 도구가 끊겨 있음). 재시작하면 MCP 서버 v1.9(id `세대:chunk_id`, 기관 별칭, 연결 닫기)가 적용됨. 옛 서버의 숫자 id는 전환 기간 동안 `fetch`가 받아 줌
+- 커밋: Claude Code가 수행(J:\AI 자료는 SOURCE_REGISTRY.yaml·CLAUDE.md·schema_backup 2개·이 항목)
