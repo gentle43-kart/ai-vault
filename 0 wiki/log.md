@@ -1745,3 +1745,10 @@ type: log
 - 시험(실제 search.db mode=ro, scope remote·all): 인자 생략 시 results가 v1.5와 동일(7개 조합), kind=wiki "객관성" all 범위 total 157(앞서 센 값과 일치)·remote 94, offset 20씩 이어 조회해 합계=total·중복 없음, limit=30은 20으로 제한, 범위를 넘는 offset은 0건, 음수 offset은 0 처리, search_case 정상. 짧은 검색어(전체 훑기) total 계산은 약 1.6초
 - 참고: total은 페이지 수가 아니라 조각 수다. DB·색인 변경 없음
 - 동기화: J:\MCP\ai-vault-mcp(mcp_server.py, README.md)와 Claude outputs/(mcp_server.py, ai-vault-mcp_README.md, README.md), mcp_server.py·README 해시 일치 확인
+
+## [2026-10-06] query | 방송심의규정 제150호·제8호 신구 대조 | Claude Opus 5.5
+- 배경: 사용자 질의("현 심의규정과 직전 심의규정 비교, 추가·삭제·변경 조항 상세 정리") 답변 후 "위키에 반영해줘" 지시.
+- 생성: [[2026-10-06 방송심의규정 제150호·제8호 신구 대조]]
+- 갱신: [[방송심의규정 제28조]] 1절(〔추론〕 재난안전법 정의와의 관계, `web:` 출처 추가), [[방송심의에 관한 규정(규칙 제8호, 2026. 9. 21. 제정, 2026. 9. 29. 시행)]] 2절(분석 페이지 링크), `분석/_index.md`
+- 근거: 제150호·제8호 변환본 자동 대조(`script: Claude outputs/compare_bangsim_150_8.py` 신규, 검증값: 대응 81개·미대응 0, 2A절 대응과 일치), 차이 56개 조는 원문 확인. 「재난 및 안전관리 기본법」 제3조는 법령 MCP로 현행본(시행 2026.7.22.) 조회.
+- lint 대상: [[조문 시기 대응표]] 2A절 제12조 판정이 "변경"이나, 대조 결과 문투·낫표 정비뿐이어서 "정비"가 맞아 보임. 수정은 사용자 확인 후.
