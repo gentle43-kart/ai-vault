@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 MCP 서버 v1.4 (2026-10-05) - search.db 읽기 전용 검색 서버
+AI 자료창고 MCP 서버 v1.5 (2026-10-06) - search.db 읽기 전용 검색 서버
+  v1.5: search에 선택 인자 kind(자료 묶음), registry_id(정확한 id 목록) 추가. 둘 다 기본값은 빈 값이며,
+        생략하면 v1.4와 결과가 같다. 값은 SQL에 직접 넣지 않고 매개변수로 넘긴다. search_case는 바꾸지 않았다.
   v1.4: 명령행 --remote-extra-ids 추가(환경변수 AIVAULT_REMOTE_EXTRA_IDS와 같고, 명령행이 우선).
         OpenAI tunnel-client 공식 문서에 stdio 명령으로 환경변수를 넘기는 방법이 확인되지 않아,
         --mcp-command 문자열 안에 값을 적을 수 있게 했다. 형식이 틀린 id는 표준오류로 알리고 무시한다.
@@ -86,6 +88,43 @@ SCOPE_NOTE = (
     "이런 자료를 외부 공유 문서에 옮길 때는 보안등급을 확인한다. "
 )
 
+# 검색 범위 필터(v1.5). kind 묶음은 SOURCE_REGISTRY.yaml의 type(= documents.type)을 기준으로 한다.
+# 보안등급(public 여부)이나 자료의 성격(법령 여부)으로 나누지 않는다. 예: law_budget은 type이 guide라
+# guide 묶음이고, 내부 자료라도 type이 law·regulation이면 law 묶음이다(공개 범위는 SCOPE_SQL이 따로 정한다).
+KINDS = {
+    "wiki": ("wiki",),
+    "law": ("law", "regulation"),
+    "minutes": ("meeting_minutes",),
+    "stats": ("statistics",),
+    "papers": ("research",),
+    "cases": ("casebook", "precedent", "interpretation"),
+    "guide": ("guide", "commentary"),
+    "news": ("news",),
+    "internal": ("internal_doc", "notes", "inbox"),
+}
+
+
+def _scope_filter(kind, registry_id):
+    """kind·registry_id를 (SQL 조각 목록, 매개변수 목록)으로 바꾼다. 값은 모두 ? 매개변수로 넘긴다."""
+    where, params = [], []
+    names = [k.strip().lower() for k in re.split(r"[|,]", kind or "") if k.strip()]
+    if names:
+        bad = [k for k in names if k not in KINDS]
+        if bad:
+            raise ValueError(f"알 수 없는 kind: {', '.join(bad)}. 사용 가능한 값: {', '.join(KINDS)}")
+        types = sorted({t for k in names for t in KINDS[k]})
+        where.append(f"d.type IN ({','.join('?' * len(types))})")
+        params += types
+    ids = [x.strip() for x in (registry_id or "").split(",") if x.strip()]
+    if ids:
+        bad = [x for x in ids if not _VALID_ID.match(x)]
+        if bad:
+            raise ValueError(f"registry_id 형식이 틀렸습니다(영문·숫자·밑줄만, 쉼표로 구분): {', '.join(bad)}")
+        where.append(f"d.registry_id IN ({','.join('?' * len(ids))})")
+        params += ids
+    return where, params
+
+
 sys.path.insert(0, HERE)
 from build_index import parse_case  # noqa: E402  의결번호 해석은 색인기와 같은 규칙을 쓴다
 from search import fts_query  # noqa: E402
@@ -148,19 +187,28 @@ def _title(r):
 
 
 @mcp.tool(annotations=RO, structured_output=True)
-def search(query: str, limit: int = 10) -> dict[str, Any]:
+def search(query: str, limit: int = 10, kind: str = "", registry_id: str = "") -> dict[str, Any]:
     """자료창고 검색. 공백으로 나눈 단어를 모두 포함하는 조각을 찾는다(3글자 이상은 색인, 2글자 이하는 전체 훑기).
-    결과의 id를 fetch에 넘기면 조각 전문을 볼 수 있다."""
+    결과의 id를 fetch에 넘기면 조각 전문을 볼 수 있다.
+    범위 좁히기(선택, 생략하면 전체): 회의록·논문이 많아 결과가 묻힐 때 쓴다.
+    - kind: 자료 묶음. wiki(위키) / law(법령·규정·규칙) / minutes(회의록) / stats(통계) / papers(논문) /
+      cases(사례집·판례·해석례) / guide(지침·해설집) / news(기사) / internal(내부·메모류).
+      '|' 또는 쉼표로 여러 개 가능(예: "wiki|law").
+    - registry_id: 정확한 자료 id를 쉼표로 구분(예: "law_broadcast,law_general"). kind와 같이 주면 둘 다 만족하는 것만 찾는다.
+    조회 범위(서버 설정)를 넘는 자료는 지정해도 나오지 않는다. 값이 틀리면 오류로 사용 가능한 값을 알려 준다."""
     limit = max(1, min(int(limit), MAX_LIMIT))
     match, shorts = fts_query(query or "")
     where, params = [SCOPE_SQL], []
+    f_where, f_params = _scope_filter(kind, registry_id)
+    where += f_where
+    params += f_params
     if match:
         where.append("chunks_fts MATCH ?")
         params.append(match)
     for s in shorts:
         where.append("instr(chunks_fts.text, ?) > 0")
         params.append(s)
-    if len(where) == 1:
+    if not match and not shorts:
         return {"results": []}
     order = "bm25(chunks_fts)" if match else "c.chunk_id"
     sql = f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start

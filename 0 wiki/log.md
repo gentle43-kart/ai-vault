@@ -1729,3 +1729,11 @@ type: log
 - 등급: ② 승인 후 반영. 사용자 지시 2026-10-05 "커밋도 니가 처리해주면 좋겠어. git 푸쉬는 내용이 많이 쌓이면 적당한 때 니가 알려줘". 기준(10개·7일)은 Claude가 정한 값이며 사용자가 바꿀 수 있음
 - 백업: `Claude outputs/schema_backup/CLAUDE_20261005_2.md`
 - 참고: ai-vault-mcp 커밋 26e0171·078ad9a 메시지의 "---full"·"---remote-extra-ids"는 오타가 아니라 PowerShell에서 git에 인수를 넘길 때 하이픈이 하나 늘어난 것으로 보임(같은 현상 2회). 이후 커밋은 PC 셸에서 하므로 해당 없음
+
+## [2026-10-06] setup | ai-vault MCP 서버 v1.5(search 범위 필터 kind·registry_id) | claude-sonnet-5-5
+- 변경: mcp_server.py v1.5. `search`에 선택 인자 `kind`(wiki/law/minutes/stats/papers/cases/guide/news/internal)와 `registry_id`(쉼표 목록) 추가. 둘 다 기본값 빈 값, 생략 시 v1.4와 동일. 값은 `?` 매개변수로 전달, 틀린 값은 ValueError로 허용 값 안내. `search_case`는 의결번호로 이미 좁혀져 변경 없음. README 이력 v1.11
+- 기준: kind 묶음은 SOURCE_REGISTRY의 type(documents.type) 기준이며 보안등급·법령 여부 기준이 아님(코드 주석과 README에 기록). law_budget은 type guide라 guide 묶음. layer는 값이 normalized·curated뿐이라 인자로 만들지 않음
+- 승인: 사용자 2026-10-06 설계안 승인(묶음 이름·registry_id 인자 유지, law_budget 위치는 기준 설명 후 유지)
+- 시험(실제 search.db mode=ro, scope remote·all 각각): (a) 근로기준법·선거방송 범위·객관성·심의·제 5개 검색어에서 인자 생략 결과가 v1.4와 동일, (b) 위키만·법령만·회의록만·`wiki|law`·`kind+registry_id` 지정 결과 확인(remote에서 kind=internal은 0건, all에서는 [internal] 자료 표시), (c) 알 수 없는 kind·형식 틀린 registry_id는 오류와 허용 값 안내, 존재하지 않는 registry_id는 0건. mode=ro 쓰기 시도는 거부됨. DB·색인 변경 없음(reindex.request 불필요)
+- 후속 과제: law_budget ★통합본·개별 파일 중복(레지스트리 문제, SOURCE_REGISTRY notes "미확인")은 코워크에서 처리. 이번 범위 제외
+- 동기화: J:\MCP\ai-vault-mcp(mcp_server.py, README.md)와 Claude outputs/(mcp_server.py, ai-vault-mcp_README.md, README.md), mcp_server.py·README 해시 일치 확인(Claude outputs/README.md는 사본 전용 줄이 있어 같은 줄만 추가)

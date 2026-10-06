@@ -1,9 +1,10 @@
 # ai-vault-mcp
 
-AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.4)가 있습니다(색인기 v1.8, 검색기 v1.2).
+AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.5)가 있습니다(색인기 v1.8, 검색기 v1.2).
 
 ## 변경 이력
 
+- v1.11 (2026-10-06, Claude): mcp_server.py v1.5: `search`에 선택 인자 `kind`(자료 묶음)와 `registry_id`(정확한 id 목록) 추가. 둘 다 기본값은 빈 값이며 생략하면 v1.4와 결과가 같다. 값은 SQL에 직접 넣지 않고 `?` 매개변수로 넘기고, 틀린 값은 오류로 사용 가능한 값을 알려 준다. kind 묶음은 SOURCE_REGISTRY의 type을 기준으로 한다(보안등급·법령 여부 기준이 아님). `search_case`는 의결번호로 이미 좁혀지므로 바꾸지 않았다. DB·색인 변경 없음(재색인 불필요).
 - v1.10 (2026-10-05, Claude): build_index.py v1.8: 색인 성공 후 `PRAGMA wal_checkpoint(TRUNCATE)`로 `search.db-wal`을 비우고, 결과를 `index_report.md`의 "WAL 정리" 줄에 적는다(완료/보류/오류). MCP 서버 등 다른 연결이 읽기 중이면 보류될 수 있으며, 보류되어도 exit=0이다. 다음 색인 때 다시 시도한다. `--full`은 `search.db`와 함께 남은 `search.db-wal`·`search.db-shm`도 지운다(이전 DB의 WAL이 새 DB에 적용되어 손상되는 것을 막음). DB 구조 변경 없음(전체 재색인 불필요).
 - v1.9 (2026-10-05, Claude): mcp_server.py v1.4: 명령행 `--remote-extra-ids` 추가(환경변수보다 우선, 형식 오류 id는 표준오류로 알림). v1.8에 적었던 tunnel-client `--env` 옵션과 프로필 경로는 공식 문서에서 확인되지 않아 삭제하고, `--mcp-command` 안에 옵션을 적는 방식으로 바꿈. build_index.py v1.7: 수신함 메모 머리말 `보안등급:`이 비어 있으면 다음 줄(예: `status: 대기`)을 보안등급으로 읽던 오류 수정(정규식 `\s*` → `[ \t]*`). 보안등급이 비어 있거나 없는 메모는 classification을 `unknown`으로 기록해 `--scope all` 결과 제목에 `[unknown]`이 붙는다. 원격 제외 판정(public만 허용)은 v1.6과 같다. 기존 DB는 해당 메모가 다시 색인될 때 반영된다(전체 재색인 불필요).
 - v1.8 (2026-10-01, Claude): mcp_server.py v1.3: AIVAULT_REMOTE_EXTRA_IDS 추가(remote 범위에서 특정 registry_id 추가 허용, 기본 빈값). build_index.py v1.6: effective()가 type: inbox 파일의 보안등급 머리말 필드를 반영해 원격 허용 여부 결정. README에 tunnel-client 환경변수 전달 방법 추가.
@@ -30,7 +31,7 @@ AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 �
 | build_index.py | SOURCE_REGISTRY.yaml에서 `searchable: true`인 자료만 읽어 `data\search.db`를 만든다(원본은 읽기만 함) |
 | search.py | search.db 조회(읽기 전용) |
 | check_index.py | 의결번호 연결 상태 점검(읽기 전용) |
-| mcp_server.py | MCP 서버(읽기 전용). 기본은 원격 허용 자료만, `AIVAULT_SCOPE=all`이면 전체 자료(Claude 데스크톱 로컬 연결용), `--remote-extra-ids`로 승인된 항목 추가 |
+| mcp_server.py | MCP 서버(읽기 전용). 기본은 원격 허용 자료만, `AIVAULT_SCOPE=all`이면 전체 자료(Claude 데스크톱 로컬 연결용), `--remote-extra-ids`로 승인된 항목 추가. `search`는 `kind`·`registry_id`로 범위 지정 가능(v1.5) |
 | stats_articles.py | (Claude outputs\에만 있음) 통계 CSV에서 「방송심의에 관한 규정」 조문별 행 수·결과 분포·기수별 분포 집계. 위키의 통계 수치 근거 스크립트 |
 | count_article_item.py | (Claude outputs\에만 있음) 통계 CSV에서 특정 조의 호·항이 관련조항에 적힌 행을 뽑음. stats_articles.py의 조문 식별 함수 재사용, 검증값: 제27조 조 단위 777 |
 | wiki_lint.py | (Claude outputs\에만 있음, v1.1: 중복본 판정에 레지스트리 규칙 2 적용) `python wiki_lint.py [자료창고 루트] > lint.json`. 위키를 고치지 않음. 검증: 2026-09-23 lint 보고의 수치(콘텐츠 페이지 107, 조문 63, 끊긴 링크 5종)와 일치 |
@@ -82,6 +83,30 @@ python stats_articles.py --top 30
 ```
 
 - 표준 라이브러리만 사용한다. 결과는 화면에만 출력하고 파일로 저장하지 않는다.
+
+## 검색 범위 좁히기 (mcp_server.py v1.5)
+
+`search(query, limit, kind, registry_id)`에서 `kind`와 `registry_id`는 선택이며, 생략하면 전체를 찾습니다. 회의록(약 6만 조각)·논문(약 3만 조각)에 결과가 묻힐 때 씁니다.
+
+| kind | 대응하는 type (SOURCE_REGISTRY 기준) | 자료 |
+|---|---|---|
+| wiki | wiki | 위키 |
+| law | law, regulation | 법령·규정·규칙 |
+| minutes | meeting_minutes | 회의록 |
+| stats | statistics | 통계·연감 |
+| papers | research | 논문 |
+| cases | casebook, precedent, interpretation | 심의사례집·판례·해석례 |
+| guide | guide, commentary | 지침·해설집(law_budget 포함) |
+| news | news | 기사 |
+| internal | internal_doc, notes, inbox | 내부·메모류 |
+
+- 여러 개는 `|` 또는 쉼표로 잇습니다(예: `wiki|law`). `registry_id`는 정확한 id를 쉼표로 적습니다(예: `law_broadcast,law_general`). 둘을 같이 주면 둘 다 만족하는 것만 나옵니다.
+- 묶음은 type 기준이라 보안등급과 무관합니다. 공개 범위는 서버의 조회 범위(remote/all)가 따로 정하며, 예를 들어 remote에서 `kind=internal`은 0건입니다.
+- `layer`는 값이 normalized·curated 둘뿐이라 인자로 만들지 않았습니다.
+
+## 후속 과제
+
+- law_budget(예산·여비 지침)의 ★통합본과 개별 파일 중복(SOURCE_REGISTRY.yaml notes에 "미확인"으로 적힘): 레지스트리 정리 문제로, 코워크에서 처리한다. 이번 v1.5 범위에서 제외했다(2026-10-06 결정).
 
 ## ChatGPT 연결 (OpenAI Secure MCP Tunnel)
 
