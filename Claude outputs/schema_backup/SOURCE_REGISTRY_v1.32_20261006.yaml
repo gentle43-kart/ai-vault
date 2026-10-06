@@ -3,7 +3,7 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.33"
+version: "1.32"
 updated: 2026-10-06
 root: "J:/AI 자료"
 
@@ -331,8 +331,7 @@ sources:
     period: "2018~2024, 2026(2025 없음)"
     classification: public
     classification_confirmed: true
-    remote_allowed: true
-    notes: "minutes_broadcast_results(연도별 방송소위 회의결과)를 안건 1건 단위로 정제한 변환본(Claude outputs/refine_subcommittee_results.py v1.0, 2026-10-06, 사용자 승인). 안건 제목 '### 제2023-방송-46-0516호 | 방송사 | 프로그램명' 아래에 방송일시·인지·소위 논의결과·표결 분포·적용조항·논의내용·원본 PDF 쪽 필드를 둔다. 회의 361회·안건 5,109건, 통계 CSV 의결번호 대조율 70.7%(소위 단계에서 종결되는 결과인 권고·의견제시·문제없음은 98.5%이고 의견진술·의결보류·법정제재 등은 전체회의 최종 의결 등으로 번호가 달라 낮음). 최종 의결은 stats(통계 CSV), 결정 사유는 minutes_broadcast(회의록)가 우선하고 이 자료의 고유 정보는 소위 표결 분포·처리 경과이다. 보안등급은 public(사용자 확인 2026-10-06). 원격 허용 true(사용자 개별 승인 2026-10-06)"
+    notes: "minutes_broadcast_results(연도별 방송소위 회의결과)를 안건 1건 단위로 정제한 변환본(Claude outputs/refine_subcommittee_results.py v1.0, 2026-10-06, 사용자 승인). 안건 제목 '### 제2023-방송-46-0516호 | 방송사 | 프로그램명' 아래에 방송일시·인지·소위 논의결과·표결 분포·적용조항·논의내용·원본 PDF 쪽 필드를 둔다. 회의 361회·안건 5,109건, 통계 CSV 의결번호 대조율 70.7%(소위 단계에서 종결되는 결과인 권고·의견제시·문제없음은 98.5%이고 의견진술·의결보류·법정제재 등은 전체회의 최종 의결 등으로 번호가 달라 낮음). 최종 의결은 stats(통계 CSV), 결정 사유는 minutes_broadcast(회의록)가 우선하고 이 자료의 고유 정보는 소위 표결 분포·처리 경과이다. 보안등급은 public(사용자 확인 2026-10-06). 원격 허용은 적지 않음(기본값 false)"
 
   # ── 광고소위 회의록 ───────────────────────────────────────
   - id: minutes_ad

@@ -1862,3 +1862,13 @@ type: log
 - 정리(사용자 지시 "search.db.bak_20260928c 지워줘", "정리할 작은 파일도 니가 처리해줘"): `J:\MCP\ai-vault-mcp\data\search.db.bak_20260928c`(0.93GB)와 `data\.fuse_hidden…` 3개(각 32KB) 삭제. `search.db.bak_20261006_1756`은 보관(새 DB를 며칠 써 본 뒤 사용자가 삭제 여부 결정). 위 setup 항목에 적힌 `J:\MCP\ai-vault-mcp\Claude outputs\` 설계안 파일은 정리 시점에 이미 없었음(설계안 사본은 코워크 대화에 남아 있음. AGENTS.md 2절상 `Claude outputs/`에는 스크립트·README만 두므로 자료창고로 옮기지 않음)
 - 커밋 대상(J:\AI 자료, Claude Code가 커밋): `SOURCE_REGISTRY.yaml`, `Claude outputs/schema_backup/SOURCE_REGISTRY_v1.31_20261006.yaml`, `0 wiki/log.md`. J:\MCP\ai-vault-mcp는 변경 없음(삭제한 파일은 git 추적 대상이 아님)
 - 커밋 메시지 초안: `schema: SOURCE_REGISTRY v1.32(방송소위 회의결과 정제본 보안등급 public 확인), 검색 DB 옛 백업 정리 기록`
+## [2026-10-06] schema | SOURCE_REGISTRY v1.33(방송소위 회의결과 정제본 원격 허용), 백업 삭제 확인, 정제본 대조 불일치 표본 검토 | Claude Opus 5.5 (코워크)
+- 승인(③등급, 항목 지정): 사용자 2026-10-06, 질문 "정제본(minutes_broadcast_results_refined)의 remote_allowed를 true로 바꿀까요?"에 "true로 변경" 답변
+- SOURCE_REGISTRY v1.32 → v1.33: `minutes_broadcast_results_refined` 블록에 `remote_allowed: true`를 새로 적고, notes 끝 "원격 허용은 적지 않음(기본값 false)"을 "원격 허용 true(사용자 개별 승인 2026-10-06)"로 바꿈. 다른 항목은 바꾸지 않음
+- 검증: YAML 파싱, id 70개 중복 0, 대상 path 존재, 대상 항목 classification public·classification_confirmed true·remote_allowed true. 백업: `Claude outputs/schema_backup/SOURCE_REGISTRY_v1.32_20261006.yaml`
+- 색인: reindex.failed 없음 확인 후 reindex.request(19:57) → 20:00 try 1/3 exit=0, 메타데이터만 갱신 8·변경 없음 1,300·실패 0, 세대 4, 보고서의 정제본 원격 허용 "예". MCP fetch('2:130113') remote_allowed true·id_checked true
+- 회귀 시험(MCP): search_case '2016-방송-08-0066' 12조각(방심위), '방미통위:2012-03-0021' 13조각(방통위만), '2012-03-0021' 19조각(방심위 먼저). 이 세션의 MCP 도구 설명문은 v1.9 문구로 표시됨(전 세션의 v1.6 표시 문제는 해소)
+- 확인: J:\AI 자료 0f79c9a는 18:18 push 완료(origin/main = main). `search.db.bak_20261006_1756`은 사용자가 직접 삭제함(사용자 답변 2026-10-06)
+- 정제본 대조 불일치 1,496건 검토(정제본은 고치지 않음): 방송사·프로그램명·방송일로 통계 CSV 행을 찾아 봄. 1,341건은 CSV에서 다른 번호로 찾았고 그중 1,251건은 소위 회차보다 앞선 회차 번호(전체회의 회차) 또는 다음 해 번호로, 최종 결과는 주의·경고·과징금·관계자 징계 등임 → "전체회의 최종 의결 번호와 달라서"라는 해석에 부합. 찾지 못한 155건은 2019년 상품판매방송(통계 CSV에 방송일시 칸이 비어 날짜 대조가 안 됨, 프로그램명만으로는 다른 번호로 찾아짐), 2026년(통계 CSV가 2026-19차까지만 수록, 소위 4월 말~9월 회의), 2018년 의결번호 칸에 날짜가 들어간 CSV 행 4건 등. 별도로 같은 일련번호인데 회차만 다른 13건(예: 2022-43-0385~0389 ↔ 2022-42, 2018-69-0641·0642 ↔ 2018-67)은 원문 또는 통계 CSV의 회차 표기 차이로 보이며 어느 쪽이 맞는지는 확인하지 않음(추측)
+- 커밋 대상(J:\AI 자료, Claude Code가 커밋): `SOURCE_REGISTRY.yaml`, `Claude outputs/schema_backup/SOURCE_REGISTRY_v1.32_20261006.yaml`, `0 wiki/log.md`. J:\MCP\ai-vault-mcp는 변경 없음
+- 커밋 메시지 초안: `schema: SOURCE_REGISTRY v1.33(방송소위 회의결과 정제본 remote_allowed true), log.md 정제본 대조 불일치 검토 기록`
