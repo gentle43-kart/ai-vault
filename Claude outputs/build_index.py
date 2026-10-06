@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 검색 DB(search.db) 색인기  v1.11 (2026-10-06)
+AI 자료창고 검색 DB(search.db) 색인기  v1.12 (2026-10-06)
+
+v1.12: 위치 정보·조회 id 세대·안전 재구축(보고서 5·10·7번, 설계안 작업 7). PARSER_VERSION 2.0.
+      ① 위치: Markdown 조각마다 파일의 실제 시작 줄(\n 기준)을 line_start에 기록한다(긴 조각을 자른 뒤 조각도 자기 줄).
+         CSV는 line_start = 파일의 실제 시작 줄(셀 안 줄바꿈 반영), 새 열 csv_row = 몇 번째 데이터 행인지.
+      ② 세대: meta.generation(실행마다 +1, --full은 이전 DB 값을 이어받음)과 chunks.gen(조각이 들어간 세대). MCP는 id를 '세대:chunk_id'로 쓴다.
+      ③ --full: 운영 DB를 지우지 않는다. data/search.db.building에 새로 만들고, 실패 파일이 없으면 VACUUM INTO로
+         정리본(.new)을 만들어 quick_check·행 수·표본 조회를 검증한 뒤 원본을 search.db.bak_날짜_시각으로 보관하고 교체한다.
+         교체가 막히면 .new를 남기고 끝나며, 'python build_index.py --swap-only'로 교체 단계만 다시 실행한다.
 
 v1.11: 색인 요청·실패 처리(보고서 3번, 설계안 작업 3).
       종료 코드: 0=성공, 1=실패 파일 1건 이상 또는 치명적 오류, 2=다른 색인이 실행 중이라 건너뜀(DB를 건드리지 않음).
@@ -52,6 +60,7 @@ import hashlib
 import io
 import os
 import re
+import shutil
 import sqlite3
 import sys
 import time
@@ -75,7 +84,7 @@ WIKI_ADMIN = {"index.md", "log.md", "_index.md"}          # 위키 관리용 노
 SECURITY_VALUES = ("public", "internal", "unknown")   # v1.10: 머리말 보안등급 허용 값
 TEXT_EXT = {".md", ".txt"}
 CSV_EXT = {".csv"}
-PARSER_VERSION = "1.9"    # 조각 나누기·의결번호·CSV 해석을 바꿀 때 올린다(올리면 다음 증분 색인에서 전체 재색인)
+PARSER_VERSION = "2.0"    # 조각 나누기·의결번호·CSV 해석을 바꿀 때 올린다(올리면 다음 증분 색인에서 전체 재색인)
 MAX_CHUNK = 1800          # 조각 최대 글자 수
 MIN_CHUNK = 200           # 이보다 짧은 조각은 다음 조각과 합친다
 
@@ -86,6 +95,7 @@ CASE_RE = re.compile(
 STRUCT_HEAD_RE = re.compile(r"^(?:\d{1,2}\s*\.|[가-하]\s*\.|제\s*\d+\s*차)")
 MEETING_RE = re.compile(r"^#\s+(.*(?:회의록|회의발언내용).*)$")
 CASE_HEAD_RE = re.compile(r"^#{1,6}\s*■\s*(.+)$")
+REFINED_CASE_HEAD_RE = re.compile(r"^제\s*\d{4}\s*-\s*[가-힣]+\s*-\s*\d{1,2}\s*-\s*\d{3,4}\s*호\s*\|")   # 정제본 안건 제목(파이프로 방송사·프로그램을 잇는다)
 HEAD_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 
 
@@ -193,24 +203,35 @@ def norm_case(s):
 # ─────────────────────────── Markdown 조각내기 ───────────────────────────
 def chunk_markdown(text):
     """(meeting, case, heading, line_start, text) 목록. case = parse_case() 결과 또는 None"""
-    lines = text.splitlines()
+    parts = text.splitlines(keepends=True)
+    lines = text.splitlines()   # 파서 동작은 종전과 같다(parts와 항목 수가 같다)
+    # 논리 줄(splitlines 기준) -> 파일의 실제 줄 번호(\n·\r\n·\r 기준). \x0c 등으로 나뉜 논리 줄은 같은 실제 줄에 있다
+    phys, cur = [], 1
+    for x in parts:
+        phys.append(cur)
+        cur += len(re.findall(r"\r\n|\r|\n", x[-2:])) if x.endswith(("\n", "\r")) else 0
     chunks = []
     meeting, case, heading = "", None, ""
     buf, buf_start = [], 1
 
     def flush():
         nonlocal buf
-        body = "\n".join(buf).strip()
+        raw = "\n".join(buf)
+        body = raw.strip()
         if body:
+            # 조각의 시작 줄: 앞쪽 공백·빈 줄을 뺀 만큼 아래로 내린다(논리 줄 번호로 세고 마지막에 실제 줄로 바꾼다)
+            cur_ln = buf_start + raw[:len(raw) - len(raw.lstrip())].count("\n")
             # 너무 긴 조각은 문단 경계에서 자른다
             while len(body) > MAX_CHUNK:
                 cut = body.rfind("\n", 0, MAX_CHUNK)
                 if cut < MAX_CHUNK // 2:
                     cut = MAX_CHUNK
-                chunks.append([meeting, case, heading, buf_start, body[:cut].strip()])
-                body = body[cut:].strip()
+                piece, rest = body[:cut], body[cut:]
+                chunks.append([meeting, case, heading, phys[min(cur_ln, len(phys)) - 1], piece.strip()])
+                cur_ln += piece.count("\n") + rest[:len(rest) - len(rest.lstrip())].count("\n")
+                body = rest.strip()
             if body:
-                chunks.append([meeting, case, heading, buf_start, body])
+                chunks.append([meeting, case, heading, phys[min(cur_ln, len(phys)) - 1], body])
         buf = []
 
     def chasu(t):
@@ -238,6 +259,8 @@ def chunk_markdown(text):
             ch = CASE_HEAD_RE.match(line)
             if ch:                              # ■ 제2019-방송-02-0019호<...>
                 case = parse_case(ch.group(1)) or case
+            elif h is not None and REFINED_CASE_HEAD_RE.match(title):   # v1.12: '### 제2023-방송-46-0516호 | 방송사 | 프로그램' (방송소위 회의결과 정제본)
+                case = parse_case(title) or case
             elif STRUCT_HEAD_RE.match(title):   # 가. / 5. 같은 구조 제목: 범위 번호가 있으면 적용, 없으면 연결 끊기
                 case = parse_case(title)
             # 그 밖의 제목(○ 위원명, ( 의견진술자 입장 ), 변환 과정에서 생긴 가짜 제목)은 직전 안건 유지
@@ -281,8 +304,20 @@ def find_col(header, keys):
 _last_header = {}
 
 
+def csv_rows_with_lines(text):
+    """(행 목록, 각 행의 파일상 시작 줄 목록). 셀 안의 줄바꿈이 있어도 시작 줄은 실제 줄 번호다."""
+    rd = csv.reader(io.StringIO(text))
+    rows, starts, prev = [], [], 0
+    for r in rd:
+        rows.append(r)
+        starts.append(prev + 1)
+        prev = rd.line_num
+    return rows, starts
+
+
 def read_csv_rows(path, text):
-    rows = list(csv.reader(io.StringIO(text)))
+    """(머리글, 데이터 행, 비고, 데이터 행별 시작 줄)"""
+    rows, starts = csv_rows_with_lines(text)
     hidx = None
     for i, r in enumerate(rows[:15]):
         hits = sum(1 for c in r if any(c.strip().startswith(k) for k in HEADER_KEYS))
@@ -293,14 +328,14 @@ def read_csv_rows(path, text):
     key = (os.path.dirname(path), group)
     if hidx is None:
         header = _last_header.get(key) or [f"col{i+1}" for i in range(max(len(r) for r in rows) if rows else 0)]
-        data = rows
+        data, dstarts = rows, starts
         header_note = "이전 part의 머리글 사용" if key in _last_header else "머리글 없음"
     else:
         header = [h.replace("\n", " ").strip() for h in rows[hidx]]
         _last_header[key] = header
-        data = rows[hidx + 1:]
+        data, dstarts = rows[hidx + 1:], starts[hidx + 1:]
         header_note = ""
-    return header, data, header_note
+    return header, data, header_note, dstarts
 
 
 ARTICLE_RE = re.compile(r"제\s*\d+\s*조(?:\s*의\s*\d+)?\s*\([^)]{1,40}\)")
@@ -311,7 +346,7 @@ EFFECTIVE_RE = re.compile(r"시행\s*(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.")
 def index_generic_csv(con, doc_id, text):
     """통계가 아닌 CSV. 앞 10행 중 '제n호'가 두 칸 이상 있는 행을 판 이름 머리글로 쓴다.
     조 제목(제n조(...))이 나오면 조각 제목으로 삼고, 다음 조 제목까지 이어 붙인다."""
-    rows = list(csv.reader(io.StringIO(text)))
+    rows, starts = csv_rows_with_lines(text)
     hidx, header = None, None
     for i, r in enumerate(rows[:10]):
         if sum(1 for c in r if EDITION_RE.search(c)) >= 2:
@@ -338,7 +373,7 @@ def index_generic_csv(con, doc_id, text):
         elif re.match(r"제\s*\d+\s*(장|절)", first):
             article = re.sub(r"\s+", " ", first)[:40]
         body = "\n".join(f"{header[i] if i < len(header) else f'col{i+1}'}: {c}" for i, c in enumerate(cells) if c)
-        insert_chunk(con, doc_id, n, "csv_row", "", None, article, seq, body)
+        insert_chunk(con, doc_id, n, "csv_row", "", None, article, starts[seq - 1], body, csv_row=seq - hidx - 1)
         n += 1
     return n, note
 
@@ -357,7 +392,7 @@ CREATE TABLE IF NOT EXISTS chunks(
   chunk_id INTEGER PRIMARY KEY,
   doc_id INTEGER, seq INTEGER, kind TEXT,
   meeting TEXT, case_no TEXT, case_prefix TEXT, num_from INTEGER, num_to INTEGER,
-  heading TEXT, line_start INTEGER);
+  heading TEXT, line_start INTEGER, csv_row INTEGER, gen INTEGER);
 CREATE INDEX IF NOT EXISTS ix_chunks_doc ON chunks(doc_id);
 CREATE INDEX IF NOT EXISTS ix_chunks_case ON chunks(case_prefix, num_from, num_to);
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
@@ -389,6 +424,18 @@ def struct_hash(typ, period_use, ns):
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16]
 
 
+CUR_GEN = 0   # 이번 실행의 색인 세대(main이 정한다). 새로 넣는 조각의 gen이 된다
+
+
+def migrate_chunks(con):
+    """v1.12: 기존 DB의 chunks에 csv_row·gen 열을 추가한다(옛 조각은 NULL. 값은 --full 재구축 때 채워진다)."""
+    have = {r[1] for r in con.execute("PRAGMA table_info(chunks)")}
+    for c in ("csv_row", "gen"):
+        if c not in have:
+            con.execute(f"ALTER TABLE chunks ADD COLUMN {c} INTEGER")
+    con.commit()
+
+
 def migrate_documents(con):
     """v1.9: 기존 DB의 documents에 증분 판정용 컬럼을 추가한다(이미 있으면 아무것도 하지 않음)."""
     have = {r[1] for r in con.execute("PRAGMA table_info(documents)")}
@@ -406,14 +453,14 @@ def delete_doc(con, doc_id):
     con.execute("DELETE FROM documents WHERE doc_id=?", (doc_id,))
 
 
-def insert_chunk(con, doc_id, seq, kind, meeting, case, heading, line_start, text, ns=None):
+def insert_chunk(con, doc_id, seq, kind, meeting, case, heading, line_start, text, ns=None, csv_row=None):
     label, prefix, na, nb = case if case else (None, None, None, None)
     if ns and prefix:  # 다른 기관(방통위 등)의 같은 형식 번호와 섞이지 않도록 접두부에 이름공간을 붙인다
         prefix, label = f"{ns}:{prefix}", f"{ns}:{label}"
     cur = con.execute(
-        "INSERT INTO chunks(doc_id,seq,kind,meeting,case_no,case_prefix,num_from,num_to,heading,line_start)"
-        " VALUES(?,?,?,?,?,?,?,?,?,?)",
-        (doc_id, seq, kind, meeting, label, prefix, na, nb, heading, line_start))
+        "INSERT INTO chunks(doc_id,seq,kind,meeting,case_no,case_prefix,num_from,num_to,heading,line_start,csv_row,gen)"
+        " VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+        (doc_id, seq, kind, meeting, label, prefix, na, nb, heading, line_start, csv_row, CUR_GEN))
     cid = cur.lastrowid
     con.execute("INSERT INTO chunks_fts(rowid,text,heading) VALUES(?,?,?)", (cid, text, heading or ""))
     return cid
@@ -505,7 +552,7 @@ def index_file(con, vault, rel, entry, stat):
     elif entry.get("type") != "statistics":
         n, note = index_generic_csv(con, doc_id, text)
     else:
-        header, data, note = read_csv_rows(full, text)
+        header, data, note, dstarts = read_csv_rows(full, text)
         cols = {k: find_col(header, v) for k, v in COLMAP.items()}
         period = parse_period(entry.get("period_use"))
         skipped = 0
@@ -528,7 +575,7 @@ def index_file(con, vault, rel, entry, stat):
                     if case:
                         break
             heading = " | ".join(x for x in (get("broadcaster"), get("program").split("\n")[0], get("result")) if x)
-            cid = insert_chunk(con, doc_id, seq, "csv_row", "", case, heading, seq + 1, body)
+            cid = insert_chunk(con, doc_id, seq, "csv_row", "", case, heading, dstarts[seq], body, csv_row=seq + 1)
             con.execute(
                 "INSERT INTO decisions VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                 (cid, doc_id, case[0] if case else None, case[1] if case else None, case[2] if case else None,
@@ -557,28 +604,196 @@ def acquire_lock(db_dir):
     return f
 
 
+# 재구축 검증용 표본: 이 번호의 조각이 옛 DB에 있었다면 새 DB에도 있어야 한다
+SAMPLES = {"2016-방송-08-0066": ("2016-방송-08", 66), "제2020-08-0064호": ("2020-08", 64),
+           "방통위:2012-03-0021": ("방통위:2012-03", 21)}
+
+
+class SwapError(Exception):
+    """재구축 검증·교체 실패. 운영 DB는 건드리지 않았거나 원래대로 되돌렸다."""
+
+
+def table_counts(path):
+    """검증용 요약(읽기 전용으로 연다): 표별 행 수, quick_check, 자료(registry_id)별 파일 수, 표본 조회, 세대."""
+    c = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        r = {t: c.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("documents", "chunks", "chunks_fts", "decisions")}
+        r["quick_check"] = c.execute("PRAGMA quick_check").fetchone()[0]
+        r["by_registry"] = dict(c.execute("SELECT registry_id, COUNT(*) FROM documents GROUP BY registry_id"))
+        r["samples"] = {k: c.execute("SELECT COUNT(*) FROM chunks WHERE case_prefix=? AND num_from<=? AND num_to>=?",
+                                     (pre, n, n)).fetchone()[0] for k, (pre, n) in SAMPLES.items()}
+        g = c.execute("SELECT value FROM meta WHERE key='generation'").fetchone()
+        r["generation"] = int(g[0]) if g else 0
+        return r
+    finally:
+        c.close()
+
+
+def read_generation(path):
+    """이전 DB의 색인 세대(없으면 0). 읽기 전용."""
+    if not os.path.exists(path):
+        return 0
+    try:
+        c = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            g = c.execute("SELECT value FROM meta WHERE key='generation'").fetchone()
+            return int(g[0]) if g else 0
+        finally:
+            c.close()
+    except (sqlite3.Error, ValueError):
+        return 0
+
+
+def verify_new(new, old, same_as=None):
+    """새 DB를 검증하고 (보고용 줄 목록)을 돌려준다. 문제가 있으면 SwapError."""
+    n = table_counts(new)
+    lines = [f"- 새 DB: documents {n['documents']:,} / chunks {n['chunks']:,} / chunks_fts {n['chunks_fts']:,} / decisions {n['decisions']:,} / 세대 {n['generation']}, quick_check {n['quick_check']}"]
+    if n["quick_check"] != "ok":
+        raise SwapError(f"quick_check 실패: {n['quick_check']}")
+    if n["chunks"] != n["chunks_fts"]:
+        raise SwapError(f"chunks({n['chunks']})와 chunks_fts({n['chunks_fts']}) 행 수가 다릅니다.")
+    if same_as is not None:
+        for t in ("documents", "chunks", "chunks_fts", "decisions"):
+            if n[t] != same_as[t]:
+                raise SwapError(f"정리본과 원본(.building)의 {t} 행 수가 다릅니다: {n[t]} / {same_as[t]}")
+        lines.append("- 정리본(VACUUM INTO)과 원본(.building)의 표별 행 수가 같음")
+    if old:
+        lost = [k for k, v in old["by_registry"].items() if v > 0 and n["by_registry"].get(k, 0) == 0]
+        if lost:
+            raise SwapError("옛 DB에는 있던 자료가 새 DB에서 0건입니다: " + ", ".join(lost))
+        diff = {k: (old["by_registry"].get(k, 0), n["by_registry"].get(k, 0)) for k in set(old["by_registry"]) | set(n["by_registry"])
+                if old["by_registry"].get(k, 0) != n["by_registry"].get(k, 0)}
+        lines.append("- 자료(registry_id)별 파일 수 옛 DB와 차이: " + (", ".join(f"{k} {a}→{b}" for k, (a, b) in sorted(diff.items())) if diff else "없음"))
+        bad = [k for k, v in old["samples"].items() if v > 0 and n["samples"].get(k, 0) == 0]
+        if bad:
+            raise SwapError("표본 조회가 새 DB에서 비었습니다: " + ", ".join(bad))
+    lines.append("- 표본 조회(새 DB 조각 수): " + ", ".join(f"{k} {v}" for k, v in n["samples"].items()))
+    return lines
+
+
+def _retry(fn, what, tries=3, wait=10):
+    """Windows에서 다른 프로세스가 파일을 열고 있으면 이름 변경이 거부될 수 있어 몇 번 다시 시도한다."""
+    last = None
+    for i in range(tries):
+        try:
+            return fn()
+        except OSError as e:
+            last = e
+            print(f"   {what} 실패({e}); {wait}초 뒤 다시 시도 ({i + 1}/{tries})", flush=True)
+            time.sleep(wait)
+    raise SwapError(f"{what} 실패: {last}")
+
+
+def swap_in(db, new_db):
+    """운영 DB를 백업 이름으로 바꾸고 새 DB를 그 자리에 놓는다. 되돌릴 수 없는 단계에서 실패하면 원래대로 복원한다. 보고용 줄을 돌려준다."""
+    if os.path.exists(db):
+        c = sqlite3.connect(db)                      # a. WAL을 본 파일에 반영
+        try:
+            c.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        finally:
+            c.close()
+    bak = f"{db}.bak_{datetime.now():%Y%m%d_%H%M}"
+    k = 2
+    while os.path.exists(bak):
+        bak = f"{db}.bak_{datetime.now():%Y%m%d_%H%M}_{k}"
+        k += 1
+    had_old = os.path.exists(db)
+    if had_old:
+        _retry(lambda: os.replace(db, bak), "운영 DB를 백업 이름으로 변경")   # b. 원본 DB 백업(이름 변경)
+    try:
+        for ext in ("-wal", "-shm"):                 # c. 이전 DB의 WAL이 새 DB에 적용되는 것을 막는다(v1.8과 같은 이유)
+            if os.path.exists(db + ext):
+                os.remove(db + ext)
+        os.replace(new_db, db)                       # d. 새 DB를 제자리에
+        chk = table_counts(db)                       # e. 교체 후 다시 검증
+        if chk["quick_check"] != "ok" or chk["chunks"] != chk["chunks_fts"]:
+            raise SwapError("교체 후 검증 실패")
+        c = sqlite3.connect(db)
+        try:
+            c.execute("PRAGMA journal_mode=WAL")     # VACUUM INTO 결과는 기본 저널이므로 종전처럼 WAL로 돌려 놓는다
+        finally:
+            c.close()
+    except Exception as e:                           # f. 실패하면 원래 DB로 복원
+        if had_old:
+            if os.path.exists(db):
+                os.replace(db, db + ".rejected")
+            os.replace(bak, db)
+        raise SwapError(f"교체 실패, 원래 DB로 복원함: {e}")
+    return [f"- 교체 완료: 이전 DB는 `{os.path.basename(bak)}`로 보관" if had_old else "- 교체 완료(이전 DB 없음)"]
+
+
+def finalize_full(args, build_db):
+    """--full 마무리: VACUUM INTO 정리본 → 검증 → 교체. 보고용 줄 목록을 돌려준다(실패하면 SwapError)."""
+    new_db = args.db + ".new"
+    old = table_counts(args.db) if os.path.exists(args.db) else None
+    for p in (new_db, new_db + "-wal", new_db + "-shm"):
+        if os.path.exists(p):
+            os.remove(p)
+    src = sqlite3.connect(build_db)
+    try:
+        src.execute("VACUUM INTO '" + new_db.replace("'", "''") + "'")
+    finally:
+        src.close()
+    built = table_counts(build_db)
+    lines = ["## 전체 재구축(--full) 결과", "", f"- 정리본: `{os.path.basename(new_db)}` ({os.path.getsize(new_db)/1e6:,.1f} MB, 작업본 {os.path.getsize(build_db)/1e6:,.1f} MB)"]
+    lines += verify_new(new_db, old, same_as=built)
+    for p in (build_db, build_db + "-wal", build_db + "-shm"):   # 검증을 통과한 정리본이 있으니 작업본은 지운다(교체가 막혀도 .new만 남는다)
+        if os.path.exists(p):
+            os.remove(p)
+    try:
+        lines += swap_in(args.db, new_db)
+    except SwapError as e:
+        if os.path.exists(new_db):
+            lines.append(f"- 교체 대기: `{os.path.basename(new_db)}`를 남겼습니다. 원인을 해결한 뒤 `python build_index.py --swap-only`")
+        raise SwapError(str(e) + "\n" + "\n".join(lines))
+    return lines
+
+
 def main():
     ap = argparse.ArgumentParser(description="AI 자료창고 검색 DB 색인기")
     ap.add_argument("--vault", default=DEFAULT_VAULT)
     ap.add_argument("--db", default=DEFAULT_DB)
-    ap.add_argument("--full", action="store_true", help="기존 DB를 지우고 전체 재색인")
+    ap.add_argument("--full", action="store_true", help="전체 재색인: search.db.building에 새로 만들어 검증한 뒤 교체(운영 DB는 백업으로 보관)")
+    ap.add_argument("--swap-only", action="store_true", help="이전 --full이 교체 단계에서 멈췄을 때 search.db.new를 검증하고 교체만 다시 실행")
     ap.add_argument("--registry", help="레지스트리 파일(기본: vault/SOURCE_REGISTRY.yaml). 시험용")
     args = ap.parse_args()
     lock = acquire_lock(os.path.dirname(os.path.abspath(args.db)))   # v1.11: 단일 실행 잠금(--full의 DB 삭제보다 먼저)
     started = datetime.now()
+    global CUR_GEN
 
     check_sqlite()
+    if args.swap_only:
+        new_db = args.db + ".new"
+        if not os.path.exists(new_db):
+            sys.exit(f"교체할 파일이 없습니다: {new_db}")
+        try:
+            old = table_counts(args.db) if os.path.exists(args.db) else None
+            out = ["## 교체만 다시 실행(--swap-only)", ""] + verify_new(new_db, old) + swap_in(args.db, new_db)
+        except SwapError as e:
+            print("교체 실패:", e)
+            sys.exit(1)
+        print("\n".join(out))
+        return
     reg_path = args.registry or os.path.join(args.vault, "SOURCE_REGISTRY.yaml")
     if not os.path.exists(reg_path):
         sys.exit(f"레지스트리를 찾을 수 없습니다: {reg_path}")
     reg = Registry(reg_path)
 
     os.makedirs(os.path.dirname(args.db), exist_ok=True)
+    work_db, prev_gen = args.db, 0
     if args.full:
-        for p in (args.db, args.db + "-wal", args.db + "-shm"):   # v1.8: 남은 WAL·SHM도 함께 지움
-            if os.path.exists(p):
-                os.remove(p)
-    con = sqlite3.connect(args.db)
+        # v1.12: 운영 DB는 건드리지 않고 .building에 새로 만든다(검색은 그동안 정상 동작). 디스크 여유를 먼저 확인한다
+        work_db = args.db + ".building"
+        prev_gen = read_generation(args.db)
+        size = os.path.getsize(args.db) if os.path.exists(args.db) else 2_000_000_000
+        free = shutil.disk_usage(os.path.dirname(os.path.abspath(args.db))).free
+        if free < size * 2.5 + 500_000_000:
+            sys.exit(f"디스크 여유 공간이 부족합니다: 여유 {free/1e9:,.1f} GB, 필요 약 {(size * 2.5 + 5e8)/1e9:,.1f} GB")
+        for base in (work_db, args.db + ".new"):   # 이전 시도의 남은 파일 정리
+            for ext in ("", "-wal", "-shm"):
+                if os.path.exists(base + ext):
+                    os.remove(base + ext)
+    con = sqlite3.connect(work_db)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("PRAGMA synchronous=NORMAL")
     cols = [r[1] for r in con.execute("PRAGMA table_info(chunks)")]
@@ -587,6 +802,12 @@ def main():
         sys.exit("DB 구조가 바뀌었습니다(v1.1). 'python build_index.py --full'로 다시 만들어 주세요.")
     con.executescript(SCHEMA)
     migrate_documents(con)
+    migrate_chunks(con)
+    # v1.12: 색인 세대. 실행마다 +1(--full은 이전 DB의 값을 이어받음). 이번 실행에서 넣는 조각의 gen이 된다
+    g = con.execute("SELECT value FROM meta WHERE key='generation'").fetchone()
+    CUR_GEN = (int(g[0]) if g else prev_gen) + 1
+    con.execute("INSERT OR REPLACE INTO meta VALUES('generation', ?)", (str(CUR_GEN),))
+    con.commit()
 
     t0 = time.time()
     seen, unlisted, report, failed = set(), [], [], []
@@ -687,7 +908,7 @@ def main():
              f"- 시작 {started:%Y-%m-%d %H:%M:%S} / 완료 {finished:%Y-%m-%d %H:%M:%S} (소요 {elapsed:,.0f}초)",
              f"- 결과: **{'실패 ' + str(len(failed)) + '건 있음 (exit 1)' if failed else '성공 (실패 0건)'}**",
              f"- 성공: 추가 {added} / 갱신 {updated} / 메타데이터만 갱신 {meta_only} / 변경 없음 {unchanged} / 삭제 {removed}; 실패 {len(failed)}",
-             f"- DB: `{args.db}` ({os.path.getsize(args.db)/1e6:,.1f} MB), WAL 정리: {wal_note}", "",
+             f"- DB: `{work_db}` ({os.path.getsize(work_db)/1e6:,.1f} MB), 세대 {CUR_GEN}, WAL 정리: {wal_note}", "",
              "## 레지스트리 항목별", "", "| registry_id | 파일 수 | 조각 수 | 원격 허용 |", "|---|---|---|---|"]
     lines += [f"| {r[0]} | {r[1]} | {r[2]} | {('예' if r[4] == r[1] else f'일부({r[4]}/{r[1]})') if r[3] else '아니오'} |" for r in stats]
     held = con.execute("SELECT path, classification FROM documents WHERE type='wiki' AND remote_allowed=0").fetchall()
@@ -701,8 +922,6 @@ def main():
     if unlisted:
         lines += ["", f"## 레지스트리에 없는 파일 ({len(unlisted)}개, 색인 제외)", ""] + [f"- `{u}`" for u in unlisted]
     rep_path = os.path.join(HERE, "data", "index_report.md")
-    with open(rep_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
     con.close()
     # v1.11: 실패 목록 파일(있으면 실패가 있다는 뜻이 되도록 0건이면 지운다)
     fail_path = os.path.join(os.path.dirname(os.path.abspath(args.db)), "index_failed.txt")
@@ -712,10 +931,27 @@ def main():
             f.writelines(f"{p}\t{m}\n" for p, m in failed)
     elif os.path.exists(fail_path):
         os.remove(fail_path)
+    swap_failed = False
+    if args.full:
+        if failed:
+            lines += ["", "## 전체 재구축(--full) 결과", "", "- 실패 파일이 있어 교체하지 않았습니다. 운영 DB는 그대로입니다."]
+            for ext in ("", "-wal", "-shm"):
+                if os.path.exists(work_db + ext):
+                    os.remove(work_db + ext)
+        else:
+            try:
+                lines += [""] + finalize_full(args, work_db)
+            except SwapError as e:
+                swap_failed = True
+                lines += ["", "## 전체 재구축(--full) 결과", "", f"- **교체하지 않았습니다**: {e}"]
+                print(f"재구축 검증·교체 실패: {e}", flush=True)
+    with open(rep_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
     print("\n".join(lines[:7]))
     print(f"\n보고서: {rep_path}")
     if failed:
         print(f"실패 {len(failed)}건: {fail_path}", flush=True)
+    if failed or swap_failed:
         sys.exit(1)
 
 

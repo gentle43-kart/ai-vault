@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 MCP 서버 v1.7 (2026-10-06) - search.db 읽기 전용 검색 서버
+AI 자료창고 MCP 서버 v1.9 (2026-10-06) - search.db 읽기 전용 검색 서버
+  v1.9: 조회 id를 '세대:chunk_id'(예: 57:123456)로 바꿨다. 세대(chunks.gen)는 조각이 DB에 들어간 색인 세대라서, 재색인으로
+        바뀐 조각의 옛 id는 fetch가 오류로 알린다(종전에는 오류 없이 다른 조각이 나올 수 있었다). 옛 형식의 숫자 id는 받아 주되
+        metadata.id_checked=false를 붙인다(전환 기간). fetch metadata에 csv_row(CSV일 때)를 추가했고, line은 파일의 실제 줄이다.
+        조회가 끝나면 DB 연결을 닫는다(종전에는 `with` 문이 연결을 닫지 않아 서버가 살아 있는 동안 search.db를 계속 쥐고 있어
+        Windows에서 --full 교체(이름 변경)가 막혔다).
+        gen 열이 없는 옛 DB에서도 동작한다(id는 숫자 그대로). 색인기 v1.12(--full 재구축)로 DB를 바꾼 뒤에는 Claude 데스크톱 재시작이 필요하다.
+  v1.8: search_case 기관 약칭에 옛 이름·현 이름 별칭 추가(방심위=방미심위→이름공간 없음, 방통위=방미통위→'방통위'; 사용자 결정 2026-10-06).
+        별칭 표(CASE_ALIASES)는 이 파일 안에 두며, 레지스트리에만 있는 이름공간은 그 값 자체를 접두어로 받는다.
+        결과 항목에 namespace(방심위·방통위) 필드를 추가한다. 접두어 없는 번호는 방심위 조각을 먼저 정렬한다(v1.6 순서 유지).
+        v1.7의 다기관 표시(title 앞 '(기관)'·metadata.institution)는 namespace 필드로 대체했다.
   v1.7: search_case가 '기관:번호'(예: 방통위:2012-03-0021)를 받아 그 기관 조각만 조회한다. 허용 기관은
         SOURCE_REGISTRY.yaml의 case_namespace 값이며, 미지원 접두어는 허용 값을 안내하는 오류로 답한다.
         접두어 없는 번호가 여러 기관에 걸리면 결과 title 앞에 (기관)을, 각 항목에 metadata.institution을 붙인다.
@@ -36,6 +46,7 @@ AI 자료창고 MCP 서버 v1.7 (2026-10-06) - search.db 읽기 전용 검색 �
     python mcp_server.py --remote-extra-ids notion_notes,law_budget   # remote 범위 + 승인된 internal 항목(v1.4)
 """
 import argparse
+from contextlib import closing
 import os
 import re
 import sqlite3
@@ -161,6 +172,22 @@ def _con():
     return c
 
 
+_gen_ok = None
+
+
+def _gen_col(con):
+    """SELECT에 넣을 gen 열 식. v1.12 이전 DB(gen 열 없음)에서도 서버가 동작하도록 한다."""
+    global _gen_ok
+    if _gen_ok is None:
+        _gen_ok = any(r[1] == "gen" for r in con.execute("PRAGMA table_info(chunks)"))
+    return "c.gen AS gen" if _gen_ok else "NULL AS gen"
+
+
+def _mkid(r):
+    """조회 id: '세대:chunk_id'(v1.9). 세대는 조각이 DB에 들어간 색인 세대라, 재색인으로 바뀐 조각의 옛 id를 가려낸다."""
+    return f"{r['gen']}:{r['chunk_id']}" if r["gen"] is not None else str(r["chunk_id"])
+
+
 _url_cache = {}
 
 
@@ -234,41 +261,50 @@ def search(query: str, limit: int = 10, kind: str = "", registry_id: str = "", o
     base = f"""FROM chunks_fts JOIN chunks c ON c.chunk_id = chunks_fts.rowid
               JOIN documents d ON d.doc_id = c.doc_id
               WHERE {' AND '.join(where)}"""
-    with _con() as con:
+    with closing(_con()) as con:
         total = con.execute(f"SELECT COUNT(*) {base}", params).fetchone()[0]
-        rows = con.execute(f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start
+        rows = con.execute(f"""SELECT c.chunk_id, {_gen_col(con)}, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start
                               {base} ORDER BY {order} LIMIT ? OFFSET ?""", params + [limit, offset]).fetchall()
-    return _page([{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)} for r in rows], total, offset, limit)
+    return _page([{"id": _mkid(r), "title": _title(r), "url": _url(r)} for r in rows], total, offset, limit)
+
+
+_ID_RE = re.compile(r"^\s*(?:(\d+)\s*:\s*)?(\d+)\s*$")
 
 
 @mcp.tool(annotations=RO, structured_output=True)
 def fetch(id: str) -> dict[str, Any]:
-    """search 결과의 id로 조각 전문과 출처(파일 경로·줄 번호·자료 종류)를 가져온다."""
-    try:
-        cid = int(id)
-    except (TypeError, ValueError):
-        raise ValueError("id는 search 결과의 숫자 id여야 합니다.")
-    with _con() as con:
-        r = con.execute(f"""SELECT c.chunk_id, c.meeting, c.case_no, c.heading, c.line_start,
+    """search·search_case 결과의 id('세대:번호' 형식)로 조각 전문과 출처(파일 경로·줄 번호·자료 종류)를 가져온다.
+    재색인으로 내용이 바뀐 조각의 옛 id는 오류로 알리니 다시 검색한다. 옛 형식의 숫자 id는 받아 주지만
+    세대를 확인할 수 없어 metadata.id_checked가 false로 나온다."""
+    m = _ID_RE.match(str(id) if id is not None else "")
+    if not m:
+        raise ValueError("id는 search 결과의 id(예: '57:123456')여야 합니다.")
+    gen = int(m.group(1)) if m.group(1) is not None else None
+    cid = int(m.group(2))
+    with closing(_con()) as con:
+        gcol = _gen_col(con)
+        extra = ", c.csv_row" if gcol.startswith("c.gen") else ", NULL AS csv_row"
+        r = con.execute(f"""SELECT c.chunk_id, {gcol}{extra}, c.meeting, c.case_no, c.heading, c.line_start,
                                   d.path, d.registry_id, d.type, d.layer, d.classification, d.remote_allowed, f.text
                            FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
                            JOIN chunks_fts f ON f.rowid = c.chunk_id
                            WHERE c.chunk_id = ? AND {SCOPE_SQL}""", (cid,)).fetchone()
     if not r:
-        raise ValueError("해당 조각이 없거나, 현재 조회 범위(" + SCOPE + ")에서 제공하지 않는 자료입니다.")
-    return {
-        "id": str(r["chunk_id"]),
-        "title": _title(r),
-        "text": r["text"],
-        "url": _url(r),
-        "metadata": {
-            "path": r["path"], "line": r["line_start"], "registry_id": r["registry_id"],
-            "type": r["type"], "layer": r["layer"], "classification": r["classification"],
-            "remote_allowed": bool(r["remote_allowed"]), "scope": SCOPE,
-            "meeting": r["meeting"] or "", "case_no": r["case_no"] or "",
-            "note": "변환본 조각이다. 결론을 좌우하는 내용은 원본·공식 원문으로 확인해야 한다.",
-        },
+        raise ValueError("해당 조각이 없거나, 현재 조회 범위(" + SCOPE + ")에서 제공하지 않는 자료입니다. 재색인으로 바뀌었을 수 있으니 다시 검색해 주세요.")
+    if gen is not None and r["gen"] is not None and gen != r["gen"]:
+        raise ValueError("재색인으로 바뀐 조각입니다(id의 세대가 현재와 다릅니다). 다시 검색해 주세요.")
+    checked = gen is not None and r["gen"] is not None
+    meta = {
+        "path": r["path"], "line": r["line_start"], "registry_id": r["registry_id"],
+        "type": r["type"], "layer": r["layer"], "classification": r["classification"],
+        "remote_allowed": bool(r["remote_allowed"]), "scope": SCOPE,
+        "meeting": r["meeting"] or "", "case_no": r["case_no"] or "",
+        "id_checked": checked,
+        "note": "변환본 조각이다. 결론을 좌우하는 내용은 원본·공식 원문으로 확인해야 한다.",
     }
+    if r["csv_row"] is not None:
+        meta["csv_row"] = r["csv_row"]   # CSV: 데이터 행 순번(line은 파일의 실제 줄)
+    return {"id": _mkid(r), "title": _title(r), "text": r["text"], "url": _url(r), "metadata": meta}
 
 
 _NS_INPUT_RE = re.compile(r"^\s*([^\s:：\d][^\s:：]*)\s*[:：]\s*(.+)$", re.S)
@@ -297,7 +333,7 @@ def _case_namespaces():
     except Exception as e:  # 레지스트리를 못 읽는 것이 검색 중단 사유는 아니다
         print(f"[ai-vault] 레지스트리의 case_namespace를 읽지 못했습니다: {e}", file=sys.stderr)
     if not found:
-        with _con() as con:
+        with closing(_con()) as con:
             found = {r[0] for r in con.execute(
                 "SELECT DISTINCT substr(case_prefix, 1, instr(case_prefix, ':') - 1) FROM chunks WHERE case_prefix LIKE '%:%'")}
     _ns_cache = sorted(found)
@@ -350,16 +386,16 @@ def search_case(case_no: str, limit: int = 20, offset: int = 0) -> dict[str, Any
         prefixes = [f"{ns}:{prefix}"]
     where = f"{SCOPE_SQL} AND c.case_prefix IN ({','.join('?' * len(prefixes))}) AND c.num_from <= ? AND c.num_to >= ?"
     params = prefixes + [nb, na]
-    with _con() as con:
+    with closing(_con()) as con:
         total = con.execute(f"""SELECT COUNT(*) FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
                                WHERE {where}""", params).fetchone()[0]
         # 이름공간 없는 조각(방심위)을 먼저 둔다: 접두어 없는 입력에서도 기존 번호의 v1.6 순서가 유지된다
-        rows = con.execute(f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.case_prefix, c.heading, c.line_start
+        rows = con.execute(f"""SELECT c.chunk_id, {_gen_col(con)}, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.case_prefix, c.heading, c.line_start
                               FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
                               WHERE {where}
                               ORDER BY (instr(c.case_prefix, ':') > 0), c.kind DESC, d.path, c.seq LIMIT ? OFFSET ?""",
                             params + [limit, offset]).fetchall()
-    results = [{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r), "namespace": _org(r["case_prefix"])} for r in rows]
+    results = [{"id": _mkid(r), "title": _title(r), "url": _url(r), "namespace": _org(r["case_prefix"])} for r in rows]
     return _page(results, total, offset, limit)
 
 

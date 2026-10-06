@@ -1825,3 +1825,22 @@ type: log
 - 동기화: Claude outputs의 build_index.py·mcp_server.py·ai-vault-mcp_README.md·README.md를 MCP 원본과 SHA-256 일치 확인
 - 참고: J:\MCP\ai-vault-mcp\Claude outputs\ai-vault_설계안_작업2·3·7_2026-10-06.md는 코워크가 만든 파일이며 커밋하지 않았음(작업 7 설계 참고용)
 - 커밋: Claude Code가 수행(MCP 저장소 dcab80e, 40e53b5 / J:\AI 자료는 이 항목과 사본 동기화)
+
+## [2026-10-06] ingest | 방송소위 회의결과 정제본 8개(2018~2024·2026) 새 변환본 추가 | Claude Sonnet 5.5
+- 승인: 사용자 2026-10-06 "작업 7, 8 진행해"(방향은 2026-10-06 사용자 승인. 회의결과 원래 판은 색인 제외하고 안건 단위 정제본을 검색 대상으로 함)
+- 원본(변경 없음): `1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과/방송소위_회의결과_{2018~2024,2026}년.md` 8개. 변환본(새 파일): `1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과_정제본/방송소위_회의결과_{연도}_정제.md` 8개(합계 약 11MB). 도구: `Claude outputs/refine_subcommittee_results.py` v1.0(파이썬, 요약·수정 없이 논의내용 원문 줄을 그대로 두고 쪽 머리의 표 머리 줄·쪽 표시 주석만 뺌)
+- 형식: 회의마다 `## {연도}년 제n차 방송심의소위원회 회의 결과 — {날짜}`, 안건마다 `### 제2023-방송-46-0516호 | 방송사 | 프로그램명` 아래에 안건구분·방송일시·인지·소위 논의결과·표결 분포·적용조항·논의내용·원본 PDF 쪽 필드. 원문에는 한 줄 표 판과 칸마다 줄이 풀린 판, 숫자가 줄 중간에서 끊긴 번호(예: `제2025-16-024`/`1호`), 2025년부터 분야 표기 없는 번호(`제2025-16-0241호`)가 섞여 있어 모두 처리함
+- 점검(AGENTS.md 6.7 4): 회의 361회·안건 5,109건(2018 1,176 / 2019 1,460 / 2020 626 / 2021 247 / 2022 576 / 2023 664 / 2024 170 / 2026 190). 회의별 "상정안건 총 n건"과 안건 수 일치 359/361회. 불일치 2회는 원문 자체의 불일치(2022년 제42차 머리·처리 요약 합계 22건/안건 목록 23건, 2023년 제36차 21건/23건)로 원문 그대로 둠. 의결번호 형식 오류 0, 같은 회의 안 번호 중복 0, 표 머리 줄 잔여 0
+- 통계 CSV 대조(`방송심의_전체통합(120101-260622).csv`+`△26.01.-08.csv`, 분야 표기를 뺀 연도-회차-번호 기준): 전체 3,613/5,109(70.7%). 소위 단계에서 종결되는 결과(권고·의견제시·문제없음)는 2,652/2,693(98.5%), 의견진술 49.3%, 의결보류 63.1%, 주의 4.6%, 경고 1.8%, 전체회의 상정 15.6%로 낮음. 소위 결과가 최종 의결이 아니거나(전체회의 의결번호·후속 회의 번호로 CSV에 올라옴) 법정제재는 전체회의에서 의결하기 때문으로 보이나 개별 확인은 하지 않음. 불일치 목록 1,496건은 `python "Claude outputs/refine_subcommittee_results.py" --check`로 출력
+- 검색 시험(스크래치 레지스트리·DB 사본): 정제본 8개 6,087조각, `search_case('제2023-방송-46-0516호')`가 정제본 조각을 찾고 fetch가 안건 전문을 돌려줌. 이를 위해 색인기 조각기가 `### 제…호 | …` 제목을 안건으로 인식하게 함(색인기 v1.12, 기존 자료 조각은 전부 동일 확인)
+- 승인 대기: SOURCE_REGISTRY에 정제본 새 id(searchable true, ingest search_only, type meeting_minutes, 보안등급 기본값)를 추가하고 `minutes_broadcast_results` notes에 정제본 id를 적는 일(①등급, 대조율 보고 뒤). 등록 전에는 정제본이 검색 DB에 없음
+- 커밋: 하지 않음(`1 documents_md`는 git 추적 대상이 아님). `Claude outputs/refine_subcommittee_results.py`는 아래 setup 항목과 함께 Claude Code가 커밋
+
+## [2026-10-06] setup | 색인기 v1.12·MCP 서버 v1.9(위치 정보·id 세대·안전 재구축), 운영 DB 교체 대기 | Claude Sonnet 5.5
+- 승인: 사용자 2026-10-06 "작업 7, 8 진행해"(코워크 설계안의 C 세대 방식, D 옛 id 허용, 3GB 이상 디스크 확인 포함)
+- 색인기 v1.12(PARSER_VERSION 2.0): ① Markdown 조각의 line_start를 파일의 실제 줄로(종전에는 약 5.6만 조각이 어긋남), CSV는 실제 시작 줄과 csv_row 분리 ② meta.generation·chunks.gen, MCP id `세대:chunk_id` ③ `--full`은 search.db.building에 새로 만들고 VACUUM INTO 정리본을 quick_check·표별 행 수·자료별 파일 수·표본 조회로 검증한 뒤 원본을 `search.db.bak_날짜_시각`으로 보관하고 교체, 막히면 `.new`를 남기고 `--swap-only`로 재개. MCP 서버 v1.9: id 세대 확인(틀린 세대는 오류, 옛 숫자 id는 id_checked false), fetch에 csv_row, gen 열이 없는 옛 DB에서도 동작, 조회 뒤 DB 연결을 닫도록 수정(종전 `with` 문이 연결을 닫지 않아 서버가 `search.db`를 계속 쥐고 있었음)
+- 시험: 실제 자료 Markdown 109,749조각 시작 줄 전부 일치·내용 v1.11과 동일, 운영 DB 사본에서 `--full` 170초 통과, 실패 파일 시 미교체·교체 막힘 시 `.new` 보존·교체 후 검증 실패 시 복원·`--swap-only` 정상, 새 DB에서 MCP 총 건수·제목 순서·새 id·옛 id·틀린 세대·줄 번호 실측 통과
+- 운영 DB: 17:47 `--full` 재구축·검증 통과(1,300파일, 124,443조각, 정리본 930MB)했으나 교체 단계에서 Claude 데스크톱의 mcp_server.py 프로세스 2개(PID 13580, 8264)가 `search.db`를 열고 있어 이름 변경이 막혀 `data\search.db.new`를 남기고 중단. 운영 `search.db`와 `search.db.bak_20260928c`는 그대로. 교체는 서버 종료 뒤 `python build_index.py --swap-only`
+- 주의: 교체 전에는 `reindex.request`를 만들지 않는다(색인기 v1.12의 PARSER_VERSION이 달라 옛 DB 전체가 제자리 재색인되어 `.new`와 어긋남)
+- 동기화: Claude outputs의 build_index.py·mcp_server.py·README 2개를 MCP 원본과 SHA-256 일치 확인. MCP 저장소 커밋 e0643a7, aadeb6d
+- 커밋: Claude Code가 수행(MCP 저장소 e0643a7·aadeb6d, J:\AI 자료는 이 항목·사본·refine_subcommittee_results.py)
