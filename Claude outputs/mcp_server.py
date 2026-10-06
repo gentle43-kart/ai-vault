@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 MCP 서버 v1.6 (2026-10-06) - search.db 읽기 전용 검색 서버
+AI 자료창고 MCP 서버 v1.7 (2026-10-06) - search.db 읽기 전용 검색 서버
+  v1.7: search_case가 '기관:번호'(예: 방통위:2012-03-0021)를 받아 그 기관 조각만 조회한다. 허용 기관은
+        SOURCE_REGISTRY.yaml의 case_namespace 값이며, 미지원 접두어는 허용 값을 안내하는 오류로 답한다.
+        접두어 없는 번호가 여러 기관에 걸리면 결과 title 앞에 (기관)을, 각 항목에 metadata.institution을 붙인다.
+        한 기관에만 걸리면 v1.6과 같은 응답이다. 배경: '방통위:2012-03-0021'이 방심위 조각을 돌려준 결함(보고서 1번).
   v1.6: search·search_case 응답에 total(일치하는 전체 조각 수)·returned·offset·limit·truncated 추가,
         offset 인자 추가(이어서 조회), 도구 설명에 limit 상한(MAX_LIMIT 20)과 잘림 확인 안내 추가.
         results 항목은 v1.5와 같다. offset 기본값 0이면 v1.5와 같은 결과가 나온다.
@@ -267,25 +271,84 @@ def fetch(id: str) -> dict[str, Any]:
     }
 
 
+_NS_INPUT_RE = re.compile(r"^\s*([^\s:：\d][^\s:：]*)\s*[:：]\s*(.+)$", re.S)
+BASE_ORG = "방심위"  # 이름공간이 없는 번호(색인기 case_namespace 미지정 항목)의 기관 표시
+_ns_cache = None
+
+
+def _case_namespaces():
+    """허용 이름공간 = SOURCE_REGISTRY.yaml의 case_namespace 값(색인기 insert_chunk가 접두부에 붙이는 값).
+    레지스트리를 읽지 못하면 DB에 실제 저장된 이름공간으로 대신한다."""
+    global _ns_cache
+    if _ns_cache is not None:
+        return _ns_cache
+    found = set()
+    try:
+        import yaml
+        with open(os.path.join(VAULT, "SOURCE_REGISTRY.yaml"), encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        defaults = data.get("defaults") or {}
+        if defaults.get("case_namespace"):
+            found.add(str(defaults["case_namespace"]))
+        found |= {str(s["case_namespace"]) for s in data.get("sources", []) if s.get("case_namespace")}
+    except Exception as e:  # 레지스트리를 못 읽는 것이 검색 중단 사유는 아니다
+        print(f"[ai-vault] 레지스트리의 case_namespace를 읽지 못했습니다: {e}", file=sys.stderr)
+    if not found:
+        with _con() as con:
+            found = {r[0] for r in con.execute(
+                "SELECT DISTINCT substr(case_prefix, 1, instr(case_prefix, ':') - 1) FROM chunks WHERE case_prefix LIKE '%:%'")}
+    _ns_cache = sorted(found)
+    return _ns_cache
+
+
+def _org(prefix):
+    return prefix.split(":", 1)[0] if prefix and ":" in prefix else BASE_ORG
+
+
 @mcp.tool(annotations=RO, structured_output=True)
 def search_case(case_no: str, limit: int = 20, offset: int = 0) -> dict[str, Any]:
     """의결번호(예: 2016-방송-08-0066, 제2020-08-0064호)로 자료 조각을 찾는다(조회 범위는 서버 설정을 따른다).
+    기관 구분: 형식이 같은 다른 기관 번호가 있어 '방통위:2012-03-0021'처럼 앞에 '기관:'을 붙이면 그 기관 조각만 돌려준다.
+    붙이지 않으면 방심위 번호와 다른 기관 번호를 함께 찾으며, 두 기관 이상이 걸리면 결과 제목과 metadata.institution에 기관을 표시한다.
     limit 최대 20(초과분은 잘림). 응답의 total·returned·truncated를 확인하고, truncated가 true이면 offset을 올려 이어서 조회한다."""
-    c = parse_case(case_no or "")
+    raw = case_no or ""
+    ns = None
+    m = _NS_INPUT_RE.match(raw)
+    if m:
+        ns, raw = m.group(1), m.group(2)
+        allowed = _case_namespaces()
+        if ns not in allowed:
+            raise ValueError(f"지원하지 않는 기관 접두어: {ns}. 허용 값: {', '.join(allowed) or '(없음)'}. 접두어 없이 번호만 입력해도 된다.")
+    c = parse_case(raw)
     if not c:
-        raise ValueError("의결번호 형식을 인식하지 못했습니다. 예: 2026-방송-02-0003")
+        raise ValueError("의결번호 형식을 인식하지 못했습니다. 예: 2026-방송-02-0003, 방통위:2012-03-0021")
     _, prefix, na, nb = c
     limit = max(1, min(int(limit), MAX_LIMIT))
     offset = max(0, int(offset))
-    where = f"{SCOPE_SQL} AND c.case_prefix = ? AND c.num_from <= ? AND c.num_to >= ?"
+    if ns:
+        prefixes = [f"{ns}:{prefix}"]
+    else:
+        prefixes = [prefix] + [f"{n}:{prefix}" for n in _case_namespaces()]
+    where = f"{SCOPE_SQL} AND c.case_prefix IN ({','.join('?' * len(prefixes))}) AND c.num_from <= ? AND c.num_to >= ?"
+    params = prefixes + [nb, na]
     with _con() as con:
         total = con.execute(f"""SELECT COUNT(*) FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
-                               WHERE {where}""", (prefix, nb, na)).fetchone()[0]
-        rows = con.execute(f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.heading, c.line_start
+                               WHERE {where}""", params).fetchone()[0]
+        orgs = [r[0] for r in con.execute(f"""SELECT DISTINCT c.case_prefix FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
+                                             WHERE {where}""", params)]
+        rows = con.execute(f"""SELECT c.chunk_id, d.path, d.registry_id, d.classification, c.meeting, c.case_no, c.case_prefix, c.heading, c.line_start
                               FROM chunks c JOIN documents d ON d.doc_id = c.doc_id
                               WHERE {where}
-                              ORDER BY c.kind DESC, d.path, c.seq LIMIT ? OFFSET ?""", (prefix, nb, na, limit, offset)).fetchall()
-    return _page([{"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)} for r in rows], total, offset, limit)
+                              ORDER BY c.kind DESC, d.path, c.seq LIMIT ? OFFSET ?""", params + [limit, offset]).fetchall()
+    mixed = len({_org(p) for p in orgs}) > 1  # 여러 기관에 걸릴 때만 표시(한 기관이면 v1.6과 같은 응답)
+    results = []
+    for r in rows:
+        item = {"id": str(r["chunk_id"]), "title": _title(r), "url": _url(r)}
+        if mixed:
+            item["title"] = f"({_org(r['case_prefix'])}) " + item["title"]
+            item["metadata"] = {"institution": _org(r["case_prefix"])}
+        results.append(item)
+    return _page(results, total, offset, limit)
 
 
 def main():

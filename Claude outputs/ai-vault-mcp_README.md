@@ -1,9 +1,10 @@
 # ai-vault-mcp
 
-AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.6)가 있습니다(색인기 v1.8, 검색기 v1.2).
+AI 자료창고(J:\AI 자료)의 검색 DB와, 나중에 붙일 MCP 서버를 두는 폴더입니다. 검색 DB와 읽기 전용 MCP 서버(mcp_server.py v1.7)가 있습니다(색인기 v1.8, 검색기 v1.2).
 
 ## 변경 이력
 
+- v1.13 (2026-10-06, Claude): mcp_server.py v1.7: `search_case`가 `기관:번호`(예: `방통위:2012-03-0021`)를 받아 그 기관 조각만 조회한다. 종전에는 접두부만 비교해 이름공간을 버려서 `방통위:2012-03-0021`이 방심위 조각을 돌려줬다(색인기는 `방통위:2012-03`으로 저장). 허용 기관은 SOURCE_REGISTRY의 `case_namespace` 값이며 미지원 접두어는 허용 값을 알리는 오류가 난다(전각 콜론 `：`도 받음). 접두어 없는 번호는 방심위와 다른 기관 번호를 함께 찾고, 두 기관 이상이 걸리면 결과 제목 앞에 `(기관)`, 항목에 `metadata.institution`을 붙인다(한 기관만 걸리면 v1.6과 같은 응답). 시험: DB mode=ro, 기존 방심위 번호·search·fetch 결과가 v1.6과 같음(scope all·remote). DB·색인 변경 없음. 적용하려면 Claude 데스크톱 재시작 필요.
 - v1.12 (2026-10-06, Claude): mcp_server.py v1.6: `search`·`search_case` 응답에 `total`(일치하는 전체 조각 수)·`returned`·`offset`·`limit`·`truncated`를 추가하고, `offset` 인자(기본 0)로 이어서 조회할 수 있게 했다. 도구 설명에 limit 최대 20(초과분은 잘림)과 truncated 확인 안내를 넣었다. `results` 항목과 순서는 v1.5와 같다(offset 이어 조회가 흔들리지 않도록 동점은 chunk_id로 정렬). 상한 20(MAX_LIMIT)은 그대로. 배경: 20건 상한에서 잘린 위키 검색 결과를 "일치 항목 전체"로 오판한 사례. total은 페이지 수가 아니라 조각 수다. DB·색인 변경 없음.
 - v1.11 (2026-10-06, Claude): mcp_server.py v1.5: `search`에 선택 인자 `kind`(자료 묶음)와 `registry_id`(정확한 id 목록) 추가. 둘 다 기본값은 빈 값이며 생략하면 v1.4와 결과가 같다. 값은 SQL에 직접 넣지 않고 `?` 매개변수로 넘기고, 틀린 값은 오류로 사용 가능한 값을 알려 준다. kind 묶음은 SOURCE_REGISTRY의 type을 기준으로 한다(보안등급·법령 여부 기준이 아님). `search_case`는 의결번호로 이미 좁혀지므로 바꾸지 않았다. DB·색인 변경 없음(재색인 불필요).
 - v1.10 (2026-10-05, Claude): build_index.py v1.8: 색인 성공 후 `PRAGMA wal_checkpoint(TRUNCATE)`로 `search.db-wal`을 비우고, 결과를 `index_report.md`의 "WAL 정리" 줄에 적는다(완료/보류/오류). MCP 서버 등 다른 연결이 읽기 중이면 보류될 수 있으며, 보류되어도 exit=0이다. 다음 색인 때 다시 시도한다. `--full`은 `search.db`와 함께 남은 `search.db-wal`·`search.db-shm`도 지운다(이전 DB의 WAL이 새 DB에 적용되어 손상되는 것을 막음). DB 구조 변경 없음(전체 재색인 불필요).

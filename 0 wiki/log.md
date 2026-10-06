@@ -1799,3 +1799,10 @@ type: log
 - 백업: `Claude outputs/schema_backup/AGENTS_v1.24_20261006.md`, `Claude outputs/schema_backup/CLAUDE_20261006_3.md`
 - 커밋: 하지 않음(코워크). 커밋 대상: AGENTS.md, AGENTS_통계기준.md, CLAUDE.md, 0 wiki/log.md, Claude outputs/schema_backup/AGENTS_v1.24_20261006.md, Claude outputs/schema_backup/CLAUDE_20261006_3.md
 - 커밋 메시지 초안: schema: AGENTS.md v1.25 7.1절 통계 대조 기준을 AGENTS_통계기준.md로 분리(③ 승인), CLAUDE.md 안내 추가
+
+## [2026-10-06] schema | 코워크 미커밋 항목 커밋, MCP 서버 v1.7(search_case 이름공간 조회) | Claude Sonnet 5.5
+- 커밋(J:\AI 자료): 코워크 2026-10-06 fix·lint·schema 항목을 3개로 나눠 커밋함(fix 제25·21조 정정 / 출처 경로 89페이지 정정 / 스키마 AGENTS v1.25·REGISTRY v1.30·CLAUDE.md와 log.md·백업). `0 wiki/@clippings`의 미추적 클리핑은 목록 밖이라 넣지 않음
+- 코드(보고서 1번): mcp_server.py v1.6 → v1.7. search_case가 `기관:번호`를 파싱해 접두부에 이름공간을 붙여 조회. 허용 기관은 SOURCE_REGISTRY의 case_namespace(현재 방통위). 미지원 접두어는 허용 값을 안내하는 ValueError. 접두어 없는 번호는 방심위+다른 기관을 함께 찾고, 두 기관 이상이면 title 앞 `(기관)`·metadata.institution 표시
+- 시험(search.db mode=ro, scope all·remote): '방통위:2012-03-0021' 13조각(방통위만), '2012-03-0021' 19조각(방심위 6+방통위 13, 기관 표시), 기존 번호 2016-방송-08-0066·제2020-08-0064호·2023-방송-46-0516·2019-방송-01-0001~0003·2026-방송-02-0003과 search·fetch 결과는 v1.6과 동일. DB·색인 변경 없음(재색인 불필요)
+- 동기화: Claude outputs/mcp_server.py·ai-vault-mcp_README.md·README.md를 MCP 폴더 원본과 SHA-256 일치 확인(build_index.py도 일치). MCP 저장소 커밋 64a11e6. Claude 데스크톱 재시작 필요
+- 커밋: Claude Code가 수행(J:\MCP\ai-vault-mcp 64a11e6, J:\AI 자료는 이 항목과 사본 동기화)
