@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-AI 자료창고 검색 DB(search.db) 색인기  v1.10 (2026-10-06)
+AI 자료창고 검색 DB(search.db) 색인기  v1.11 (2026-10-06)
+
+v1.11: 색인 요청·실패 처리(보고서 3번, 설계안 작업 3).
+      종료 코드: 0=성공, 1=실패 파일 1건 이상 또는 치명적 오류, 2=다른 색인이 실행 중이라 건너뜀(DB를 건드리지 않음).
+      data/index_failed.txt에 실패 파일과 오류를 적고(실패 0건이면 지움), index_report.md 머리에 시작·완료 시각과
+      성공(추가·갱신)·실패 건수를 적는다. 실패한 파일은 추가·갱신 건수에서 뺀다.
+      단일 실행 잠금: DB 폴더의 index.lock에 Windows 파일 잠금(msvcrt.locking)을 건다. 프로세스가 죽으면 운영체제가
+      잠금을 풀므로 남은 잠금 파일 때문에 막히지 않는다(잠금 파일은 지우지 않는다).
+      실패한 파일은 DB에 이전 판이 남고 mtime이 달라 다음 실행에서 자동으로 다시 시도된다.
 
 v1.10: 보안 머리말 판정(보고서 11번). effective()가 위키·수신함 머리말을 정규식이 아닌 YAML로 읽고(read_frontmatter),
       classification·보안등급 값을 public|internal|unknown으로 검증한다. 머리말 YAML이 깨졌거나 닫히지 않았거나
@@ -47,6 +55,10 @@ import re
 import sqlite3
 import sys
 import time
+try:
+    import msvcrt   # Windows 전용(단일 실행 잠금). 없으면 잠금 없이 실행한다
+except ImportError:
+    msvcrt = None
 from datetime import date, datetime
 
 try:
@@ -529,6 +541,22 @@ def index_file(con, vault, rel, entry, stat):
     return n, note
 
 
+def acquire_lock(db_dir):
+    """다른 색인기가 실행 중이면 exit 2로 끝낸다. 잠금은 프로세스가 끝날 때까지(반환된 파일 객체가 살아 있는 동안) 유지된다."""
+    if msvcrt is None:
+        return None
+    os.makedirs(db_dir, exist_ok=True)
+    f = open(os.path.join(db_dir, "index.lock"), "a+b")
+    try:
+        f.seek(0)
+        msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+    except OSError:
+        f.close()
+        print("다른 색인이 실행 중이라 이번 실행은 건너뜁니다(exit 2).", flush=True)
+        sys.exit(2)
+    return f
+
+
 def main():
     ap = argparse.ArgumentParser(description="AI 자료창고 검색 DB 색인기")
     ap.add_argument("--vault", default=DEFAULT_VAULT)
@@ -536,6 +564,8 @@ def main():
     ap.add_argument("--full", action="store_true", help="기존 DB를 지우고 전체 재색인")
     ap.add_argument("--registry", help="레지스트리 파일(기본: vault/SOURCE_REGISTRY.yaml). 시험용")
     args = ap.parse_args()
+    lock = acquire_lock(os.path.dirname(os.path.abspath(args.db)))   # v1.11: 단일 실행 잠금(--full의 DB 삭제보다 먼저)
+    started = datetime.now()
 
     check_sqlite()
     reg_path = args.registry or os.path.join(args.vault, "SOURCE_REGISTRY.yaml")
@@ -559,7 +589,7 @@ def main():
     migrate_documents(con)
 
     t0 = time.time()
-    seen, unlisted, report = set(), [], []
+    seen, unlisted, report, failed = set(), [], [], []
     added = updated = unchanged = removed = meta_only = 0
 
     targets = []
@@ -610,21 +640,25 @@ def main():
                 meta_only += 1
                 print(f"[{k}/{total}] (메타데이터만 갱신) {rel}", flush=True)
                 continue
+        is_update = bool(row)
         if row:
             delete_doc(con, row[0])
-            updated += 1
-        else:
-            added += 1
         print(f"[{k}/{total}] {rel}", flush=True)
         try:
             n, note = index_file(con, args.vault, rel, entry, st)
             report.append((entry["id"], rel, n, note))
-        except Exception as ex:  # 한 파일 오류로 전체가 멈추지 않게 한다
-            con.rollback()
-            report.append((entry["id"], rel, -1, f"오류: {ex}"))
-            print(f"   ! 오류: {ex}", flush=True)
+        except Exception as ex:  # 한 파일 오류로 전체가 멈추지 않게 한다. 실패는 목록에 남기고 종료 코드 1로 알린다
+            con.rollback()   # 지우기·넣기를 함께 되돌리므로 DB에는 이전 판이 남고, 다음 실행에서 다시 시도된다
+            msg = " ".join(str(ex).split()) or type(ex).__name__
+            report.append((entry["id"], rel, -1, f"오류: {msg}"))
+            failed.append((rel, msg))
+            print(f"   ! 오류: {msg}", flush=True)
             continue
         con.commit()
+        if is_update:
+            updated += 1
+        else:
+            added += 1
 
     for doc_id, path in con.execute("SELECT doc_id, path FROM documents").fetchall():
         if path not in seen:
@@ -648,17 +682,20 @@ def main():
         "SELECT registry_id, COUNT(*), SUM(n_chunks), MAX(remote_allowed), SUM(remote_allowed) FROM documents GROUP BY registry_id ORDER BY registry_id"
     ).fetchall()
     elapsed = time.time() - t0
-    lines = [f"# 색인 보고서 ({datetime.now():%Y-%m-%d %H:%M})", "",
-             f"- DB: `{args.db}` ({os.path.getsize(args.db)/1e6:,.1f} MB)",
-             f"- 소요 시간: {elapsed:,.0f}초",
-             f"- 추가 {added} / 갱신 {updated} / 메타데이터만 갱신 {meta_only} / 변경 없음 {unchanged} / 삭제 {removed}",
-             f"- WAL 정리: {wal_note}", "",
+    finished = datetime.now()
+    lines = [f"# 색인 보고서 ({finished:%Y-%m-%d %H:%M})", "",
+             f"- 시작 {started:%Y-%m-%d %H:%M:%S} / 완료 {finished:%Y-%m-%d %H:%M:%S} (소요 {elapsed:,.0f}초)",
+             f"- 결과: **{'실패 ' + str(len(failed)) + '건 있음 (exit 1)' if failed else '성공 (실패 0건)'}**",
+             f"- 성공: 추가 {added} / 갱신 {updated} / 메타데이터만 갱신 {meta_only} / 변경 없음 {unchanged} / 삭제 {removed}; 실패 {len(failed)}",
+             f"- DB: `{args.db}` ({os.path.getsize(args.db)/1e6:,.1f} MB), WAL 정리: {wal_note}", "",
              "## 레지스트리 항목별", "", "| registry_id | 파일 수 | 조각 수 | 원격 허용 |", "|---|---|---|---|"]
     lines += [f"| {r[0]} | {r[1]} | {r[2]} | {('예' if r[4] == r[1] else f'일부({r[4]}/{r[1]})') if r[3] else '아니오'} |" for r in stats]
     held = con.execute("SELECT path, classification FROM documents WHERE type='wiki' AND remote_allowed=0").fetchall()
     if held:
         lines += ["", f"## 원격 제외 위키 페이지 ({len(held)}개, 머리말 classification)", ""] + [f"- `{p}` ({c})" for p, c in held]
     notes = [r for r in report if r[3]]
+    if failed:
+        lines += ["", f"## 실패 파일 ({len(failed)}건, 다음 실행에서 자동 재시도)", ""] + [f"- `{p}`: {m}" for p, m in failed]
     if notes:
         lines += ["", "## 참고·오류", ""] + [f"- `{r[1]}` ({r[0]}): {r[3]}" for r in notes]
     if unlisted:
@@ -667,8 +704,19 @@ def main():
     with open(rep_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     con.close()
-    print("\n".join(lines[:6]))
+    # v1.11: 실패 목록 파일(있으면 실패가 있다는 뜻이 되도록 0건이면 지운다)
+    fail_path = os.path.join(os.path.dirname(os.path.abspath(args.db)), "index_failed.txt")
+    if failed:
+        with open(fail_path, "w", encoding="utf-8") as f:
+            f.write(f"# 색인 실패 {len(failed)}건 ({finished:%Y-%m-%d %H:%M:%S})\n")
+            f.writelines(f"{p}\t{m}\n" for p, m in failed)
+    elif os.path.exists(fail_path):
+        os.remove(fail_path)
+    print("\n".join(lines[:7]))
     print(f"\n보고서: {rep_path}")
+    if failed:
+        print(f"실패 {len(failed)}건: {fail_path}", flush=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

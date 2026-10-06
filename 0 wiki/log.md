@@ -1816,3 +1816,12 @@ type: log
 - 실제 반영: reindex.request 3회. 17:10 메타데이터만 갱신 1300(해시 채움, 조각 124,443 그대로, quick_check ok), 17:15·17:20 변경 없음 1300, 모두 exit=0
 - 동기화: Claude outputs의 build_index.py·mcp_server.py·ai-vault-mcp_README.md·README.md를 MCP 원본과 SHA-256 일치 확인. MCP 저장소 커밋 813d511(v1.9), 6c652aa(v1.10)
 - 커밋: Claude Code가 수행(J:\AI 자료는 이 항목과 Claude outputs의 wiki_lint.py·telecom_stats.py·사본)
+
+## [2026-10-06] setup | MCP 서버 v1.8(기관 약칭 별칭), 색인기 v1.11·bat v1.1(색인 요청·실패 처리) | Claude Sonnet 5.5
+- 승인: 사용자 2026-10-06. 작업 2 추가 결정(search_case 기관 약칭 옛·현 이름 별칭)은 사용자가 대화에 붙여 넣은 결정문, 작업 3은 "미뤄둔 작업 포함 진행" 지시. 재시도 상한 3회는 코워크 설계안(Claude outputs 설계안 파일의 결정 B)의 기본값을 따름
+- mcp_server.py v1.7 → v1.8(보고서 1번 보완): 별칭 표 CASE_ALIASES(방심위·방미심위→이름공간 없음, 방통위·방미통위→방통위, SOURCE_REGISTRY 필드 추가 없음), 레지스트리에만 있는 이름공간은 그 값 자체 허용, 전각 콜론·공백 허용, 결과 항목에 namespace 필드, 접두어 없는 번호는 방심위 먼저 정렬, 미지원 접두어 오류에 허용 접두어 안내. 시험(mode=ro, scope all·remote): 기존 번호 5종이 v1.6과 같고(namespace 필드 제외), 방미심위:번호=번호, 방미통위:번호=방통위:번호, 접두어 없는 2012-03-0021 19건=방심위 6+방통위 13. 커밋 dcab80e. Claude 데스크톱 재시작 필요
+- build_index.py v1.11 + run_index_on_request.bat v1.1(보고서 3번): 종료 코드 0/1/2, data\index_failed.txt, 보고서에 시작·완료 시각과 성공·실패 건수, index.lock 단일 실행 잠금, 요청 파일은 reindex.running으로 바꿔 두고 성공 때만 삭제, 실패 시 5분 간격 최대 3회 재시도 후 reindex.failed로 정지. 시험은 스크래치 폴더에서 bat 12단계 시나리오와 DB 사본의 실패 2건·잠금 중 실행으로 확인한 뒤 운영 반영(커밋 40e53b5). 운영 스케줄러 첫 실행(17:30): try 1/3 exit=0, 변경 없음 1300, 실패 0
+- 운영 주의: reindex.failed가 있으면 reindex.request를 만들기 전에 data\index_failed.txt의 원인부터 확인한다(README에 적음). 이 절차를 CLAUDE.md에 올리려면 스키마 개정 절차가 필요해 제안만 하고 반영하지 않음
+- 동기화: Claude outputs의 build_index.py·mcp_server.py·ai-vault-mcp_README.md·README.md를 MCP 원본과 SHA-256 일치 확인
+- 참고: J:\MCP\ai-vault-mcp\Claude outputs\ai-vault_설계안_작업2·3·7_2026-10-06.md는 코워크가 만든 파일이며 커밋하지 않았음(작업 7 설계 참고용)
+- 커밋: Claude Code가 수행(MCP 저장소 dcab80e, 40e53b5 / J:\AI 자료는 이 항목과 사본 동기화)
