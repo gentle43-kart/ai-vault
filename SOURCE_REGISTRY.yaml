@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.33"
-updated: 2026-10-06
+version: "1.35"
+updated: 2026-10-08
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -58,6 +58,8 @@ sources:
       제149~152호(2020-12-28) 단행본은 종전 판으로 개정 이력용이다. 선거방송심의에 관한 특별규정은 제149호가 현행이다(사용자 확인 2026-09-29).
       법제처 등에서 받은 원본 PDF는 3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/에 두고, 변환 md는 이 폴더에 둔다.
       개정판을 받으면 최신판 md를 이 폴더에 추가하고 종전 판 md는 덮어쓰지 않고 개정 이력용으로 보존한다(2026-09-21 사용자 결정, 2026-09-24 raw_regulation_md_latest 항목에서 옮김).
+      「방송심의 연혁」과 「구 규정 연혁」 1~8(원본 3 source_raw/법령 등_raw/방송_raw/규정 연혁/)의 변환본도 이 폴더에 둔다(2026-10-08 Claude 변환, script: Claude outputs/convert_2up_pdf.py, 보안등급 public은 사용자 확인 2026-10-08).
+      두 연혁 자료는 편집·취합본이라 조문 문언은 공식 원문 대조 전에는 단서로만 쓴다. 가로 쪽은 인쇄 쪽 2개를 좌우로 나눠 <!-- p.N 왼쪽/오른쪽 --> 주석을 달았다.
 
   - id: commentary_2016_v2
     path: "1 documents_md/법령_md/방송_md/▲방송심의에관한 규정 해설집(2016)_재변환.md"
@@ -300,17 +302,6 @@ sources:
     remote_allowed: true
     notes: "2008~2010년 파일 5개는 용량이 작지만 그대로 사용(2026-09-21 사용자 결정)"
 
-  - id: minutes_broadcast_merged
-    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/방송소위_md/챗지피티용_md/"
-    layer: normalized
-    type: meeting_minutes
-    canonical: false
-    duplicate_of: minutes_broadcast
-    searchable: false
-    ingest: none
-    classification: public
-    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
-
   - id: minutes_broadcast_results
     path: "1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과/"
     layer: normalized
@@ -360,17 +351,6 @@ sources:
     remote_allowed: true
     notes: "기준본에 없는 기간이므로 예외적으로 사용"
 
-  - id: minutes_ad_merged
-    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/광고소위_md/챗지피티용_md/★광고소위 회의록_통합_2009-2024.md"
-    layer: normalized
-    type: meeting_minutes
-    canonical: false
-    duplicate_of: minutes_ad
-    searchable: false
-    ingest: none
-    classification: public
-    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
-
   # ── 전체회의 회의록 ───────────────────────────────────────
   - id: minutes_plenary
     path: "1 documents_md/회의록_md/전체회의_md/제미나이 노트북용 분할본_md/"
@@ -383,17 +363,6 @@ sources:
     classification_confirmed: true
     remote_allowed: true
 
-  - id: minutes_plenary_merged
-    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/전체회의_md/챗지피티용_md/"
-    layer: normalized
-    type: meeting_minutes
-    canonical: false
-    duplicate_of: minutes_plenary
-    searchable: false
-    ingest: none
-    classification: public
-    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
-
   # ── 선거방송심의위원회 회의록 ─────────────────────────────
   - id: minutes_election
     path: "1 documents_md/회의록_md/선방위_md/제미나이 노트북용 분할본_md/"
@@ -405,39 +374,6 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-
-  - id: minutes_election_merged_old
-    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/선방위_md/★선거방송심의위원회 회의록 모음(2002-2023).md"
-    layer: normalized
-    type: meeting_minutes
-    canonical: false
-    duplicate_of: minutes_election
-    searchable: false
-    ingest: none
-    classification: public
-    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).'
-
-  - id: minutes_election_merged_new
-    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/선방위_md/★선거방송심의위원회 회의록 모음(2024~)_2026년 추가.md"
-    layer: normalized
-    type: meeting_minutes
-    canonical: false
-    duplicate_of: minutes_election
-    searchable: false
-    ingest: none
-    classification: public
-    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지). 2026 제9회 지선 3~6차 회의록은 기준본(분할본)에 없음(문장 대조 시 이 파일에만 있는 행 610개). 같은 내용의 연도별 원본 파일 1개는 이동하지 않고 원래 폴더에 남김(minutes_election_2026으로 등록)'
-
-  - id: minutes_election_yearly
-    path: "../기타자료/AI 자료_보관/1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/"
-    layer: normalized
-    type: meeting_minutes
-    canonical: false
-    duplicate_of: minutes_election
-    searchable: false
-    ingest: none
-    classification: public
-    notes: '2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지). 단, 2026 제9회 전국동시지방선거(2026.6.3.) 3차-6차.md는 기준본에 없는 내용이라 이동하지 않고 원래 폴더(1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/)에 남김(minutes_election_2026으로 등록)'
 
   - id: minutes_election_2026
     path: "1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/2026 제9회 전국동시지방선거(2026.6.3.) 3차-6차.md"
@@ -484,21 +420,6 @@ sources:
     classification_confirmed: true
     remote_allowed: true
     notes: "방송심의 관련 논문·연구보고서 md 변환본. 연구자 견해이므로 인용 시 성격을 밝힌다"
-
-  - id: research_papers_merged
-    path: "../기타자료/AI 자료_보관/1 documents_md/논문_md/"
-    layer: normalized
-    type: research
-    canonical: false
-    duplicate_of: research_papers
-    searchable: false
-    ingest: none
-    classification: unknown
-    notes: >
-      위원회 내부 연구자료 병합본 8개(2014~2024, 보고서 82건). 논문_md의 개별 보고서 파일과 문장 일치율 100%(2026-09-26 대조)여서
-      중복본으로 처리하고 2026-09-26 사용자 지시(a와 c 진행)로 보관함 밖 J:/기타자료/AI 자료_보관/ 폴더로 이동(sha1 대조 후 이동, 원 상대경로 유지).
-      병합본 2014년의 '2014년 인터넷 불법·유해정보 실태 조사'와 '보도프로그램 공공성 평가 분석 연구' 구간에는 각각 '독일의 방송통신 내용 규제 체계',
-      '영국의 방송통신 내용 규제 체계'가 면책문 없이 이어 붙어 있었음(개별 파일은 따로 있음). 2021-2023 병합본에는 2020년 보고서 7건도 들어 있었음
 
   - id: research_papers_misconverted
     path: "1 documents_md/논문_md/EBS 다큐프라임-100세 쇼크_김미수.md"
@@ -590,6 +511,36 @@ sources:
       Notion에서 내보낸 업무 정리·분석 노트와 학회 발표 자료(원본은 Notion, 별도 원본 파일 없음).
       사용자가 정리한 2차 자료이므로 결론의 단독 근거로 쓰지 않고 검색·인용만 한다(사용자 확인 internal, 2026-09-23).
       Notion 첨부 원본(PDF 등)이 생기면 3 source_raw에 별도 폴더를 두고 raw_source에 적는다.
+
+  - id: law_broadcast_shopping152_dup
+    path: "1 documents_md/법령_md/방송_md/상품소개 및 판매방송 심의에 관한 규정(방송통신심의위원회규칙)(제152호)(20201228).md"
+    layer: normalized
+    type: regulation
+    canonical: false
+    duplicate_of: law_broadcast
+    searchable: false
+    ingest: none
+    classification: public
+    notes: >
+      상품판매방송규정 제152호의 기존 변환본. 기준본은 같은 폴더의 "상품소개_및_판매방송_심의에_관한_규정_제152호_20201228.md"
+      (2026-09-28 업로드본, 원본 3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/ … (1).pdf)이다. 업로드본은 조문 끝 대괄호 개정 표시를
+      보존한 더 완전한 판이다(2026-09-28 ingest 기록). 이중 색인을 막기 위해 중복본으로 지정(사용자 승인 2026-10-08).
+
+  - id: review_md
+    path: "1 documents_md/검토_md/"
+    layer: normalized
+    type: notes
+    ingest: search_only
+    raw_source: ""
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      다른 분류에 속하지 않는 변환본(기존 자료를 변환한 자료 등)의 검토 대기 폴더(2026-10-08 신설). 간단한 메모는 0 wiki/@Inbox에 둔다.
+      사용자가 검토를 요청하면 Claude가 파일별로 내용·보안등급·알맞은 위치를 보고하고, 이동은 사용자가 한다(AGENTS.md 6.3).
+      보안등급 public·원격 허용은 사용자 개별 승인(2026-10-08, "원격 허용도 가능하니 반영해줘"). internal 자료는 넣지 않으며,
+      검토에서 public이 아닌 파일이 확인되면 파일 단위 항목(classification: internal)을 추가하도록 제안한다.
+      파일마다 자료 성격이 달라 type은 notes로 두었다(검색 kind는 internal로 묶임).
 
   # ── 위키 (0 wiki) ─────────────────────────────────────────
   - id: wiki
