@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-section_stats.py v1.0 (2026-09-23, Claude Opus 5.5)
+section_stats.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 인자(2026.07~09 행 추가)
+  v1.0 (2026-09-23)
 
 목적
   방송심의규정 제150호의 절(節) 단위로 통계 CSV 행을 모아 다음을 집계한다.
@@ -54,7 +55,8 @@ def agenda_key(r):
     return (str(d) if d else "nodate:" + S.case_no(r).rsplit("-", 1)[0], prog(r))
 
 def main():
-    R = S.load()
+    import sys
+    R = S.load("--recent" in sys.argv)
     print("대상 행", len(R))
     for name, sec in SECTIONS.items():
         rows = [r for r in R if arts(r) & sec]

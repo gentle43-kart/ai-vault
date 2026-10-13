@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.35"
-updated: 2026-10-08
+version: "1.40"
+updated: 2026-10-13
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -296,11 +296,11 @@ sources:
     type: meeting_minutes
     ingest: search_only
     raw_source: "3 source_raw/회의록_raw/방송소위/"
-    period: "2008~2026 제21차, 2013년 없음"
+    period: "2008~2026 제24차, 2013년 없음"
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "2008~2010년 파일 5개는 용량이 작지만 그대로 사용(2026-09-21 사용자 결정)"
+    notes: "2008~2010년 파일 5개는 용량이 작지만 그대로 사용(2026-09-21 사용자 결정). 2026년 제22~24차(2026.9.15.~)는 회차별 파일 '2026년 제NN차 방송심의소위원회 회의록.md'로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, pdftotext 쪽 주석, 원본 3 source_raw/회의록_raw/방송소위/추가분(26.9월~)/)"
 
   - id: minutes_broadcast_results
     path: "1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과/"
@@ -339,6 +339,9 @@ sources:
     notes: >
       광고소위 분할본(2026-09-21 사용자 확인). 2021~2023년은 연도 통합 파일과 차수별 파일이
       함께 있어 파일 사이 중복 가능성이 있음(색인 전 확인 필요).
+      2026년 제22·23차는 회차별 파일 '2026년 제NN차 광고심의소위원회 회의록.md'로 이 폴더에 추가
+      (2026-10-13 Claude 변환, AGENTS.md 6.7, 원본 3 source_raw/회의록_raw/광고소위/추가분(26.9월~)/).
+      이 폴더의 '△2026년 광고소위 회의록 모음_01-21.md'는 minutes_ad_2026과 같은 크기의 파일임(2026-10-13 확인, 내용 대조는 하지 않음).
 
   - id: minutes_ad_2026
     path: "1 documents_md/회의록_md/광고소위_md/챗지피티용_md/△2026년 광고소위 회의록 모음_01-21.md"
@@ -358,10 +361,24 @@ sources:
     type: meeting_minutes
     ingest: search_only
     raw_source: "3 source_raw/회의록_raw/전체회의/"
-    period: "2008~2026 제13차"
+    period: "2008~2026 제14차"
     classification: public
     classification_confirmed: true
     remote_allowed: true
+    notes: "2026년 제1~14차(2026.3.12.~9.7.)는 회차별 파일 '(YYMMDD) 제N차(정기|임시) 발언내용(공개).md' 14개로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, Claude outputs/convert_minutes_pdf.py v1.0, 원본 3 source_raw/회의록_raw/전체회의/추가분(26.9월~)/). 공개 발언내용만 변환함: 제1·2차 '발언내용(비공개)' PDF는 '대외비(영구)' 표시가 있어 이 폴더(public·원격 허용)에 넣지 않음. 제4차는 '(공개)'와 '(공개)_수정' 두 판 중 나중 판(_수정, 2026.5.18. 작성, 신상발언 부분 포함)만 변환함. 종전 period '2008~2026 제13차'는 실제와 달랐음(2026-10-13 정정, 그때까지 2026년분은 이 폴더에 없었음)"
+
+  # ── 통신소위 회의록 ───────────────────────────────────────
+  - id: minutes_telecom
+    path: "1 documents_md/회의록_md/통신소위_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/통신소위/"
+    period: "2026 제1~44차(2026.4.16.~10.1.)"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "통신심의소위원회 회차별 회의록 변환본 44개(2026-10-13 Claude 변환, AGENTS.md 6.7, pdftotext 쪽 주석 <!-- p.N -->, Claude outputs/convert_minutes_pdf.py v1.0). 원본 파일명에 연도가 없으나 회의 일시로 모두 2026년 회의임을 확인. 보안등급 public·원격 허용 true(사용자 개별 승인 2026-10-13)"
 
   # ── 선거방송심의위원회 회의록 ─────────────────────────────
   - id: minutes_election
@@ -600,16 +617,16 @@ sources:
     notes: "심의의결 내역 전체. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인)"
 
   - id: stats_2026_recent
-    path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-08.csv"
+    path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-09.csv"
     layer: normalized
     type: statistics
     ingest: search_only
-    period: "2026.01~08"
-    period_use: "2026.07~2026.08"
+    period: "2026.01~09"
+    period_use: "2026.07~2026.09"
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "기준본(stats)과 2026.01~06이 겹치므로 07~08월 행만 사용"
+    notes: "기준본(stats)과 2026.01~06이 겹치므로 07~09월 행만 사용(2026-10-13 △26.01.-08 → △26.01.-09 교체, 376행)"
 
   - id: stats_election_recent
     path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/선방위 통계(02-26.7).csv"

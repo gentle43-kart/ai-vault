@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-hyup_articles.py v1.0 (2026-09-27, Claude Opus 5.5) — AGENTS.md 7.1 "협찬고지규칙 통계" 기준(v1.13)
+hyup_articles.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 옵션 추가(2026.07~09 행)
+  v1.0 (2026-09-27) — AGENTS.md 7.1 "협찬고지규칙 통계" 기준(v1.13)
 
 목적
   방송심의 의결 내역 통계 CSV에서 「협찬고지 등에 관한 규칙」(구 명칭 「협찬고지에 관한 규칙」, 약칭 협찬고지규칙)
@@ -62,9 +63,9 @@ def articles(rel):
     return out
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--rows", action="store_true")
+    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--rows", action="store_true"); ap.add_argument("--recent", action="store_true")
     a = ap.parse_args()
-    rows = S.load()
+    rows = S.load(a.recent)
     tgt = [(r, articles(r.get("관련조항") or "")) for r in rows]
     tgt = [(r, arts) for r, arts in tgt if arts is not None]
     print("대상 행 %d / 협찬고지규칙 표기 %d / 조 식별 %d" % (len(rows), len(tgt), sum(1 for _, x in tgt if x)))

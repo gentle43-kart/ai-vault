@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-stats_articles.py v1.1 (2026-09-22, Claude Opus 5)
+stats_articles.py v1.2 (2026-10-13, Claude Opus 5.5)
+  v1.2: --recent 입력을 △26.01.-09.csv로 바꾸고 추가 기간을 2026.07~09로 넓힘
   v1.1: '조' 누락 표기(제n의m) 예외 규칙 추가
 
 목적
@@ -9,8 +10,8 @@ stats_articles.py v1.1 (2026-09-22, Claude Opus 5)
 
 입력
   2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 방송심의 파일(12-17_*, 18-25_*, 26.01-06.csv).
-  선방위_* 파일은 뺀다. --recent 를 주면 2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-08.csv 의
-  2026.07~08 행만 추가한다(registry stats_2026_recent, period_use).
+  선방위_* 파일은 뺀다. --recent 를 주면 2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-09.csv 의
+  2026.07~09 행만 추가한다(registry stats_2026_recent, period_use).
 
 출력
   표준 출력(텍스트). 집계 결과 파일은 만들지 않는다(AGENTS.md 2절).
@@ -56,7 +57,7 @@ import sys
 
 VAULT = os.environ.get("AI_VAULT", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 STATS_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "제미나이 노트북용 분할_csv")
-RECENT = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "쳇지피팅용 병합_csv", "△26.01.-08.csv")
+RECENT = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "쳇지피팅용 병합_csv", "△26.01.-09.csv")
 
 # ── 읽기 ────────────────────────────────────────────────
 def _read(path):
@@ -78,7 +79,7 @@ def load(recent=False):
     if recent:
         for d in _read(RECENT):
             dd = decision_date(raw_date(d))
-            if dd and datetime.date(2026, 7, 1) <= dd <= datetime.date(2026, 8, 31):
+            if dd and datetime.date(2026, 7, 1) <= dd <= datetime.date(2026, 9, 30):
                 out.append(d)
     return out
 
@@ -239,13 +240,13 @@ def main():
     ap.add_argument("--verify", action="store_true")
     ap.add_argument("--article", help="예: 제46조, 제55조의2")
     ap.add_argument("--top", type=int, help="조문별 행 수 상위 N")
-    ap.add_argument("--recent", action="store_true", help="2026.07~08 행 추가(stats_2026_recent)")
+    ap.add_argument("--recent", action="store_true", help="2026.07~09 행 추가(stats_2026_recent)")
     a = ap.parse_args()
     if a.verify and a.recent:
         sys.exit("--verify 는 --recent 없이 실행한다(검증값은 2012.01~2026.06 기준)")
     R = load(a.recent)
     if a.recent:
-        print(f"※ stats_2026_recent 2026.07~08 행 추가: 대상 {len(R):,}행")
+        print(f"※ stats_2026_recent 2026.07~09 행 추가: 대상 {len(R):,}행")
     if a.verify:
         sys.exit(cmd_verify(R))
     if a.article:

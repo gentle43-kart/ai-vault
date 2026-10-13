@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-count_article_item.py v1.0 (2026-09-23, Claude Opus 5.5)
+count_article_item.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 옵션(2026.07~09 행 추가)
+  v1.0 (2026-09-23)
 
 목적
   통계 CSV에서 「방송심의에 관한 규정」 특정 조의 특정 호(또는 항)가 관련조항에 적힌 행을 뽑는다.
@@ -62,9 +63,10 @@ def main():
     ap.add_argument("--sub", type=int)
     ap.add_argument("--item", type=int)
     ap.add_argument("--para", type=int)
+    ap.add_argument("--recent", action="store_true")
     a = ap.parse_args()
     num, kind = (a.item, "호") if a.item else ((a.para, "항") if a.para else (None, ""))
-    R = S.load()
+    R = S.load(a.recent)
     n_art = n_item = 0
     for r in R:
         text = r.get("관련조항", "")

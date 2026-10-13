@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-sanction_results.py v1.0 (2026-09-25, Claude Opus 5.5)
+sanction_results.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 인자(2026.07~09 행 추가)
+  v1.0 (2026-09-25)
 
 목적
   방송심의 의결 내역 통계 CSV 전체(방송·광고 심의 포함)의 결과 분포를 방송법 제100조의 조치 유형별로 집계한다.
@@ -46,7 +47,8 @@ MAP = {"과징금": "제1항 본문·제3항(과징금)", "프로그램 중지":
 
 
 def main():
-    R = S.load(False)
+    import sys as _sys
+    R = S.load("--recent" in _sys.argv)
     ok = len(R) == 12560
     print(f"대상 행: {len(R):,} (기대 12,560)")
     c = collections.Counter(S.result_class(r["심의결과"]) for r in R)

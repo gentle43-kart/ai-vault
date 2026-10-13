@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-ad_articles.py v1.1 (2026-09-27, Claude Opus 5.5) — AGENTS.md 7.1 "광고심의규정 통계" 기준(v1.12, 사용자 승인 2026-09-27)
+ad_articles.py v1.2 (2026-10-13, Claude Opus 5.5) — AGENTS.md 7.1 "광고심의규정 통계" 기준(v1.12, 사용자 승인 2026-09-27)
+  v1.2: --recent(stats_articles.load(recent=True), 2026.07~09 행 추가) 옵션 추가
   v1.1: 안건 구분을 통계부문 기준으로 바꾸고, 의결번호 형태는 "번호 형태"로 따로 출력한다(v1.0의 "방송 안건" 해석 정정).
 
 목적
@@ -76,8 +77,8 @@ def numform(r):
     return "광고 번호" if "-광고-" in c else "그 밖의 번호"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--article"); a = ap.parse_args()
-    R = S.load()
+    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--recent", action="store_true"); a = ap.parse_args()
+    R = S.load(a.recent)
     rows = []; mention = 0
     for r in R:
         rel = r.get("관련조항", "")
