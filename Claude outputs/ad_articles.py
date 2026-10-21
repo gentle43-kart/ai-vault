@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-ad_articles.py v1.2 (2026-10-13, Claude Opus 5.5) — AGENTS.md 7.1 "광고심의규정 통계" 기준(v1.12, 사용자 승인 2026-09-27)
+ad_articles.py v1.3 (2026-10-21; v1.2 2026-10-13, Claude Opus 5.5) — AGENTS.md 7.1 "광고심의규정 통계" 기준(v1.12, 사용자 승인 2026-09-27)
+  v1.3 (2026-10-21): --items(항·호별 행 수와 행 목록, --article과 함께 사용) 추가. 한 행에 같은 조가 여러 번 나오면
+        모든 표기의 항·호를 모은다(v1.2까지의 조 제목 수집은 첫 표기만 봄). 조 단위 집계는 바뀌지 않는다.
   v1.2: --recent(stats_articles.load(recent=True), 2026.07~09 행 추가) 옵션 추가
   v1.1: 안건 구분을 통계부문 기준으로 바꾸고, 의결번호 형태는 "번호 형태"로 따로 출력한다(v1.0의 "방송 안건" 해석 정정).
 
@@ -29,14 +31,17 @@ ad_articles.py v1.2 (2026-10-13, Claude Opus 5.5) — AGENTS.md 7.1 "광고심�
   - 번호 형태(보조 정보): 의결번호에 "광고"가 있으면 "광고 번호", 없으면 "그 밖의 번호", 의결번호가 없으면 "의결번호 없음".
   - 결과 분류: stats_articles.result_class(가장 무거운 조치 하나).
 
-검증값(대상 2012.01~2026.06, 12,560행, 2026-09-26 기기에서 실행)
-  광고심의규정 표기 3,276행, 조 식별 3,275행(방송광고 안건 3,271 / 방송프로그램 안건 4), 미식별 1행(위 예외)
-  번호 형태: 광고 번호 1,951 / 그 밖의 번호 887 / 의결번호 없음 437
-  제18조 1,512 / 제3조 237 / 제23조 216 / 제38조의2 89 / 제11조의2 14
+검증값(대상 2012.01~2026.06, 12,560행, stats_articles.py v1.3 보정본 기준, 2026-10-21 기기에서 실행)
+  광고심의규정 표기 3,278행, 조 식별 3,277행(방송광고 안건 3,273 / 방송프로그램 안건 4), 미식별 1행(위 예외)
+  번호 형태: 광고 번호 1,953 / 그 밖의 번호 960 / 의결번호 없음 364
+  제18조 1,514 / 제3조 237 / 제23조 216 / 제38조의2 89 / 제11조의2 14
+  (보정 전 2026-09-26 값: 표기 3,276, 조 식별 3,275, 방송광고 3,271, 번호 형태 1,951/887/437, 제18조 1,512.
+   차이는 병합 셀 보정 2행(2014-광고-38-0585·0586)과 case_no 수정 73행)
 
 사용
   python ad_articles.py            # 전체 요약
   python ad_articles.py --article 제3조
+  python ad_articles.py --recent --article 제35조 --items   # 항·호별
 """
 import argparse, collections, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -63,6 +68,43 @@ def ad_articles(text):
             res.setdefault(k, a.group(4) or "")
     return res
 
+def ad_items(text, target):
+    """v1.3: 광고심의규정 구간에서 조(target, 예: '제35조')의 모든 표기 뒤에 적힌 항·호를 모은다.
+    '제1항제3호·제5호'처럼 항이 생략된 호는 바로 앞 항에 붙인다. 호가 없는 항은 '제n항'으로 적는다.
+    항·호 표기가 없으면 '(항·호 없음)'."""
+    s = S._norm(text or "")
+    dm = S._depth(s)
+    laws = [m for m in S._LAW.finditer(s) if dm[m.start()] == 0]
+    items = set(); hit = False
+    for i, m in enumerate(laws):
+        if m.group(1) not in _TARGET:
+            continue
+        seg = s[m.end():laws[i + 1].start() if i + 1 < len(laws) else len(s)]
+        seg = re.sub(r"(?<![제\d])(\d+조의\d+)", r"제\1", seg)
+        seg = re.sub(r"제(\d+)조\(([^)]*)\)의(\d+)", r"제\1조의\3(\2)", seg)
+        arts = list(S._ART.finditer(seg))
+        for j, a in enumerate(arts):
+            sub = a.group(2) or a.group(3)
+            k = f"제{a.group(1)}조" + (f"의{sub}" if sub else "")
+            if k != target:
+                continue
+            hit = True
+            chunk = seg[a.end():arts[j + 1].start() if j + 1 < len(arts) else len(seg)]
+            hang = None; hang_used = True; found = False
+            for t in re.finditer(r"제(\d+)(항|호)", chunk):
+                found = True
+                if t.group(2) == "항":
+                    if hang and not hang_used:
+                        items.add(f"제{hang}항")
+                    hang, hang_used = t.group(1), False
+                else:
+                    items.add((f"제{hang}항" if hang else "") + f"제{t.group(1)}호"); hang_used = True
+            if hang and not hang_used:
+                items.add(f"제{hang}항")
+            if not found:
+                items.add("(항·호 없음)")
+    return items if hit else set()
+
 _AD_SECTORS = {"방송광고", "PP", "지상파", "종편", "SO", "위성"}
 
 def kind(r):
@@ -77,7 +119,7 @@ def numform(r):
     return "광고 번호" if "-광고-" in c else "그 밖의 번호"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--recent", action="store_true"); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--recent", action="store_true"); ap.add_argument("--items", action="store_true"); a = ap.parse_args()
     R = S.load(a.recent)
     rows = []; mention = 0
     for r in R:
@@ -105,6 +147,13 @@ def main():
         c = collections.Counter(S.result_class(r.get("심의결과", "")) for r, _ in sel)
         print(" 결과:", {k: c[k] for k in S.ORDER if c[k]})
         print(" 연도:", dict(sorted(collections.Counter(S.year(r) for r, _ in sel).items(), key=lambda x: (x[0] is None, x[0] or 0))))
+        if a.items:
+            ic = collections.Counter()
+            for r, _ in sel:
+                its = ad_items(r.get("관련조항", ""), a.article)
+                ic.update(its)
+                print("  -", S.raw_date(r)[:10], S.case_no(r), sorted(its), S.result_class(r.get("심의결과", "")))
+            print(" 항·호별(행):", dict(sorted(ic.items())))
         return
     for k, n in art.most_common():
         print(f"{k}\t{n}\t{dict(titles[k].most_common(3))}")

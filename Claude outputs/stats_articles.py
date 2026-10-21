@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-stats_articles.py v1.2 (2026-10-13, Claude Opus 5.5)
+stats_articles.py v1.3 (2026-10-21, Claude Opus 5.5)
+  v1.3: ① 2012~2017 구간은 보정본(2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv, registry stats_1217_corrected,
+        stats_fill_1217.py로 생성)을 읽고 분할본 12-17_part01~09는 읽지 않는다(load(split=True)면 분할본, 대조용).
+        ② case_no: "2016-17-0269"처럼 적힌 전체회의 번호의 앞부분을 날짜로 지우던 오류 수정(날짜 뒤에 숫자가 이어지면 날짜로 보지 않음).
+        2012~2017 행 149행이 의결번호·연도를 되찾는다(사용자 승인 2026-10-21)
   v1.2: --recent 입력을 △26.01.-09.csv로 바꾸고 추가 기간을 2026.07~09로 넓힘
   v1.1: '조' 누락 표기(제n의m) 예외 규칙 추가
 
@@ -9,7 +13,8 @@ stats_articles.py v1.2 (2026-10-13, Claude Opus 5.5)
   위원회 기수별 분포를 집계한다. AGENTS.md 7.1절(통계 CSV 대조 기준)을 코드로 옮긴 것이다.
 
 입력
-  2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 방송심의 파일(12-17_*, 18-25_*, 26.01-06.csv).
+  2012~2017: 2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv (v1.3. 없으면 분할본 12-17_part*로 대신하고 경고)
+  2018~2026.06: 2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 18-25_*, 26.01-06.csv.
   선방위_* 파일은 뺀다. --recent 를 주면 2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-09.csv 의
   2026.07~09 행만 추가한다(registry stats_2026_recent, period_use).
 
@@ -39,7 +44,7 @@ stats_articles.py v1.2 (2026-10-13, Claude Opus 5.5)
   의결일 미식별 1,135행
   기수별(의결일 있음, 문제없음 제외) 의결 행·주의 이상: 제2기 2,155·951 / 제3기 2,347·773 / 제4기 2,984·654 /
   제5기 2,251·399 / 제6기 368·73 / 방미심위 제1기 165·24
-  2026-09-22 기기에서 실행해 모두 일치 확인.
+  2026-09-22 기기에서 실행해 모두 일치 확인. v1.3(보정본·case_no 수정) 뒤에도 같음(2026-10-21 확인).
 
 사용
   python stats_articles.py --verify
@@ -57,6 +62,7 @@ import sys
 
 VAULT = os.environ.get("AI_VAULT", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 STATS_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "제미나이 노트북용 분할_csv")
+CORRECTED_1217 = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "2012-2017 방송심의 통계(보정).csv")
 RECENT = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "쳇지피팅용 병합_csv", "△26.01.-09.csv")
 
 # ── 읽기 ────────────────────────────────────────────────
@@ -70,10 +76,16 @@ def _read(path):
         d["_file"] = os.path.basename(path)
         yield d
 
-def load(recent=False):
+def load(recent=False, split=False):
     out = []
+    use_corr = not split and os.path.exists(CORRECTED_1217)
+    if not split and not use_corr:
+        print("경고: 보정본이 없어 분할본 12-17_part*를 읽습니다", file=sys.stderr)
+    if use_corr:
+        out.extend(_read(CORRECTED_1217))
     for p in sorted(glob.glob(os.path.join(STATS_DIR, "*.csv"))):
-        if os.path.basename(p).startswith("선방위"):
+        b = os.path.basename(p)
+        if b.startswith("선방위") or (use_corr and b.startswith("12-17_")):
             continue
         out.extend(_read(p))
     if recent:
@@ -110,7 +122,7 @@ _CASE = re.compile(r"제?\s*(\d{4})\s*-\s*(?:(방송|광고)\s*-\s*)?(\d{1,2})\s
 def case_no(r):
     """의결번호를 'YYYY-(방송|광고-)?NN-NNNN' 형태로 정규화. 행 식별은 의결일+의결번호(7.1)."""
     v = r.get("의결번호") or raw_date(r)
-    v = re.sub(r"^\s*\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}:\d{2})?", "", v) if not r.get("의결번호") else v
+    v = re.sub(r"^\s*\d{4}-\d{2}-\d{2}(?!\d)(\s+\d{2}:\d{2}:\d{2})?", "", v) if not r.get("의결번호") else v
     m = _CASE.search(v)
     if not m:
         return ""

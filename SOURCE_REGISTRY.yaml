@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.40"
-updated: 2026-10-13
+version: "1.47"
+updated: 2026-10-21
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -119,6 +119,39 @@ sources:
     type: internal_doc
     ingest: none
     classification: internal
+
+  - id: law_general_draft_employment
+    path: "1 documents_md/법령_md/일반_md/안_「방송미디어통신심의위원회 사무처 취업세칙」 제정안.md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/일반_raw/안_「방송미디어통신심의위원회 사무처 취업세칙」 제정안.pdf"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "2026.10. 제정안(시행 전). 파일 단위 항목. 2026-10-15 internal로 등록했다가 같은 날 사용자 개별 승인(③등급)으로 public·원격 허용으로 변경."
+
+  - id: law_general_draft_personnel
+    path: "1 documents_md/법령_md/일반_md/안_「방송미디어통신심의위원회 사무처 인사세칙」 제정안.md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/일반_raw/안_「방송미디어통신심의위원회 사무처 인사세칙」 제정안.pdf"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "2026.10. 제정안(시행 전). 파일 단위 항목. 2026-10-15 internal로 등록했다가 같은 날 사용자 개별 승인(③등급)으로 public·원격 허용으로 변경."
+
+  - id: law_general_draft_pay
+    path: "1 documents_md/법령_md/일반_md/안_「방송미디어통신심의위원회 사무처 보수규칙」 제정안.md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/일반_raw/안_「방송미디어통신심의위원회 사무처 보수규칙」 제정안.pdf"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "2026.10. 제정안(시행 전). 파일 단위 항목. 2026-10-15 internal로 등록했다가 같은 날 사용자 개별 승인(③등급)으로 public·원격 허용으로 변경. 원본이 2쪽 모아찍기라 쪽마다 좌·우 절반을 나누어 변환함"
 
   - id: law_general_rulebook_dup
     path: "1 documents_md/법령_md/일반_md/★방송통신심의위원회 규정집(2024).md"
@@ -332,7 +365,7 @@ sources:
     type: meeting_minutes
     ingest: search_only
     raw_source: "3 source_raw/회의록_raw/광고소위/"
-    period: "2009~2024, 2013·2014년 없음"
+    period: "2009~2024, 2026(2013년은 제1~30차 1.9.~8.21.만, 2014년은 제21·22차 없음, 2025년은 광고소위 미개최)"
     classification: public
     classification_confirmed: true
     remote_allowed: true
@@ -342,6 +375,10 @@ sources:
       2026년 제22·23차는 회차별 파일 '2026년 제NN차 광고심의소위원회 회의록.md'로 이 폴더에 추가
       (2026-10-13 Claude 변환, AGENTS.md 6.7, 원본 3 source_raw/회의록_raw/광고소위/추가분(26.9월~)/).
       이 폴더의 '△2026년 광고소위 회의록 모음_01-21.md'는 minutes_ad_2026과 같은 크기의 파일임(2026-10-13 확인, 내용 대조는 하지 않음).
+      2013·2014년은 사용자 변환본 '2013년 광고심의소위원회 회의록(1-30).md'(PDF 972쪽, 제1~30차 2013.1.9.~8.21.),
+      '2014년 광고심의소위원회 회의록(1-39).md'(PDF 1,445쪽, 제1~39차 2014.1.8.~12.24., 제21·22차는 원본 PDF에도 없음)로 추가
+      (2026-10-21, 원본 3 source_raw/회의록_raw/광고소위/의 같은 이름 PDF. PDF 순서는 2013년 제30차 → 제1~29차, 2014년 제18~39차 → 제1~17차이며 변환본도 이 순서를 유지).
+      2025년은 광고심의소위원회가 열리지 않음(사용자 확인 2026-10-21).
 
   - id: minutes_ad_2026
     path: "1 documents_md/회의록_md/광고소위_md/챗지피티용_md/△2026년 광고소위 회의록 모음_01-21.md"
@@ -516,6 +553,39 @@ sources:
     period: "2021"
     notes: "「2021 방송통신심의 연감」 md 변환 실패본(610바이트, 표지·목차 조각만 있음). 3 source_raw에 원본 없음. 검색 제외로 등록(2026-09-28 사용자 승인, 2등급). 원본 PDF를 넣으면 6.7절에 따라 다시 변환하고 이 항목을 고친다"
 
+  # ── 방송산업 현황 보고서 (1 documents_md/현황_md) ─────────
+  - id: status_reports
+    path: "1 documents_md/현황_md/"
+    layer: normalized
+    type: statistics
+    ingest: wiki
+    raw_source: "3 source_raw/현황_raw/"
+    period: "2024~2025"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송미디어통신위원회가 발간한 방송산업·매체 현황 보고서의 md 변환본(2026-10-19 사용자 추가). 사용자가 보안 자료라고 알리지 않아 사용자 기본값(public)에 따름(2026-10-16 결정).
+      「2025 방송매체이용행태조사」(2025.12., 국가승인통계 제164002호, 조사기간 2025.6.16.~9.5.), 「2025년 방송산업 실태조사 보고서」(2025.12., 국가승인통계 제164006호, 조사기준일 2024.12.31.),
+      「2025년 방송사업자 재산상황 공표집」(2026.6., 방송법 제98조의2, 2025 회계연도). 원본 PDF는 3 source_raw/현황_raw/(raw_status_reports)에 있다.
+      PDF 변환본이어서 표가 줄글로 풀리거나 부호(△) 위치가 어긋난 곳이 있다. 특히 재산상황 공표집은 서술문에서 숫자가 빠졌으므로 수치는 표 부분에서 확인한다. 본문의 이미지 링크(images/)가 가리키는 파일은 폴더에 없다.
+      위키에는 문서 페이지만 만들고(domain: 방송산업), 수치는 통계 CSV처럼 필요한 부분만 찾아 인용한다(사용자 결정 2026-10-19).
+
+  - id: raw_status_reports
+    path: "3 source_raw/현황_raw/"
+    layer: canonical_raw
+    type: statistics
+    searchable: false
+    ingest: none
+    period: "2024~2025"
+    classification: public
+    classification_confirmed: true
+    notes: >
+      status_reports 변환본 3건의 원본 PDF(2026-10-19 사용자 추가, 사용자 기본값(public)에 따름).
+      「2025 방송매체이용행태조사」 466쪽(Acrobat Distiller, HWP발), 「2025년 방송사업자 재산상황 공표집」 449쪽(HWP를 Microsoft Print To PDF로 출력),
+      「2025년 방송산업 실태조사 보고서」 418쪽(Adobe Acrobat). 쪽 수는 변환본의 쪽 표시와 같다(2026-10-19 확인).
+      재산상황 공표집은 원본 PDF의 텍스트층에도 서술문 숫자가 없다(화면에는 보임). 서술문 수치가 필요하면 원본 쪽 이미지로 확인한다.
+
   # ── 노션 추출 자료 (1 documents_md/노션_md) ──────────────
   - id: notion_notes
     path: "1 documents_md/노션_md/"
@@ -614,7 +684,135 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "심의의결 내역 전체. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인)"
+    notes: "심의의결 내역 전체. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인). 2012~2017 구간(12-17_part01~09)은 v1.47부터 stats_1217_corrected(보정본)가 기준본이고, 분할본은 아래 파일 단위 항목으로 원본 대조용(검색 제외)"
+
+  - id: stats_1217_corrected
+    path: "2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv"
+    layer: normalized
+    type: statistics
+    canonical: true
+    searchable: true
+    ingest: search_only
+    raw_source: "3 source_raw/통계_raw/2012-2017 방송심의 통계.xlsx"
+    period: "방송심의 2012.01~2017"
+    classification: public
+    classification_confirmed: false
+    remote_allowed: false
+    notes: >
+      2012~2017 방송심의 의결 내역 보정본(AGENTS.md 2.3절, 2026-10-21 생성, 사용자 승인 "①~⑤ 전부 승인", 위치는 사용자 지정).
+      script: Claude outputs/stats_fill_1217.py v1.1. 입력은 stats의 12-17_part01~09(6,136행)와 원본 xlsx(사용자 확인: 정본)의 병합 범위 201개.
+      원래 11개 열은 보정값, 덧붙인 열(원본 파일, 의결 내용(원본) 등, 보정 근거, 보정 출처)에 바꾼 값의 근거를 적음.
+      보정: 병합 셀 668(+방송사/프로그램명 2, 관련조항 2), 상동 239, 묶음 63, 회의록 13(2016.7.27. 광고소위 제26차), 광고 길이 정정 2(사용자 확인).
+      원격 허용은 사용자 결정으로 false(2026-10-21, ChatGPT 미연결)
+
+  - id: stats_1217_part01
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part01.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+    notes: "보정 전 분할본(원본 대조용, v1.47). part02~09도 같은 처리"
+
+  - id: stats_1217_part02
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part02.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part03
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part03.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part04
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part04.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part05
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part05.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part06
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part06.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part07
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part07.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part08
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part08.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
+
+  - id: stats_1217_part09
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part09.csv"
+    layer: normalized
+    type: statistics
+    canonical: false
+    duplicate_of: stats_1217_corrected
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: false
 
   - id: stats_2026_recent
     path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-09.csv"
@@ -654,7 +852,7 @@ sources:
     notes: "위 두 파일(stats_2026_recent, stats_election_recent)은 파일 단위 항목이 우선"
 
   - id: stats_root_dup
-    path: "2 data_csv/통계_csv/방송/2012-2017 방송심의 통계.csv"
+    path: "2 data_csv/통계_csv/방송/보정 전_csv/2012-2017 방송심의 통계.csv"
     layer: normalized
     type: statistics
     canonical: false

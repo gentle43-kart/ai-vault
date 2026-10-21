@@ -7,7 +7,7 @@
 
 ## Claude에 추가로 적용되는 사항
 
-- 이 폴더에서 쓰기 권한을 가진 AI는 Claude뿐이다. 쓰기는 파일시스템으로 `0 wiki/`와 `Claude outputs/`에 하고(사용자가 변환을 요청하면 AGENTS.md 6.7절에 따라 `1 documents_md/`에 새 변환본을 추가할 수 있다), `AGENTS.md`·`AGENTS_통계기준.md`·`CLAUDE.md`·`SOURCE_REGISTRY.yaml`은 AGENTS.md 2.1절의 등급과 승인 절차에 따라서만 고친다. MCP 서버를 통해 쓰지 않는다.
+- 이 폴더에서 쓰기 권한을 가진 AI는 Claude뿐이다. 쓰기는 파일시스템으로 `0 wiki/`와 `Claude outputs/`에 하고(사용자가 변환을 요청하면 AGENTS.md 6.7절에 따라 `1 documents_md/`에 새 변환본을 추가할 수 있고, 사용자가 지시하거나 승인하면 AGENTS.md 2.2절에 따라 자료창고 안에서 파일을 옮길 수 있으며, 사용자가 승인하면 AGENTS.md 2.3절에 따라 `2 data_csv/`에 보정본을 추가할 수 있다), `AGENTS.md`·`AGENTS_통계기준.md`·`CLAUDE.md`·`SOURCE_REGISTRY.yaml`은 AGENTS.md 2.1절의 등급과 승인 절차에 따라서만 고친다. MCP 서버를 통해 쓰지 않는다.
 - ingest·lint를 마치면 `log.md`에 기록하고, 작성자 칸에 사용한 모델명을 적는다(예: `Claude Sonnet 5`).
 - `log.md`는 쓰기 직전에 다시 읽고 파일 끝에 붙이기만 한다. 전체를 다시 쓰지 않는다. 다른 세션이 같은 자료창고에서 작업 중이면 그 세션이 끝난 뒤에 기록한다(2026-10-05 덮어쓰기 사고 후속, 사용자 결정 2026-10-05).
 - 사용자가 "@Inbox ingest 해줘", "_Inbox ingest 해줘", "인박스 새로 넣은 자료 처리해줘", "인박스 새로 넣은 자료 ingest 해줘", "인박스 새로 넣은 자료 검토해줘"처럼 말하면 모두 같은 요청으로 보고(표현이 달라도 수신함 자료를 위키에 반영해 달라는 뜻이면 같다), AGENTS.md 6.3절 수신함 행에 따라 `0 wiki/@Inbox/`의 `status: 대기` 파일을 ingest한 뒤 `status`를 `완료`로 바꾼다. 목록 확인만 원하는지 반영까지 원하는지 모호하면 처리 전에 사용자에게 묻는다(사용자 지시 2026-09-29).
