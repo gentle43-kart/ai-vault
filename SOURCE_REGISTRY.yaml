@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.47"
-updated: 2026-10-21
+version: "1.49"
+updated: 2026-11-10
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -291,6 +291,22 @@ sources:
     classification_confirmed: true
     remote_allowed: true
     notes: "편집·취합 자료. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인)"
+
+  - id: interpretation_moleg_26_0621
+    path: "1 documents_md/판례_md/법제처 해석례 26-0621(2026.9.15.) 방미통위법 제13조제2항 의사정족수·의결정족수 산정.md"
+    layer: normalized
+    type: interpretation
+    ingest: wiki
+    raw_source: ""
+    period: "2026-09-15"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      법제처 법령해석례 26-0621(2026.9.15. 회신, 질의기관 방송미디어통신위원회). 방미통위법 제13조 제2항의 의사정족수·의결정족수를
+      산정할 때 제척·기피·회피 절차를 마친 위원과 회의 중 퇴장한 위원의 산입 여부. 국가법령정보센터 해석례 본문을 법령·판례 MCP로 조회해
+      옮긴 변환본(2026-10-26 Claude 작성, 사용자 요청 "해석례 원문 등록까지 포함해서 진행해줘"). 원본 PDF는 없다(raw_source 빈값).
+      같은 날 같은 제목의 26-0662~0668 7건이 있으며 26-0662는 본문이 같음을 확인했다. 사용자 기본값(public)에 따름.
 
   # ── 방송심의사례집 ────────────────────────────────────────
   - id: casebook_raw
@@ -680,7 +696,7 @@ sources:
     type: statistics
     ingest: search_only
     raw_source: "3 source_raw/통계_raw/"
-    period: "방송심의 2012.01~2026.06, 선방위 2002~2025"
+    period: "방송심의 2012.01~2025.12(2026년은 stats_2026_recent), 선방위 2002~2025"
     classification: public
     classification_confirmed: true
     remote_allowed: true
@@ -815,16 +831,16 @@ sources:
     remote_allowed: false
 
   - id: stats_2026_recent
-    path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-09.csv"
+    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/2026_잠정.csv"
     layer: normalized
     type: statistics
     ingest: search_only
-    period: "2026.01~09"
-    period_use: "2026.07~2026.09"
+    period: "2026.01~10(잠정, 기준일 2026-10-27, 422행)"
+    period_use: "2026.01~"
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "기준본(stats)과 2026.01~06이 겹치므로 07~09월 행만 사용(2026-10-13 △26.01.-08 → △26.01.-09 교체, 376행)"
+    notes: "2026년 방송심의 잠정본. 매월 새 누적본으로 덮어쓰고 파일명은 고정한다. 기준일·행 수는 이 항목에 적는다. 확정본이 나오면 확정본으로 교체한다(v1.49, 사용자 승인 2026-11-10). 이력: 2026-10-13 △26.01.-09(376행, 기준일 2026-09-29) → 2026-11-10 △26.01-10(422행, 기준일 2026-10-27, 2026.01~09 행은 의결번호·내용 동일하고 10월 46행 추가). 분할 폴더의 26.01-06.csv와 쳇지피팅용 병합_csv의 △26.01.-09.csv는 삭제함(새 파일에 모두 포함)"
 
   - id: stats_election_recent
     path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/선방위 통계(02-26.7).csv"
@@ -849,7 +865,7 @@ sources:
     searchable: false
     ingest: none
     classification: unknown
-    notes: "위 두 파일(stats_2026_recent, stats_election_recent)은 파일 단위 항목이 우선"
+    notes: "stats_election_recent는 파일 단위 항목이 우선. 이 폴더의 2026년 방송심의 △ 파일(예: △26.01-10.csv)은 stats_2026_recent의 사용자 투입본(중복본)이다(v1.49)"
 
   - id: stats_root_dup
     path: "2 data_csv/통계_csv/방송/보정 전_csv/2012-2017 방송심의 통계.csv"
@@ -1042,3 +1058,12 @@ sources:
     ingest: none
     classification: internal
     notes: "민원 원자료. 개인정보 포함 가능. 원격 제공 금지"
+
+  - id: hwp_converter_data
+    path: "4 스킬, 프로젝트/HWP_HWPX 변환기/"
+    layer: instruction
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: internal
+    notes: "HWP→HWPX 변환 작업용 입출력 자료. 지침 아님, 참고·인용하지 않는다"
