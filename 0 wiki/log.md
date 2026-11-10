@@ -2528,3 +2528,9 @@ type: log
 - 신설 update_stats_2026.py v1.0: 기본 dry-run, `--apply`는 잠정본 덮어쓰기 → registry stats_2026_recent period·notes 갱신(백업·version+0.01) → log.md → reindex.request. 현재 △26.01-10.csv로 dry-run: "누락 0, 추가 0, 변경 0". --apply는 임시 복사본으로 registry·log 갱신 부분만 시험함(실제 파일에는 적용 안 함)
 - lint: wiki_lint.py exit=0, broken_sources 0, broken_links 38·sources_bad 2·yaml_error 1은 기존 건
 - 커밋: 작업 1~3(스크립트)과 2026-11-10 schema 항목 대상을 분리해 커밋(push 안 함)
+
+## [2026-11-10] schema | AGENTS.md v1.33 → v1.34(2.1절 ①등급에 stats_2026_recent 월별 period·notes 갱신 추가) | Claude Sonnet 5.5
+- 등급: ③(2.1절 자체의 변경). 승인 2026-11-10: 제안 문안을 가리켜 "승인 후 반영"
+- 변경: 2.1절 표 ①행 끝에 "`stats_2026_recent`의 `period`·`notes` 이력만 바꾸는 월별 갱신(update_stats_2026.py --apply, path·보안 필드 불변)" 추가. 다른 규칙은 바꾸지 않음
+- 백업: Claude outputs/schema_backup/AGENTS_v1.33_20261110.md
+- 커밋 대상: AGENTS.md, 위 백업, 0 wiki/log.md
