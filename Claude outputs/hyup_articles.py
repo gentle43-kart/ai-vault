@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-hyup_articles.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 옵션 추가(2026.07~09 행)
+hyup_articles.py v1.2 (2026-11-10) — v1.2: --until 추가(--recent와 함께, 기본 잠정본 전체). v1.1 (2026-10-13, Claude Opus 5.5): --recent 옵션 추가(2026.07~09 행)
   v1.0 (2026-09-27) — AGENTS.md 7.1 "협찬고지규칙 통계" 기준(v1.13)
 
 목적
@@ -63,9 +63,9 @@ def articles(rel):
     return out
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--rows", action="store_true"); ap.add_argument("--recent", action="store_true")
+    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--rows", action="store_true"); ap.add_argument("--recent", action="store_true"); ap.add_argument("--until")
     a = ap.parse_args()
-    rows = S.load(a.recent)
+    rows = S.load(a.recent, until=a.until)
     tgt = [(r, articles(r.get("관련조항") or "")) for r in rows]
     tgt = [(r, arts) for r, arts in tgt if arts is not None]
     print("대상 행 %d / 협찬고지규칙 표기 %d / 조 식별 %d" % (len(rows), len(tgt), sum(1 for _, x in tgt if x)))

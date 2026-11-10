@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-stats_articles.py v1.3 (2026-10-21, Claude Opus 5.5)
+stats_articles.py v1.4 (2026-11-10, Claude Sonnet 5.5)
+  v1.4: 2026년 잠정본 고정 파일명(분할_csv/2026_잠정.csv, registry stats_2026_recent) 반영. load()는 STATS_DIR의 *.csv 중
+        2026_잠정.csv를 따로 처리한다: 기본은 의결일 2026-06-30 이하 행만, recent=True면 2026-07-01 이후 행을 추가한다.
+        --until YYYY-MM-DD 신설(기본: 잠정본 전체). RECENT 상수를 2026_잠정.csv로 교체
   v1.3: ① 2012~2017 구간은 보정본(2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv, registry stats_1217_corrected,
         stats_fill_1217.py로 생성)을 읽고 분할본 12-17_part01~09는 읽지 않는다(load(split=True)면 분할본, 대조용).
         ② case_no: "2016-17-0269"처럼 적힌 전체회의 번호의 앞부분을 날짜로 지우던 오류 수정(날짜 뒤에 숫자가 이어지면 날짜로 보지 않음).
         2012~2017 행 149행이 의결번호·연도를 되찾는다(사용자 승인 2026-10-21)
-  v1.2: --recent 입력을 △26.01.-09.csv로 바꾸고 추가 기간을 2026.07~09로 넓힘
+  v1.2: --recent 입력을 △26.01.-09.csv로 바꾸고 추가 기간을 2026.07~09로 넓힘(v1.4에서 잠정본 전체로 교체)
   v1.1: '조' 누락 표기(제n의m) 예외 규칙 추가
 
 목적
@@ -14,9 +17,10 @@ stats_articles.py v1.3 (2026-10-21, Claude Opus 5.5)
 
 입력
   2012~2017: 2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv (v1.3. 없으면 분할본 12-17_part*로 대신하고 경고)
-  2018~2026.06: 2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 18-25_*, 26.01-06.csv.
-  선방위_* 파일은 뺀다. --recent 를 주면 2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01.-09.csv 의
-  2026.07~09 행만 추가한다(registry stats_2026_recent, period_use).
+  2018~2025: 2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 18-25_*.csv.
+  2026: 같은 폴더의 2026_잠정.csv(registry stats_2026_recent). 기본은 의결일 2026-06-30 이하 행만 넣는다.
+  선방위_* 파일은 뺀다. --recent 를 주면 2026-07-01 이후 행을 추가하고, --until YYYY-MM-DD 로 끝 날짜를 정한다
+  (기본: 잠정본 전체. --until 은 --recent 와 함께 쓸 때 의미가 있다).
 
 출력
   표준 출력(텍스트). 집계 결과 파일은 만들지 않는다(AGENTS.md 2절).
@@ -39,7 +43,7 @@ stats_articles.py v1.3 (2026-10-21, Claude Opus 5.5)
   예외 규칙: "제45의2"처럼 '조'가 빠진 표기는 제45조의2로 읽는다(v1.1, 사용자 결정 2026-09-22). 2012.01~2026.06 기준 2행
   (--verify 가 행 수를 보고한다)
 
-검증값(대상 2012.01~2026.06, --recent 없이, 12,560행)
+검증값(대상 2012.01~2026.06, --recent 없이, 12,560행. --recent --until 2026-09-30 은 12,722행, --recent 는 12,768행(2026-11-10 잠정본, 10월 46행 포함))
   조문별 행: 제46조 1,351 / 제44조 760 / 제27조 777 / 제14조 1,117 / 제9조 332
   의결일 미식별 1,135행
   기수별(의결일 있음, 문제없음 제외) 의결 행·주의 이상: 제2기 2,155·951 / 제3기 2,347·773 / 제4기 2,984·654 /
@@ -48,7 +52,7 @@ stats_articles.py v1.3 (2026-10-21, Claude Opus 5.5)
 
 사용
   python stats_articles.py --verify
-  python stats_articles.py --article 제46조 [--recent]
+  python stats_articles.py --article 제46조 [--recent] [--until 2026-09-30]
   python stats_articles.py --top 30
 """
 import argparse
@@ -63,7 +67,8 @@ import sys
 VAULT = os.environ.get("AI_VAULT", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 STATS_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "제미나이 노트북용 분할_csv")
 CORRECTED_1217 = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "2012-2017 방송심의 통계(보정).csv")
-RECENT = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "쳇지피팅용 병합_csv", "△26.01.-09.csv")
+RECENT = os.path.join(STATS_DIR, "2026_잠정.csv")
+BASE_END = datetime.date(2026, 6, 30)   # 기본 집계의 끝(2012.01~2026.06). 07-01 이후는 --recent
 
 # ── 읽기 ────────────────────────────────────────────────
 def _read(path):
@@ -76,7 +81,10 @@ def _read(path):
         d["_file"] = os.path.basename(path)
         yield d
 
-def load(recent=False, split=False):
+def load(recent=False, split=False, until=None):
+    """until: datetime.date 또는 'YYYY-MM-DD'. recent=True일 때 잠정본의 끝 날짜(기본 전체). 의결일 미식별 행은 잠정본에서 뺀다."""
+    if isinstance(until, str):
+        until = datetime.date.fromisoformat(until)
     out = []
     use_corr = not split and os.path.exists(CORRECTED_1217)
     if not split and not use_corr:
@@ -85,15 +93,29 @@ def load(recent=False, split=False):
         out.extend(_read(CORRECTED_1217))
     for p in sorted(glob.glob(os.path.join(STATS_DIR, "*.csv"))):
         b = os.path.basename(p)
-        if b.startswith("선방위") or (use_corr and b.startswith("12-17_")):
+        if b.startswith("선방위") or b == os.path.basename(RECENT) or (use_corr and b.startswith("12-17_")):
             continue
         out.extend(_read(p))
-    if recent:
+    if os.path.exists(RECENT):
         for d in _read(RECENT):
             dd = decision_date(raw_date(d))
-            if dd and datetime.date(2026, 7, 1) <= dd <= datetime.date(2026, 9, 30):
+            if not dd:
+                continue
+            if dd <= BASE_END or (recent and (until is None or dd <= until)):
                 out.append(d)
+    else:
+        print("경고: 2026_잠정.csv가 없어 2026년 행을 읽지 못했습니다", file=sys.stderr)
     return out
+
+def argv_until(argv=None):
+    """sys.argv에서 --until YYYY-MM-DD 값을 꺼낸다(argparse를 쓰지 않는 스크립트용). 없으면 None."""
+    argv = sys.argv if argv is None else argv
+    for i, x in enumerate(argv):
+        if x == "--until" and i + 1 < len(argv):
+            return argv[i + 1]
+        if x.startswith("--until="):
+            return x.split("=", 1)[1]
+    return None
 
 def raw_date(r):
     return r.get("의결일/ 의결번호/ 심의부문") or r.get("의결일", "")
@@ -252,13 +274,16 @@ def main():
     ap.add_argument("--verify", action="store_true")
     ap.add_argument("--article", help="예: 제46조, 제55조의2")
     ap.add_argument("--top", type=int, help="조문별 행 수 상위 N")
-    ap.add_argument("--recent", action="store_true", help="2026.07~09 행 추가(stats_2026_recent)")
+    ap.add_argument("--recent", action="store_true", help="2026-07-01 이후 잠정본 행 추가(stats_2026_recent)")
+    ap.add_argument("--until", help="--recent 의 끝 날짜 YYYY-MM-DD(기본: 잠정본 전체)")
     a = ap.parse_args()
     if a.verify and a.recent:
         sys.exit("--verify 는 --recent 없이 실행한다(검증값은 2012.01~2026.06 기준)")
-    R = load(a.recent)
+    if a.until and not a.recent:
+        sys.exit("--until 은 --recent 와 함께 쓴다(기본 집계는 2026-06-30까지)")
+    R = load(a.recent, until=a.until)
     if a.recent:
-        print(f"※ stats_2026_recent 2026.07~09 행 추가: 대상 {len(R):,}행")
+        print(f"※ stats_2026_recent 2026-07-01~{a.until or '잠정본 끝'} 행 추가: 대상 {len(R):,}행")
     if a.verify:
         sys.exit(cmd_verify(R))
     if a.article:

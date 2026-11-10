@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-section_stats.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 인자(2026.07~09 행 추가)
+section_stats.py v1.2 (2026-11-10) — v1.2: --until YYYY-MM-DD 인자 추가(--recent와 함께). v1.1 (2026-10-13, Claude Opus 5.5): --recent 인자(2026.07~09 행 추가)
   v1.0 (2026-09-23)
 
 목적
@@ -56,7 +56,7 @@ def agenda_key(r):
 
 def main():
     import sys
-    R = S.load("--recent" in sys.argv)
+    R = S.load("--recent" in sys.argv, until=S.argv_until())
     print("대상 행", len(R))
     for name, sec in SECTIONS.items():
         rows = [r for r in R if arts(r) & sec]

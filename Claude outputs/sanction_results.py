@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-sanction_results.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 인자(2026.07~09 행 추가)
+sanction_results.py v1.2 (2026-11-10) — v1.2: --until 인자 추가(--recent와 함께). v1.1 (2026-10-13, Claude Opus 5.5): --recent 인자(2026.07~09 행 추가)
   v1.0 (2026-09-25)
 
 목적
@@ -48,7 +48,7 @@ MAP = {"과징금": "제1항 본문·제3항(과징금)", "프로그램 중지":
 
 def main():
     import sys as _sys
-    R = S.load("--recent" in _sys.argv)
+    R = S.load("--recent" in _sys.argv, until=S.argv_until())
     ok = len(R) == 12560
     print(f"대상 행: {len(R):,} (기대 12,560)")
     c = collections.Counter(S.result_class(r["심의결과"]) for r in R)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-count_article_item.py v1.1 (2026-10-13, Claude Opus 5.5) — v1.1: --recent 옵션(2026.07~09 행 추가)
+count_article_item.py v1.2 (2026-11-10) — v1.2: --until 추가(--recent와 함께). v1.1 (2026-10-13, Claude Opus 5.5): --recent 옵션(2026.07~09 행 추가)
   v1.0 (2026-09-23)
 
 목적
@@ -64,9 +64,10 @@ def main():
     ap.add_argument("--item", type=int)
     ap.add_argument("--para", type=int)
     ap.add_argument("--recent", action="store_true")
+    ap.add_argument("--until")
     a = ap.parse_args()
     num, kind = (a.item, "호") if a.item else ((a.para, "항") if a.para else (None, ""))
-    R = S.load(a.recent)
+    R = S.load(a.recent, until=a.until)
     n_art = n_item = 0
     for r in R:
         text = r.get("관련조항", "")

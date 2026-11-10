@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-ad_articles.py v1.3 (2026-10-21; v1.2 2026-10-13, Claude Opus 5.5) — AGENTS.md 7.1 "광고심의규정 통계" 기준(v1.12, 사용자 승인 2026-09-27)
+ad_articles.py v1.4 (2026-11-10; v1.3 2026-10-21; v1.2 2026-10-13, Claude Opus 5.5) — AGENTS.md 7.1 "광고심의규정 통계" 기준(v1.12, 사용자 승인 2026-09-27)
+  v1.4 (2026-11-10): --until YYYY-MM-DD 추가(--recent와 함께, 기본 잠정본 전체). stats_articles v1.4의 2026_잠정.csv 기준. 이전 검증값(2026.07~09)은 --recent --until 2026-09-30
   v1.3 (2026-10-21): --items(항·호별 행 수와 행 목록, --article과 함께 사용) 추가. 한 행에 같은 조가 여러 번 나오면
         모든 표기의 항·호를 모은다(v1.2까지의 조 제목 수집은 첫 표기만 봄). 조 단위 집계는 바뀌지 않는다.
   v1.2: --recent(stats_articles.load(recent=True), 2026.07~09 행 추가) 옵션 추가
@@ -119,8 +120,8 @@ def numform(r):
     return "광고 번호" if "-광고-" in c else "그 밖의 번호"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--recent", action="store_true"); ap.add_argument("--items", action="store_true"); a = ap.parse_args()
-    R = S.load(a.recent)
+    ap = argparse.ArgumentParser(); ap.add_argument("--article"); ap.add_argument("--recent", action="store_true"); ap.add_argument("--until"); ap.add_argument("--items", action="store_true"); a = ap.parse_args()
+    R = S.load(a.recent, until=a.until)
     rows = []; mention = 0
     for r in R:
         rel = r.get("관련조항", "")
