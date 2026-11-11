@@ -290,3 +290,11 @@ type: log
 - 알려진 점: 클리핑 새 파일 수는 이전 날짜의 check.json이 있어야 계산되어 첫 실행은 "기준 없음". 작업 스케줄러 등록은 사용자가 PowerShell로 함
 - 커밋 대상 파일: Claude outputs/maintenance_check.py, Claude outputs/run_maintenance_check.bat, Claude outputs/README.md, .claude/skills/wiki-maintenance/SKILL.md, .claude/skills/stats-monthly-update/SKILL.md, 0 wiki/log.md
 - 커밋 메시지 초안: feat: 정기 점검 A 단계 maintenance_check.py·bat 신설, 스킬 wiki-maintenance 신설·stats-monthly-update 0단계 추가
+
+## [2026-11-11] fix | B 예약 작업 프롬프트 v2: 원격 도구가 없을 때 로컬 도구로 접근하도록 0단계 수정 | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자가 데스크톱 앱 편집 창에서 직접 붙여넣어 저장(2026-11-11, 사용자 완료 보고). 쓰기 범위 4가지·하지 말 것·일정(수 14:13)은 바뀌지 않아 6.8절 변경 없음
+- 사유: 예약 작업이 "이 컴퓨터 필요·로컬 폴더" 설정이라 mcp__remote-devices__* 도구가 없을 수 있고, 그러면 0단계가 "연결되지 않음"으로 끝날 위험이 있음(추정). 시험 실행(2026-11-11)은 0단계 날짜 조건(1~7일 아님)으로 한 줄 종료한 정상 동작이며, 수동 실행에 붙인 시험 지시는 참고 자료로 취급해 따르지 않음(방어 규칙 정상)
+- 변경: 0단계 두 번째~네 번째 글머리표, 4c log 형식의 "세션" 줄. 전문은 Claude outputs/schema_backup/B_예약작업_프롬프트_v2_20261111.md
+- 미확인: 1~7일 이후 본 경로(PC 접근·법령 MCP·쓰기)는 첫 실제 실행(2026-12-02)에서 확인
+- 커밋 대상 파일: Claude outputs/schema_backup/B_예약작업_프롬프트_v2_20261111.md, 0 wiki/log.md
+- 커밋 메시지 초안: docs: B 예약 작업 프롬프트 v2 보관(원격 도구 없을 때 로컬 접근)
