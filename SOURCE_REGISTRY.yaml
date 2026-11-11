@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.49"
-updated: 2026-11-10
+version: "1.50"
+updated: 2026-11-11
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -307,6 +307,82 @@ sources:
       산정할 때 제척·기피·회피 절차를 마친 위원과 회의 중 퇴장한 위원의 산입 여부. 국가법령정보센터 해석례 본문을 법령·판례 MCP로 조회해
       옮긴 변환본(2026-10-26 Claude 작성, 사용자 요청 "해석례 원문 등록까지 포함해서 진행해줘"). 원본 PDF는 없다(raw_source 빈값).
       같은 날 같은 제목의 26-0662~0668 7건이 있으며 26-0662는 본문이 같음을 확인했다. 사용자 기본값(public)에 따름.
+
+  # ── 위원회 규칙 제8~12호 국가법령정보센터 등재본 변환본 (2026-11-11) ──────────
+  - id: law_rule8_nlic
+    path: "1 documents_md/법령_md/방송_md/방송심의에 관한 규정(방송미디어통신심의위원회규칙)(제8호)(20260929).md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/방송심의에 관한 규정(방송미디어통신심의위원회규칙)(제8호)(20260929).pdf"
+    period: "2026-09-29"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송미디어통신심의위원회규칙 제8호「방송심의에 관한 규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108985, 2026.9.21. 공포, 2026.9.29. 시행)을
+      사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제8호, 같은 폴더)과
+      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+
+  - id: law_rule10_nlic
+    path: "1 documents_md/법령_md/방송_md/방송광고심의에 관한 규정(방송미디어통신심의위원회규칙)(제10호)(20260929).md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/방송광고심의에 관한 규정(방송미디어통신심의위원회규칙)(제10호)(20260929).pdf"
+    period: "2026-09-29"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송미디어통신심의위원회규칙 제10호「방송광고심의에 관한 규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108989, 2026.9.21. 공포, 2026.9.29. 시행)을
+      사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제10호, 같은 폴더)과
+      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+
+  - id: law_rule11_nlic
+    path: "1 documents_md/법령_md/방송_md/상품소개 및 판매방송 심의에 관한 규정(방송미디어통신심의위원회규칙)(제11호)(20260929).md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/상품소개 및 판매방송 심의에 관한 규정(방송미디어통신심의위원회규칙)(제11호)(20260929).pdf"
+    period: "2026-09-29"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송미디어통신심의위원회규칙 제11호「상품소개 및 판매방송 심의에 관한 규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108991, 2026.9.21. 공포, 2026.9.29. 시행)을
+      사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제11호, 같은 폴더)과
+      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+
+  - id: law_rule9_nlic
+    path: "1 documents_md/법령_md/방송_md/방송프로그램의 등급분류 및 표시 등에 관한 규칙(방송미디어통신심의위원회규칙)(제9호)(20260929).md"
+    layer: normalized
+    type: regulation
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/방송프로그램의 등급분류 및 표시 등에 관한 규칙(방송미디어통신심의위원회규칙)(제9호)(20260929).pdf"
+    period: "2026-09-29"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송미디어통신심의위원회규칙 제9호「방송프로그램의 등급분류 및 표시 등에 관한 규칙」 국가법령정보센터 등재본(행정규칙일련번호 2200000108987, 2026.9.21. 공포, 2026.9.29. 시행)을
+      사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제9호, 같은 폴더)과
+      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+
+  - id: law_rule12_nlic
+    path: "1 documents_md/법령_md/통신_md/정보통신에 관한 심의규정(방송미디어통신심의위원회규칙)(제12호)(20260929).md"
+    layer: normalized
+    type: law
+    ingest: wiki
+    raw_source: "3 source_raw/법령 등_raw/통신_raw/정보통신에 관한 심의규정(방송미디어통신심의위원회규칙)(제12호)(20260929).pdf"
+    period: "2026-09-29"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      방송미디어통신심의위원회규칙 제12호「정보통신에 관한 심의규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108993, 2026.9.21. 공포, 2026.9.29. 시행)을
+      사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제12호, 같은 폴더)과
+      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
 
   # ── 방송심의사례집 ────────────────────────────────────────
   - id: casebook_raw
