@@ -7,6 +7,7 @@ description: 사용자가 새 월별 통계 파일(△26.01-NN.csv)을 넣었다
 
 정본은 `AGENTS.md` 2.1절 ①등급(`AGENTS_절차.md` 2.1)과 `Claude outputs/update_stats_2026.py` 첫머리 설명이다. 규칙이 다르면 그쪽을 따른다.
 
+0. 사용자가 파일명을 말하지 않았으면 J:\MCP\ai-vault-mcp\data\maintenance\의 최신 *_요약.md에서 '새 △ 파일' 항목을 확인해 대상으로 삼는다. 여러 개면 가장 최근 기준일 파일 하나만 쓴다(누적본이므로).
 1. 사용자가 넣은 새 파일을 확인한다: `2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/△26.01-NN.csv`
 2. 점검만 먼저 실행한다(dry-run, 기본값):
    `python "Claude outputs/update_stats_2026.py" "<새 파일 경로>"`
