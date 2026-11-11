@@ -140,3 +140,10 @@ type: log
 - 백업: Claude outputs/schema_backup/AGENTS_v1.34_20261111.md, CLAUDE_20261111.md. log.md 원본·스크립트 원본은 세션 작업 공간에만 보관(저장소에 넣지 않음)
 - 기존 항목의 내용은 고치지 않음. 머리말 안내문의 "AGENTS.md 9절"은 이번에 고치지 않음
 - 커밋 메시지 초안: schema: AGENTS v1.35 log.md 월별 분할(log/YYYY-MM.md), 색인·lint 제외 반영, split_log.py 신설
+
+## [2026-11-11] schema | AGENTS.md v1.35 → v1.36: 0절 1항에 AGENTS_절차.md·AGENTS_원격.md를 AGENTS.md의 일부로 명시(③-1만 반영) | Claude Sonnet 5.5
+- 등급 ③(0절 변경, 항목별 승인). 승인: 2026-11-11 사용자가 경량화안(작업 2)의 ③-1을 가리켜 "③-1 승인". ③-2(0절 3항 원격 규칙 이동)·③-3(2.1절 이동)과 ②등급 묶음은 승인 전이라 반영하지 않음
+- 0절 1항 문구 확장: `AGENTS.md(7.1절 본문인 AGENTS_통계기준.md 포함)` → `AGENTS.md(7.1절 본문인 AGENTS_통계기준.md, 절차 본문인 AGENTS_절차.md, 부록 AGENTS_원격.md 포함)`. 두 파일은 아직 만들지 않았고(후속 ②등급 반영 예정), 지금은 이름만 선언된 상태
+- 판 번호·개정일 갱신(v1.36). 기존 위키 페이지 영향 없음
+- 백업: Claude outputs/schema_backup/AGENTS_v1.35_20261111.md
+- 커밋 메시지 초안: schema: AGENTS v1.36 0절 1항에 AGENTS_절차.md·AGENTS_원격.md 명시(③-1)
