@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-wiki_lint.py v1.3 (2026-10-06; v1.1: 중복본 판정에 레지스트리 규칙 2 적용, v1.2: _Inbox·_templates 제외(AGENTS.md v1.16 6.3),
+wiki_lint.py v1.4 (2026-11-11; v1.4: 0 wiki/log/ 월별 조각을 머리말 점검·stray 점검에서 빼고 링크 스캔에는 포함(AGENTS.md v1.35 10절);
+  v1.3 2026-10-06; v1.1: 중복본 판정에 레지스트리 규칙 2 적용, v1.2: _Inbox·_templates 제외(AGENTS.md v1.16 6.3),
   v1.3: ① 링크 해석에 머리말 aliases 반영 ② 내부 출처·중복본 판정을 색인기 Registry.match와 같은 규칙(파일 단위 우선, 그다음 가장 긴 폴더)으로
   ③ 위키 전체 페이지의 sources 로컬 경로 존재 검사 결과를 broken_sources로 따로 출력, 깨진 출처가 있으면 종료 코드 1)
 목적: AGENTS.md 6.6절 lint 항목 가운데 기계적으로 점검할 수 있는 것을 한 번에 점검한다.
@@ -51,7 +52,8 @@ for p in glob.glob(os.path.join(W, '**', '*.md'), recursive=True):
             err = str(e)
         body = m.group(2)
     else:
-        err = 'no frontmatter'
+        # v1.4: 0 wiki/log/ 월별 조각은 머리말이 없는 게 정상(AGENTS.md 10절). 형식 점검은 빼고 링크는 log.md처럼 센다
+        err = None if rel.startswith('log' + os.sep) else 'no frontmatter'
     name = os.path.basename(rel)[:-3]
     pages[rel] = dict(name=name, fm=fm, body=body, err=err, full=txt)
 
@@ -69,7 +71,7 @@ mgmt = {'index', 'log', '_index'}
 R = {}
 R['yaml_error'] = {k: v['err'] for k, v in pages.items() if v['err']}
 R['stray_root_files'] = [k for k in pages if os.sep not in k and k not in ('index.md', 'log.md')] + \
-    [k for k in pages if k.split(os.sep)[0] not in ('문서', '조문', '쟁점', '사례', '분석') and os.sep in k]
+    [k for k in pages if k.split(os.sep)[0] not in ('문서', '조문', '쟁점', '사례', '분석', 'log') and os.sep in k]
 
 # links
 link_re = re.compile(r'\[\[([^\]\|#]+)(?:#[^\]\|]*)?(?:\|[^\]]*)?\]\]')
