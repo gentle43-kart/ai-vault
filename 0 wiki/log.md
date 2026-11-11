@@ -147,3 +147,12 @@ type: log
 - 판 번호·개정일 갱신(v1.36). 기존 위키 페이지 영향 없음
 - 백업: Claude outputs/schema_backup/AGENTS_v1.35_20261111.md
 - 커밋 메시지 초안: schema: AGENTS v1.36 0절 1항에 AGENTS_절차.md·AGENTS_원격.md 명시(③-1)
+
+## [2026-11-11] schema | AGENTS.md v1.36: 0절 3항(원격 규칙)을 AGENTS_원격.md로, 2.1절 본문을 AGENTS_절차.md로 이동(③-2, ③-3) | Claude Sonnet 5.5
+- 등급 ③(항목별 승인). 승인: 2026-11-11 사용자가 경량화안(작업 2)의 ③-2와 ③-3을 가리켜 "③-2 승인, ③-3 승인". ②등급 묶음(2·3·4·5·6·9·10절 이동, 대응표, CLAUDE.md 수정 등)은 승인 전이라 반영하지 않음
+- ③-2: 0절 3항 원문(remote_allowed: false 자료의 원격 제공 금지, AIVAULT_REMOTE_EXTRA_IDS 예외는 개별 승인)을 새 파일 AGENTS_원격.md에 그대로 옮기고, 0절 3항에는 "원격 규칙은 AGENTS_원격.md에 있으며 현재 원격 경로는 연결하지 않는다, 연결하게 되면 그 파일을 따른다"만 남김. 내용은 바꾸지 않았고 위치만 옮김
+- ③-3: 2.1절 본문(등급표, ①등급 조건, 승인 요건, 반영 6단계, 되돌리기)을 새 파일 AGENTS_절차.md 2.1절로 그대로 옮기고, AGENTS.md에는 요지 4줄만 남김. 2.1절 뒤쪽의 쓰기 범위 단락은 AGENTS.md에 그대로 둠
+- 검증: 이동 전 AGENTS.md(v1.36) 비어 있지 않은 397줄 중 새 파일 3개에 그대로 없는 줄 0. AGENTS.md 26,534 → 24,656자
+- 현재 상태: AGENTS_절차.md에는 2.1절만 있고 대응표는 아직 없음(②등급 반영 때 추가). AGENTS_원격.md에는 0절 3항만 있고 2.1절 표의 ChatGPT 행은 AGENTS.md에 남아 있음
+- 백업: Claude outputs/schema_backup/AGENTS_v1.36_20261111.md
+- 커밋 메시지 초안: schema: AGENTS v1.36 0절 3항 원격 규칙을 AGENTS_원격.md로, 2.1절 본문을 AGENTS_절차.md로 이동(③-2·③-3)
