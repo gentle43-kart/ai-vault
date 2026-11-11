@@ -252,3 +252,19 @@ type: log
 - 처리: 1절 인용 블록은 바꾸지 않음(⑯ 유지). 다른 일치 페이지와 같은 방식으로 열린 항목을 닫고(번호 기호 차이와 사용자 확인을 같은 줄에 적음), sources에 web 항목(행정규칙일련번호 2200000108985, 확인일) 추가, text_basis 끝을 "(국가법령정보센터 등재본과 대조, 2026-11-11)"로, verified_at·updated 갱신
 - 결과: 규칙 제8~12호 등재본 대조 238개 모두 분류·해소 완료(일치 237 + 사용자 확인 1). wiki_lint.py exit=0, 열린 항목 732 → 731
 - 커밋 메시지 초안: fix: 방송심의규정 제7조 제16항 번호 기호 ⑯ 유지 확정, 등재본 대조 해소
+
+## [2026-11-11] schema | SOURCE_REGISTRY.yaml v1.50 → v1.51: 등재본 변환본 5개(law_rule8/9/10/11/12_nlic)를 중복본으로 변경 | Claude Sonnet 5.5
+- 등급 ②(기존 항목의 canonical·duplicate_of·searchable 변경). 승인: 2026-11-11 사용자가 기준본 지위 제안 가운데 "등재본 변환본 5개를 중복본으로 바꾸는 안"을 선택하며 "canonical: false, duplicate_of는 각 공표본 변환본 id, searchable: false, 위키 sources는 옮기지 마"라고 지시
+- 변경: law_rule8_nlic·law_rule9_nlic·law_rule10_nlic·law_rule11_nlic에 canonical false, duplicate_of law_broadcast, searchable false. law_rule12_nlic에 canonical false, duplicate_of law_telecom, searchable false. notes의 "기준본 지위는 정하지 않았다" 문장을 중복본 결정(2026-11-11)과 기준본 설명으로 교체. ingest(wiki)·classification 등 그 밖의 필드는 바꾸지 않음
+- duplicate_of 대상: 공표본 변환본(규칙 제8~12호)은 파일 단위 id가 없고 폴더 단위 항목(방송 law_broadcast, 통신 law_telecom)이 포함하므로 그 폴더 id를 가리킴(기존 duplicate_of: law_broadcast 항목과 같은 방식). 공표본용 파일 단위 id 5개를 새로 만드는 안은 승인 범위 밖이라 하지 않음
+- 영향: 위키 페이지 sources에는 등재본 변환본 경로가 없어 sources_bad 영향 없음(위키 sources는 옮기지 않음). 등재본 대조 결과는 조문 페이지의 web: 출처와 log에 남음
+- 검증: YAML 파싱 id 88개·중복 0, 5개 항목의 canonical·duplicate_of·searchable와 대상 id 존재, 새 path 존재 확인. 재색인 reindex_last.log exit=0, index_report.md "삭제 5"(등재본 조각 5개 제거), 검색 DB에서 등재본(20260929) 문서 0건(읽기 전용 조회)
+- 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.50_20261111.yaml
+- 커밋 메시지 초안: schema: registry v1.51 등재본 변환본 5개 중복본 처리(canonical false, searchable false)
+
+## [2026-11-11] schema | SOURCE_REGISTRY.yaml v1.51: stats_root_dup의 path를 백업_보정 전_csv로 정정 | Claude Sonnet 5.5
+- 등급 ②(기존 항목의 path 변경). 승인: 2026-11-11 사용자가 REGISTRY 정리 중 "stats_root_dup의 path를 '2 data_csv/통계_csv/방송/백업_보정 전_csv/2012-2017 방송심의 통계.csv'로 고치는 것만" 승인. notes·중복본 38건·remote_allowed는 그대로 둠
+- 변경: stats_root_dup.path "2 data_csv/통계_csv/방송/보정 전_csv/2012-2017 방송심의 통계.csv" → "2 data_csv/통계_csv/방송/백업_보정 전_csv/2012-2017 방송심의 통계.csv". 폴더 이름이 바뀌어 옛 경로의 파일이 없던 상태였고, 새 경로에 파일이 있음. canonical false·duplicate_of stats·searchable false는 그대로
+- 검증: 새 path 존재, path 중복 0, 파일이 없는 파일 단위 path 0(위 항목과 같은 v1.51 한 번에 반영)
+- 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.50_20261111.yaml (위 항목과 같은 판)
+- 커밋 메시지 초안: schema: registry v1.51 stats_root_dup path 정정

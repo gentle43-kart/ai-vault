@@ -3,7 +3,7 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.50"
+version: "1.51"
 updated: 2026-11-11
 root: "J:/AI 자료"
 
@@ -313,6 +313,9 @@ sources:
     path: "1 documents_md/법령_md/방송_md/방송심의에 관한 규정(방송미디어통신심의위원회규칙)(제8호)(20260929).md"
     layer: normalized
     type: regulation
+    canonical: false
+    duplicate_of: law_broadcast
+    searchable: false
     ingest: wiki
     raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/방송심의에 관한 규정(방송미디어통신심의위원회규칙)(제8호)(20260929).pdf"
     period: "2026-09-29"
@@ -322,12 +325,15 @@ sources:
     notes: >
       방송미디어통신심의위원회규칙 제8호「방송심의에 관한 규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108985, 2026.9.21. 공포, 2026.9.29. 시행)을
       사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제8호, 같은 폴더)과
-      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+      따로 둔 사본이다. 2026-11-11 사용자 결정으로 중복본(canonical false, duplicate_of law_broadcast, searchable false)이며 기준본은 위원회 공표본 변환본이다(조문 페이지 238개 대조에서 문언이 일치, 위키 sources는 옮기지 않음). 사용자 기본값(public)에 따름.
 
   - id: law_rule10_nlic
     path: "1 documents_md/법령_md/방송_md/방송광고심의에 관한 규정(방송미디어통신심의위원회규칙)(제10호)(20260929).md"
     layer: normalized
     type: regulation
+    canonical: false
+    duplicate_of: law_broadcast
+    searchable: false
     ingest: wiki
     raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/방송광고심의에 관한 규정(방송미디어통신심의위원회규칙)(제10호)(20260929).pdf"
     period: "2026-09-29"
@@ -337,12 +343,15 @@ sources:
     notes: >
       방송미디어통신심의위원회규칙 제10호「방송광고심의에 관한 규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108989, 2026.9.21. 공포, 2026.9.29. 시행)을
       사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제10호, 같은 폴더)과
-      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+      따로 둔 사본이다. 2026-11-11 사용자 결정으로 중복본(canonical false, duplicate_of law_broadcast, searchable false)이며 기준본은 위원회 공표본 변환본이다(조문 페이지 238개 대조에서 문언이 일치, 위키 sources는 옮기지 않음). 사용자 기본값(public)에 따름.
 
   - id: law_rule11_nlic
     path: "1 documents_md/법령_md/방송_md/상품소개 및 판매방송 심의에 관한 규정(방송미디어통신심의위원회규칙)(제11호)(20260929).md"
     layer: normalized
     type: regulation
+    canonical: false
+    duplicate_of: law_broadcast
+    searchable: false
     ingest: wiki
     raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/상품소개 및 판매방송 심의에 관한 규정(방송미디어통신심의위원회규칙)(제11호)(20260929).pdf"
     period: "2026-09-29"
@@ -352,12 +361,15 @@ sources:
     notes: >
       방송미디어통신심의위원회규칙 제11호「상품소개 및 판매방송 심의에 관한 규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108991, 2026.9.21. 공포, 2026.9.29. 시행)을
       사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제11호, 같은 폴더)과
-      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+      따로 둔 사본이다. 2026-11-11 사용자 결정으로 중복본(canonical false, duplicate_of law_broadcast, searchable false)이며 기준본은 위원회 공표본 변환본이다(조문 페이지 238개 대조에서 문언이 일치, 위키 sources는 옮기지 않음). 사용자 기본값(public)에 따름.
 
   - id: law_rule9_nlic
     path: "1 documents_md/법령_md/방송_md/방송프로그램의 등급분류 및 표시 등에 관한 규칙(방송미디어통신심의위원회규칙)(제9호)(20260929).md"
     layer: normalized
     type: regulation
+    canonical: false
+    duplicate_of: law_broadcast
+    searchable: false
     ingest: wiki
     raw_source: "3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/방송프로그램의 등급분류 및 표시 등에 관한 규칙(방송미디어통신심의위원회규칙)(제9호)(20260929).pdf"
     period: "2026-09-29"
@@ -367,12 +379,15 @@ sources:
     notes: >
       방송미디어통신심의위원회규칙 제9호「방송프로그램의 등급분류 및 표시 등에 관한 규칙」 국가법령정보센터 등재본(행정규칙일련번호 2200000108987, 2026.9.21. 공포, 2026.9.29. 시행)을
       사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제9호, 같은 폴더)과
-      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+      따로 둔 사본이다. 2026-11-11 사용자 결정으로 중복본(canonical false, duplicate_of law_broadcast, searchable false)이며 기준본은 위원회 공표본 변환본이다(조문 페이지 238개 대조에서 문언이 일치, 위키 sources는 옮기지 않음). 사용자 기본값(public)에 따름.
 
   - id: law_rule12_nlic
     path: "1 documents_md/법령_md/통신_md/정보통신에 관한 심의규정(방송미디어통신심의위원회규칙)(제12호)(20260929).md"
     layer: normalized
     type: law
+    canonical: false
+    duplicate_of: law_telecom
+    searchable: false
     ingest: wiki
     raw_source: "3 source_raw/법령 등_raw/통신_raw/정보통신에 관한 심의규정(방송미디어통신심의위원회규칙)(제12호)(20260929).pdf"
     period: "2026-09-29"
@@ -382,7 +397,7 @@ sources:
     notes: >
       방송미디어통신심의위원회규칙 제12호「정보통신에 관한 심의규정」 국가법령정보센터 등재본(행정규칙일련번호 2200000108993, 2026.9.21. 공포, 2026.9.29. 시행)을
       사용자가 내려받아(2026-11-11) AGENTS.md 6.7절에 따라 pdftotext 기본 모드로 변환한 파일이다(쪽마다 p.N 주석). 위원회 공표본 변환본(규칙 제12호, 같은 폴더)과
-      따로 둔 사본이며 기준본 지위는 정하지 않았다(대조 결과 보고 뒤 사용자 결정). 사용자 기본값(public)에 따름.
+      따로 둔 사본이다. 2026-11-11 사용자 결정으로 중복본(canonical false, duplicate_of law_telecom, searchable false)이며 기준본은 위원회 공표본 변환본이다(조문 페이지 238개 대조에서 문언이 일치, 위키 sources는 옮기지 않음). 사용자 기본값(public)에 따름.
 
   # ── 방송심의사례집 ────────────────────────────────────────
   - id: casebook_raw
@@ -944,7 +959,7 @@ sources:
     notes: "stats_election_recent는 파일 단위 항목이 우선. 이 폴더의 2026년 방송심의 △ 파일(예: △26.01-10.csv)은 stats_2026_recent의 사용자 투입본(중복본)이다(v1.49)"
 
   - id: stats_root_dup
-    path: "2 data_csv/통계_csv/방송/보정 전_csv/2012-2017 방송심의 통계.csv"
+    path: "2 data_csv/통계_csv/방송/백업_보정 전_csv/2012-2017 방송심의 통계.csv"
     layer: normalized
     type: statistics
     canonical: false
