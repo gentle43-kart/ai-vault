@@ -268,3 +268,25 @@ type: log
 - 검증: 새 path 존재, path 중복 0, 파일이 없는 파일 단위 path 0(위 항목과 같은 v1.51 한 번에 반영)
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.50_20261111.yaml (위 항목과 같은 판)
 - 커밋 메시지 초안: schema: registry v1.51 stats_root_dup path 정정
+
+## [2026-11-11] schema | AGENTS.md v1.38 → v1.39: AGENTS_절차.md 6.8절 "정기 점검·자동화" 신설, B 예약 작업 생성 | Claude Opus 5.5
+- 등급 ②. 승인: 2026-11-11 사용자가 정례화 설계안 1·2절(6.8절 신설, AGENTS.md 6절 문장·대응표 행)을 가리켜 "승인, 지금 반영"
+- 결정(같은 날 결정 질문): A 매주 수요일 09:40 Windows 작업 스케줄러, B 매월 첫째 주 수요일 14:13 claude.ai 예약 작업(PC 연결 필요), 알림 휴대폰 푸시, 새 △ 통계 파일은 감지·알림만 하고 반영은 C. 알림과 통계 범위는 사용자 무응답으로 인계메모 기본값을 따름
+- 변경: AGENTS_절차.md 6.7절 뒤에 6.8절(19줄) 삽입. AGENTS.md 머리말 판 번호 v1.39, 6절 첫 줄 "6.2~6.7" → "6.2~6.8"(정기 점검·자동화 추가), 대응표에 "정기 점검·자동화 → AGENTS_절차.md 6.8" 행 추가
+- 영향: 운영 규칙 문서만 바뀜. 위키 페이지·registry 변경 없음
+- 검증: 바꿀 문장 각 1회 확인(치환 스크립트), diff로 의도한 3곳·19줄만 바뀐 것 확인, BOM 없음·LF 유지(치환 직후 붙은 BOM을 바로 제거)
+- 백업: Claude outputs/schema_backup/AGENTS_v1.38_20261111.md, Claude outputs/schema_backup/AGENTS_절차_v1.38_20261111.md
+- 예약 작업: "AI 자료창고 월간 정비(B)"(cron `CRON_TZ=Asia/Seoul 13 14 * * 3`, PC 필요, 폴더 J:\AI 자료·J:\MCP\ai-vault-mcp, 푸시 알림, 승인 설정 auto(서버 지정, 사용자가 유지 선택)). 처음 만든 작업은 폴더가 붙지 않아 지우고 폴더를 지정해 다시 만듦. 같은 날 안전 시험 실행(위키 쓰기 없이 data\maintenance\test_B_2026-11-11.md에만 쓰도록 지시)
+- 남은 일(Claude Code): A 구현(maintenance_check.py·bat·작업 스케줄러 등록), 스킬 wiki-maintenance 신설·stats-monthly-update 0단계 추가, 커밋. 남은 lint 제안 ③④⑤⑦⑧⑨⑩은 첫 B 보고서(2026-12-02)의 미처리 제안으로 넘김(사용자 결정)
+- 세션: 채팅(원격 셸, 삭제 제한)이므로 커밋하지 않음
+- 커밋 대상 파일: AGENTS.md, AGENTS_절차.md, Claude outputs/schema_backup/AGENTS_v1.38_20261111.md, Claude outputs/schema_backup/AGENTS_절차_v1.38_20261111.md, 0 wiki/log.md
+- 커밋 메시지 초안: schema: AGENTS v1.39 AGENTS_절차 6.8절 정기 점검·자동화 신설(②)
+
+## [2026-11-11] fix | 정기 점검 A 구현(maintenance_check.py·bat), 스킬 wiki-maintenance 신설·stats-monthly-update 0단계 추가 | Claude Sonnet 5.5
+- 세션: Claude Code. 승인: 인계메모 작업 1·2(2026-11-11 사용자 승인, 스킬 정비안 승인 포함)
+- 신설: Claude outputs/maintenance_check.py v1.0(읽기 전용, AGENTS_절차.md 6.8절 A 항목 전부), Claude outputs/run_maintenance_check.bat v1.1(run_history.log에 "시각 종료코드" 한 줄), .claude/skills/wiki-maintenance/SKILL.md(6.6·6.8절 기준 6단계). 변경: .claude/skills/stats-monthly-update/SKILL.md(1단계 앞 0단계 추가), Claude outputs/README.md(두 파일 설명 추가)
+- 결과 위치: J:\MCP\ai-vault-mcp\data\maintenance\{YYYY-MM-DD}_check.json·_요약.md·run_history.log(자료창고 안에는 쌓지 않음)
+- 검증: 수동 실행 종료 0, 같은 날 두 번 실행해 JSON(run_at 제외)이 같음, bat 실행 후 run_history.log에 한 줄씩 추가. wiki_lint 수치(열린 항목 731, 깨진 출처 0)가 이전 lint 기록과 일치. 위키·스키마·search.db는 바꾸지 않음
+- 알려진 점: 클리핑 새 파일 수는 이전 날짜의 check.json이 있어야 계산되어 첫 실행은 "기준 없음". 작업 스케줄러 등록은 사용자가 PowerShell로 함
+- 커밋 대상 파일: Claude outputs/maintenance_check.py, Claude outputs/run_maintenance_check.bat, Claude outputs/README.md, .claude/skills/wiki-maintenance/SKILL.md, .claude/skills/stats-monthly-update/SKILL.md, 0 wiki/log.md
+- 커밋 메시지 초안: feat: 정기 점검 A 단계 maintenance_check.py·bat 신설, 스킬 wiki-maintenance 신설·stats-monthly-update 0단계 추가

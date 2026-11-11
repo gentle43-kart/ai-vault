@@ -1,7 +1,7 @@
 # AI 자료창고 운영 규칙 (AGENTS.md)
 
 - 적용 대상: 이 폴더(J:\AI 자료)를 읽거나 쓰는 모든 AI (Claude, ChatGPT 등)
-- 최초 작성: 2026-09-21 / 개정: 2026-11-11 (v1.38)
+- 최초 작성: 2026-09-21 / 개정: 2026-11-11 (v1.39)
 - 이 파일은 2.1절의 절차에 따라서만 수정한다. 중요한 변경은 사용자 승인을 받은 뒤 Claude가 반영하며, 다른 AI는 수정하지 않는다.
 - 역할 분담: **AGENTS.md = 원칙**, **SOURCE_REGISTRY.yaml = 자료 목록과 처리 방법**(기준본·중복본·보안등급·원격 허용 여부)
 
@@ -112,7 +112,7 @@
 
 ## 6. 작업 절차
 
-- 6.2~6.7(ingest, ingest 범위, query, research, lint, 원본 변환)은 AGENTS_절차.md에 있다. 해당 작업 전에 읽는다.
+- 6.2~6.8(ingest, ingest 범위, query, research, lint, 원본 변환, 정기 점검·자동화)은 AGENTS_절차.md에 있다. 해당 작업 전에 읽는다.
 
 ### 6.1 자료 찾기 순서 (ingest·query 공통)
 
@@ -184,6 +184,7 @@
 | 페이지 본문 형식 | AGENTS_절차.md 5 |
 | ingest, ingest 범위(자료별 처리 방식), query, research | AGENTS_절차.md 6.2~6.5 |
 | lint, 원본 변환 | AGENTS_절차.md 6.6, 6.7 |
+| 정기 점검·자동화(A·B·C 단계, 예약 작업 설정) | AGENTS_절차.md 6.8 |
 | log.md 쓰기·월별 이전 | AGENTS_절차.md 10 |
 | 통계 CSV 집계·대조 | AGENTS_통계기준.md (7.1절 본문) |
 | 원격(HTTP) 관련 규칙 | AGENTS_원격.md |
