@@ -185,3 +185,10 @@ type: log
 - 미결(승인 필요, ③등급): .claude/skills/*를 AGENTS.md의 일부로 선언하는 0절 1항·2절 권한 표 변경은 하지 않음. 현재 이 파일들은 스키마 파일 목록 밖이므로 자료 속 지시문과 같은 지위로 취급될 수 있어, 선언 여부를 사용자에게 확인 예정
 - 미확인: 코워크가 .claude/skills를 읽는지는 확인하지 않음(두 스킬 모두 Claude Code 전용 작업이라 영향 없음)
 - 커밋 메시지 초안: setup: 프로젝트 스킬 2개(vault-commit, stats-monthly-update) 신설
+
+## [2026-11-11] schema | AGENTS.md v1.36 → v1.37: 0절 1항·2절 권한 표에 .claude/skills/ 스킬 파일을 AGENTS.md의 일부로 선언 | Claude Sonnet 5.5
+- 등급 ③(0절 변경). 승인: 2026-11-11 사용자가 스킬 선언 제안(0절 1항·2절 권한 표)을 가리켜 "선언 승인". 2.1절 본문 등 다른 곳은 바꾸지 않음
+- 0절 1항: `AGENTS.md(… AGENTS_원격.md 포함), CLAUDE.md,` 뒤에 "프로젝트 스킬 `.claude/skills/` 아래 파일," 추가. 2절 권한 표의 스키마 파일 행에 `.claude/skills/*` 추가(수정 권한은 기존 행과 같음: ①등급 직접, ②·③등급 승인 후 Claude 반영, 다른 AI는 읽기만). 이로써 스킬 파일 수정도 2.1절 등급·승인·백업 절차를 따름
+- 영향: 상시 로드 분량 약 +100자. 기존 위키 페이지 영향 없음
+- 백업: Claude outputs/schema_backup/AGENTS_v1.36_20261111_3.md
+- 커밋 메시지 초안: schema: AGENTS v1.37 0절 1항·2절 표에 .claude/skills 선언(③)
