@@ -167,3 +167,13 @@ type: log
 - 백업: Claude outputs/schema_backup/AGENTS_v1.36_20261111_2.md, CLAUDE_20261111_2.md
 - 미반영(후속 후보): SOURCE_REGISTRY.yaml의 notes·중복본·remote_allowed 정리는 이번 범위 밖
 - 커밋 메시지 초안: schema: AGENTS v1.36 경량화(작업별 절차를 AGENTS_절차.md로 분리, 대응표, CLAUDE.md 정리)
+
+## [2026-11-11] fix | Claude outputs의 옛 사본 정리: build_index.py·mcp_server.py·README 사본·stats_seqmap json 삭제, 동일 사본 4건 삭제, README.md 안내문으로 교체 | Claude Sonnet 5.5
+- 승인: 2026-11-11 사용자가 작업 4 처분안을 가리켜 "A+B 승인"(AGENTS.md 2.1절 삭제는 사용자 확인 후)
+- 삭제(A): Claude outputs/build_index.py(50,012바이트, 실제 52,819), mcp_server.py(26,087, 실제 28,380), ai-vault-mcp_README.md, stats_seqmap_2026-11-10.json(43KB, 읽는 스크립트 없음). README.md는 옛 README 사본(위 파일과 동일 내용)이라 안내문으로 교체
+- 삭제(B): search.py, check_index.py, check_md_quality.py, convert_haesul.py(J:\MCP\ai-vault-mcp의 파일과 바이트 단위로 동일한 사본. 삭제 전 cmp로 확인). 실제 버전은 모두 J:\MCP\ai-vault-mcp에 있음
+- 사전 확인: 위키 페이지·SOURCE_REGISTRY.yaml이 이 파일들을 경로로 참조하지 않음(log.md 이력과 2026-09-23 lint 보고의 말 언급뿐). refine_subcommittee_results.py는 이미 J:\MCP 경로를 지정해 영향 없음. 사본 build_index.py를 import하던 search.py·check_md_quality.py는 함께 삭제(B)
+- 새 README.md: 실제 버전 위치, wiki_lint.py v1.4·split_log.py 등 이 폴더 주요 스크립트 안내. 11-11 log 분할 때 약속한 split_log.py 설명을 포함
+- 복구: 모두 git 추적 파일이라 커밋 이력에서 복원 가능
+- lint: wiki_lint.py exit=0
+- 커밋 메시지 초안: fix: Claude outputs 옛 사본 정리(MCP 실제 버전은 J:\MCP\ai-vault-mcp), README 안내문 교체
