@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-이 폴더에서 작업하기 전에 반드시 `AGENTS.md`와 `SOURCE_REGISTRY.yaml`을 읽고 따른다. 통계 CSV를 집계·대조하는 작업이면 AGENTS.md 7.1절 본문인 `AGENTS_통계기준.md`도 읽는다(이 파일은 자동으로 불러오지 않는다).
-`AGENTS.md`가 운영 원칙이고, `SOURCE_REGISTRY.yaml`이 자료별 처리 방법(기준본·중복본·보안등급)이다. 이 파일은 그 두 파일을 가리키기만 한다.
+`AGENTS.md`가 운영 원칙이며 아래 줄로 자동 로드된다. 작업 종류에 따라 AGENTS.md 끝의 "작업별 읽을 문서" 대응표가 가리키는 `AGENTS_절차.md`·`AGENTS_통계기준.md`·`AGENTS_원격.md`의 해당 절을 그 작업 전에 읽는다(이 파일들은 자동으로 불러오지 않는다).
+`SOURCE_REGISTRY.yaml`(자료별 처리 방법: 기준본·중복본·보안등급)은 통째로 읽지 않는다. 작업에 관련된 `id`·`path`를 검색해 해당 항목과 `defaults`만 읽는다. 이 파일은 그 문서들을 가리키기만 한다.
 
 @AGENTS.md
 

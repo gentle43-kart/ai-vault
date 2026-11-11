@@ -5,3 +5,9 @@
 ## 0절 3항 (원문)
 
 3. `SOURCE_REGISTRY.yaml`에서 `remote_allowed: false`인 자료는 원격(HTTP) 경로로 제공하지 않는다. 단, MCP 서버의 `AIVAULT_REMOTE_EXTRA_IDS` 환경변수로 관리자가 지정한 `registry_id`는 예외로 제공할 수 있다. 이 예외는 항목마다 개별 승인(③등급)을 받아야 하며, 결과 제목에 보안등급 표시(`[internal]` 등)를 유지한다.
+
+## 2.1절 구성요소 표의 ChatGPT 행 (원문)
+
+| 구성요소 | 역할 |
+|---|---|
+| ChatGPT | Reader/Analyst: 조회·분석(`remote_allowed: true` 자료만) |

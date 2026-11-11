@@ -156,3 +156,14 @@ type: log
 - 현재 상태: AGENTS_절차.md에는 2.1절만 있고 대응표는 아직 없음(②등급 반영 때 추가). AGENTS_원격.md에는 0절 3항만 있고 2.1절 표의 ChatGPT 행은 AGENTS.md에 남아 있음
 - 백업: Claude outputs/schema_backup/AGENTS_v1.36_20261111.md
 - 커밋 메시지 초안: schema: AGENTS v1.36 0절 3항 원격 규칙을 AGENTS_원격.md로, 2.1절 본문을 AGENTS_절차.md로 이동(③-2·③-3)
+
+## [2026-11-11] schema | AGENTS.md v1.36 경량화 완료(②등급): 2.2·2.3·3.1~3.4·4·5·6.2~6.7·9·10절을 AGENTS_절차.md로 이동, 대응표 신설, CLAUDE.md 첫머리 수정 | Claude Sonnet 5.5
+- 등급 ②. 승인: 2026-11-11 사용자가 경량화안(작업 2)의 ②등급 묶음을 가리켜 "②등급 묶음 승인". ③-1·③-2·③-3은 앞선 두 항목에서 반영함
+- 이동: 2.2, 2.3, 3.1~3.4, 4.1~4.3, 5, 6.2~6.7, 9, 10절 전문을 AGENTS_절차.md로(절 번호 유지, 내용 변경 없음). AGENTS.md에는 3절 끝 안내 1줄, 4절·9절 요지, 6절 안내 1줄, "작업별 읽을 문서" 대응표를 둠. 2절 권한 표의 스키마 파일 행에 AGENTS_절차.md·AGENTS_원격.md 추가, 구성요소 표의 ChatGPT 행은 원문 그대로 AGENTS_원격.md로 이동
+- CLAUDE.md: 첫머리의 "AGENTS.md와 SOURCE_REGISTRY.yaml을 반드시 읽고" 지시를 삭제하고 "AGENTS.md 자동 로드, 대응표의 절은 작업 전에 읽는다, REGISTRY는 관련 id·path와 defaults만 검색해 읽는다"로 바꿈. 나머지 규칙은 그대로
+- 검증: 이동 전 AGENTS.md 비어 있지 않은 376줄 중 새 파일 3개(AGENTS.md, AGENTS_절차.md, AGENTS_원격.md)에 그대로 없는 줄은 1줄(의도한 변경: 2절 표의 스키마 파일 행). 누락 0
+- 분량: 상시 로드 AGENTS.md 8,825자 + CLAUDE.md 2,845자 = 11,670자(이전 29,279자). AGENTS_절차.md 19,818자. wiki_lint.py exit=0
+- 기존 위키 페이지가 인용한 "AGENTS.md ○절"은 대응표로 찾음(페이지 수정 없음). 위키 변경이 아니어서 색인 요청은 하지 않음
+- 백업: Claude outputs/schema_backup/AGENTS_v1.36_20261111_2.md, CLAUDE_20261111_2.md
+- 미반영(후속 후보): SOURCE_REGISTRY.yaml의 notes·중복본·remote_allowed 정리는 이번 범위 밖
+- 커밋 메시지 초안: schema: AGENTS v1.36 경량화(작업별 절차를 AGENTS_절차.md로 분리, 대응표, CLAUDE.md 정리)
