@@ -5,7 +5,7 @@ author:
 related: []
 created: {{DATE:YYYY-MM-DD}}
 description:
-보안등급: unknown
+보안등급: public
 status: 대기
 tags: []
 ---
