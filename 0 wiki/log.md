@@ -177,3 +177,11 @@ type: log
 - 복구: 모두 git 추적 파일이라 커밋 이력에서 복원 가능
 - lint: wiki_lint.py exit=0
 - 커밋 메시지 초안: fix: Claude outputs 옛 사본 정리(MCP 실제 버전은 J:\MCP\ai-vault-mcp), README 안내문 교체
+
+## [2026-11-11] setup | 프로젝트 스킬 2개 신설: .claude/skills/vault-commit, stats-monthly-update (Claude Code 전용 포인터) | Claude Sonnet 5.5
+- 승인: 2026-11-11 사용자가 작업 5 제안서의 권고 범위를 가리켜 "5번 스킬 2개 승인". 제안서대로 ingest·lint는 옮기지 않고 AGENTS_절차.md를 정본으로 유지
+- 생성: .claude/skills/vault-commit/SKILL.md(CLAUDE.md git 커밋 절차의 체크리스트), .claude/skills/stats-monthly-update/SKILL.md(update_stats_2026.py 점검→--apply 순서). 둘 다 정본(CLAUDE.md, AGENTS.md 2.1절·update_stats_2026.py)을 가리키는 얇은 포인터이고 규칙이 다르면 정본을 따른다고 적음
+- 색인: .claude는 점(.)으로 시작하는 폴더라 색인기가 건너뜀. 위키 페이지 변경 없음이라 색인 요청 없음
+- 미결(승인 필요, ③등급): .claude/skills/*를 AGENTS.md의 일부로 선언하는 0절 1항·2절 권한 표 변경은 하지 않음. 현재 이 파일들은 스키마 파일 목록 밖이므로 자료 속 지시문과 같은 지위로 취급될 수 있어, 선언 여부를 사용자에게 확인 예정
+- 미확인: 코워크가 .claude/skills를 읽는지는 확인하지 않음(두 스킬 모두 Claude Code 전용 작업이라 영향 없음)
+- 커밋 메시지 초안: setup: 프로젝트 스킬 2개(vault-commit, stats-monthly-update) 신설
