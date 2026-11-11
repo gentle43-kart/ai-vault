@@ -8,7 +8,7 @@
 
 ## 이 폴더의 주요 스크립트
 
-- `wiki_lint.py` v1.4: 위키 lint(읽기 전용, JSON 출력). `0 wiki/log/` 월별 조각은 형식 점검에서 제외하고 링크 스캔에는 포함
+- `wiki_lint.py` v1.5: 위키 lint(읽기 전용, JSON 출력). `0 wiki/log/` 월별 조각은 형식 점검에서 제외하고 링크 스캔에는 포함. internal 출처가 모두 statistics 유형이고 링크·언급 단서가 없는 페이지는 `internal_suspect` 대신 `internal_aggregate`(확인용 목록)로 출력
 - `split_log.py` v1.0: `0 wiki/log.md`의 지난 달 항목을 `0 wiki/log/YYYY-MM.md`로 바이트 그대로 옮김(기본은 점검만, `--apply`로 적용. 매월 첫 항목을 쓰기 전에 실행)
 - `stats_articles.py` 등 통계 스크립트: 각 파일 첫머리의 목적·입력·출력·검증값 주석 참조
 - `update_stats_2026.py`: `stats_2026_recent` 월별 갱신(`--apply`)

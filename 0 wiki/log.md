@@ -238,3 +238,11 @@ type: log
 - 검증: wiki_lint.py exit=0, 열린 항목 969 → 732(237 감소 = 일치 페이지 수), broken_links 38(같은 항목)·orphans 0·broken_sources 0·sources_bad 0. 색인 reindex_last.log exit=0, 추가 5 / 갱신 237
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.49_20261111.yaml
 - 커밋 메시지 초안: fix: 위원회 규칙 제8~12호 등재본 대조, 조문 237개 해소 반영, registry v1.50, compare_rules_2026.py 신설
+
+## [2026-11-11] fix | wiki_lint.py v1.5: AGENTS.md v1.38 8절 단서 반영, internal_aggregate 항목 신설 | Claude Sonnet 5.5
+- 세션: Claude Code. 승인: 2026-11-11 사용자가 작업 3의 변경 범위 보고를 가리켜 "작업 3 승인"
+- 변경: Claude outputs/wiki_lint.py v1.4 → v1.5. internal로 지정된 출처를 쓴 페이지 가운데, 그 internal 출처의 registry type이 모두 statistics이고 internal 자료 링크·언급 단서가 없으면 internal_suspect에서 빼 internal_aggregate(확인용 목록)로 출력. 그 밖의 판정은 그대로. 위키 페이지는 바꾸지 않음
+- 검증(같은 위키 상태에서 v1.4와 v1.5 실행 비교): 두 번 모두 exit=0. JSON에서 달라진 키는 internal_suspect(19 → 7)와 신설 internal_aggregate(12)뿐이며, 빠진 12개 = 새 항목의 12개로 같은 집합이고 internal_suspect에 새로 들어온 페이지는 없음. 12개는 모두 통신심의 쟁점 페이지(광고성 정보 전송·게시, 교통단속 회피장비 판매정보, 다단계 판매정보 등)
+- 참고: 남은 internal_suspect 7개는 소송 현황 문서 링크·언급 등 다른 단서가 있는 페이지로, 이번 변경 범위 밖
+- Claude outputs/README.md의 wiki_lint.py 설명을 v1.5로 갱신
+- 커밋 메시지 초안: fix: wiki_lint v1.5 internal 집계값 페이지를 internal_aggregate로 분리(AGENTS v1.38 8절)

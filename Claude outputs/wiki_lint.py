@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-wiki_lint.py v1.4 (2026-11-11; v1.4: 0 wiki/log/ 월별 조각을 머리말 점검·stray 점검에서 빼고 링크 스캔에는 포함(AGENTS.md v1.35 10절);
+wiki_lint.py v1.5 (2026-11-11; v1.5: AGENTS.md v1.38 8절 단서 — internal 출처가 모두 registry type statistics이고 링크·언급 단서가 없는 페이지는
+  internal_suspect 대신 internal_aggregate(확인용 목록)로 출력, 그 밖의 출력은 v1.4와 같음;
+  v1.4: 0 wiki/log/ 월별 조각을 머리말 점검·stray 점검에서 빼고 링크 스캔에는 포함(AGENTS.md v1.35 10절);
   v1.3 2026-10-06; v1.1: 중복본 판정에 레지스트리 규칙 2 적용, v1.2: _Inbox·_templates 제외(AGENTS.md v1.16 6.3),
   v1.3: ① 링크 해석에 머리말 aliases 반영 ② 내부 출처·중복본 판정을 색인기 Registry.match와 같은 규칙(파일 단위 우선, 그다음 가장 긴 폴더)으로
   ③ 위키 전체 페이지의 sources 로컬 경로 존재 검사 결과를 broken_sources로 따로 출력, 깨진 출처가 있으면 종료 코드 1)
@@ -143,6 +145,7 @@ for k, v in pages.items():
 R['broken_sources'] = broken_sources
 # internal
 intr = []
+agg = []
 for k in content:
     fm = pages[k]['fm']
     srcs = [str(s) for s in fm.get('sources') or []]
@@ -151,8 +154,15 @@ for k in content:
     mentions = LIT in pages[k]['body'] or '소송 현황 문서' in pages[k]['body']
     cls = fm.get('classification')
     if (uses or links_lit or mentions) and cls != 'internal':
-        intr.append(dict(page=k, source=uses, link=links_lit, mention=mentions, classification=cls))
+        # v1.5: internal 출처가 모두 registry type statistics이고 링크·언급 단서가 없으면 집계값만 옮긴 페이지로 보고 따로 낸다(AGENTS.md 8절 단서)
+        int_types = {(reg_match(s) or {}).get('type') for s in srcs
+                     if not s.startswith(('web:', 'script:')) and (reg_match(s) or {}).get('classification') == 'internal'}
+        if uses and not links_lit and not mentions and int_types == {'statistics'}:
+            agg.append(dict(page=k, source=uses, classification=cls))
+        else:
+            intr.append(dict(page=k, source=uses, link=links_lit, mention=mentions, classification=cls))
 R['internal_suspect'] = intr
+R['internal_aggregate'] = agg   # v1.5: 확인용 목록(집계값만 옮긴 페이지가 실제로 집계값뿐인지 사람이 확인)
 R['internal_pages'] = sorted(k for k in pages if pages[k]['fm'].get('classification') == 'internal')
 # 사례 상태
 cases = {k: pages[k]['fm'] for k in content if pages[k]['fm'].get('type') == '사례'}
