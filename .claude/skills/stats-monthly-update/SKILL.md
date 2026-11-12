@@ -13,6 +13,6 @@ description: 사용자가 새 월별 통계 파일(△26.01-NN.csv)을 넣었다
    `python "Claude outputs/update_stats_2026.py" "<새 파일 경로>"`
    - 종료 코드 2(현 잠정본의 의결번호가 새 파일에 없음)면 중단하고 사용자에게 보고한다.
    - 월별 행 수, 추가·변경·순번이 바뀐 행 수를 사용자에게 보고한다.
-3. 점검이 통과하고 추가·변경이 1행 이상이면 `--apply`로 다시 실행한다. 스크립트가 잠정본 덮어쓰기, `SOURCE_REGISTRY.yaml`의 `stats_2026_recent` `period`·`notes` 갱신(백업, YAML 검증 포함), `log.md` 항목, `reindex.request`를 처리한다. `path`·보안 필드는 바뀌지 않는다.
+3. 점검이 통과하고 추가·변경이 1행 이상이면 `--apply`로 다시 실행한다. 스크립트(v1.1)가 registry 새 내용 검증 → 백업(`J:\MCP\ai-vault-mcp\data\stats_backup\{날짜시각}\`) → registry 쓰기 → 잠정본 교체 → 재검증 → `log.md` 항목(새 파일 sha256 포함) → `reindex.request` 순으로 처리한다. 중간에 실패하면 잠정본과 registry를 함께 백업본으로 되돌리고 종료 코드 1로 끝난다(log·reindex 없음). `path`·보안 필드는 바뀌지 않는다.
 4. 이전 △ 파일은 지우지 않는다. 위키 페이지의 기존 수치는 다시 계산하지 않는다(`AGENTS_통계기준.md` 7.1절). 재집계는 사용자가 요청할 때와 확정본을 반영할 때만 한다.
 5. 끝나면 `data\reindex_last.log`의 `exit=0`을 확인하고(`reindex.failed`가 있으면 `index_failed.txt`부터 확인), `vault-commit` 스킬로 고친 파일만 커밋한다.

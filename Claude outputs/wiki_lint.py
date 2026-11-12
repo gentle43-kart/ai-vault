@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-wiki_lint.py v1.5 (2026-11-11; v1.5: AGENTS.md v1.38 8절 단서 — internal 출처가 모두 registry type statistics이고 링크·언급 단서가 없는 페이지는
+wiki_lint.py v1.6 (2026-11-12; v1.6: 판정 정리 — ① log.md·0 wiki/log/ 조각에서 나온 끊긴 링크(옛 조 번호 등 과거 기록)는 broken_links_log(참고)로 따로 내고
+  broken_links에는 내용 페이지에서 나온 것만 남긴다 ② 종료 코드 1의 조건을 broken_sources 외에 broken_links·yaml_error·sources_bad까지 넓힌다(종료 코드는 0·1만 쓴다).
+  그 밖의 출력은 v1.5와 같다;
+  v1.5: AGENTS.md v1.38 8절 단서 — internal 출처가 모두 registry type statistics이고 링크·언급 단서가 없는 페이지는
   internal_suspect 대신 internal_aggregate(확인용 목록)로 출력, 그 밖의 출력은 v1.4와 같음;
   v1.4: 0 wiki/log/ 월별 조각을 머리말 점검·stray 점검에서 빼고 링크 스캔에는 포함(AGENTS.md v1.35 10절);
   v1.3 2026-10-06; v1.1: 중복본 판정에 레지스트리 규칙 2 적용, v1.2: _Inbox·_templates 제외(AGENTS.md v1.16 6.3),
@@ -8,7 +11,8 @@ wiki_lint.py v1.5 (2026-11-11; v1.5: AGENTS.md v1.38 8절 단서 — internal �
   ③ 위키 전체 페이지의 sources 로컬 경로 존재 검사 결과를 broken_sources로 따로 출력, 깨진 출처가 있으면 종료 코드 1)
 목적: AGENTS.md 6.6절 lint 항목 가운데 기계적으로 점검할 수 있는 것을 한 번에 점검한다.
 입력: 자료창고 루트(기본값: 이 파일의 상위 폴더), SOURCE_REGISTRY.yaml, 0 wiki/**/*.md (@clippings·@Inbox·@templates 제외, 옛 이름도 제외)
-출력: 표준출력에 JSON(점검 항목별 결과). 파일을 고치지 않는다(읽기 전용). 종료 코드: broken_sources(존재하지 않는 로컬 출처)가 있으면 1, 없으면 0.
+출력: 표준출력에 JSON(점검 항목별 결과). 파일을 고치지 않는다(읽기 전용). 종료 코드(v1.6): broken_sources(존재하지 않는 로컬 출처)·broken_links(내용 페이지의 끊긴 링크)·yaml_error·sources_bad 가운데 하나라도 있으면 1, 모두 없으면 0.
+      broken_links_log(log 기록의 끊긴 링크)는 참고용이라 종료 코드에 넣지 않는다. 스크립트가 예외로 죽어도 파이썬은 1을 내므로, 호출하는 쪽은 표준출력이 JSON인지도 확인해야 한다.
 검증값: 2026-09-22 lint 보고 당시 기준(조문 60개 verified_at 공란)과 현재 조문 페이지 수를 함께 출력해 대조한다.
 """
 import os, re, sys, json, glob, yaml
@@ -90,7 +94,18 @@ for k, v in pages.items():
         else:
             broken.setdefault(l, []).append(k)
 todo = set(link_re.findall(open(os.path.join(W, 'index.md'), encoding='utf-8').read().split('## 작성 필요')[-1]))
-R['broken_links'] = {l: dict(pages=sorted(ps), in_todo=l in todo) for l, ps in broken.items() if l != '페이지 이름'}
+# v1.6: log.md와 0 wiki/log/ 조각은 과거 기록이라 링크가 옛 이름이어도 고치지 않는다(AGENTS.md 10절). 내용 페이지와 나눠 센다
+def _is_log(k):
+    return k == 'log.md' or k.startswith('log' + os.sep)
+R['broken_links'], R['broken_links_log'] = {}, {}
+for l, ps in broken.items():
+    if l == '페이지 이름':
+        continue
+    c_ps, l_ps = sorted(p for p in ps if not _is_log(p)), sorted(p for p in ps if _is_log(p))
+    if c_ps:
+        R['broken_links'][l] = dict(pages=c_ps, in_todo=l in todo)
+    if l_ps:
+        R['broken_links_log'][l] = dict(pages=l_ps, in_todo=l in todo)
 R['todo_list'] = sorted(todo)
 R['todo_now_exists'] = sorted(t for t in todo if t in link_names)
 content = {k for k, v in pages.items() if v['fm'].get('type') in ('문서', '조문', '쟁점', '사례', '분석')}
@@ -189,5 +204,8 @@ for k in content:
     open_items[k] = dict(open=o, done=len(d), plain=plain)
 R['_open_items'] = open_items
 R['counts'] = dict(pages=len(pages), content=len(content), cases=len(cases), articles=len(arts))
+EXIT_KEYS = ('broken_sources', 'broken_links', 'yaml_error', 'sources_bad')
+R['exit_reasons'] = [k for k in EXIT_KEYS if R[k]]
 print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
-sys.exit(1 if R['broken_sources'] else 0)
+# v1.6: 종료 코드는 0·1만. 1이면 어느 항목 때문인지 JSON의 exit_reasons에 남긴다(maintenance_check가 요약에 쓴다)
+sys.exit(1 if any(R[k] for k in EXIT_KEYS) else 0)

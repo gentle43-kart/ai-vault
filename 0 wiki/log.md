@@ -298,3 +298,12 @@ type: log
 - 미확인: 1~7일 이후 본 경로(PC 접근·법령 MCP·쓰기)는 첫 실제 실행(2026-12-02)에서 확인
 - 커밋 대상 파일: Claude outputs/schema_backup/B_예약작업_프롬프트_v2_20261111.md, 0 wiki/log.md
 - 커밋 메시지 초안: docs: B 예약 작업 프롬프트 v2 보관(원격 도구 없을 때 로컬 접근)
+
+## [2026-11-12] fix | 외부 개선 의견 대조 결과 반영: 통계 갱신 복구 순서(update_stats_2026 v1.1)·lint 판정 정리(wiki_lint v1.6)·검색 정렬(mcp_server v1.13) | Claude Sonnet 5.5
+- 세션: Claude Code. 인계메모 작업 1~4(2026-11-12). 순서는 데이터 손상 위험 → 주간 점검 일정 → 작업량 순(사용자 결정). 위키 페이지·SOURCE_REGISTRY.yaml·AGENTS 계열 문서는 고치지 않음
+- 1) update_stats_2026.py v1.1: --apply를 registry 새 내용 메모리 검증 → CSV·registry 백업(J:\MCP\ai-vault-mcp\data\stats_backup\{날짜_시각}\) → registry 쓰기 → CSV 임시 파일 복사 후 os.replace → 디스크 재검증 순으로 바꾸고, 어느 단계든 예외가 나면 CSV·registry를 함께 복원해 종료 코드 1(log·reindex 없음). log 항목에 새 파일 sha256·기준일·실행 옵션 한 줄 추가. dry-run·종료 코드 2는 그대로. 시험(임시 복사본): 정상 실행 결과가 v1.0과 같음(CSV·registry 바이트 동일, log는 추가 줄만 다름), 강제 실패 4종(CSV 교체 실패·log 쓰기 실패·사전 검증 실패·교체 뒤 해시 불일치) 모두 실행 전후 sha256 동일·reindex.request 없음. 실제 2026_잠정.csv·registry는 시험에 쓰지 않음
+- 2) wiki_lint.py v1.6, maintenance_check.py v1.1: log.md·log/ 조각의 끊긴 링크를 broken_links_log(참고)로 분리(현재 broken_links 0, broken_links_log 38). 종료 코드 1 조건을 broken_sources·내용 페이지 broken_links·yaml_error·sources_bad로 확대(0·1만 사용), JSON에 exit_reasons 추가. 현재 종료 1의 사유는 yaml_error 1건(위키 루트 웹클리퍼 기본-템플릿-clipper.md, Cowork가 @templates로 이동 예정이라 예외 처리 없음). maintenance_check 요약이 log 링크를 따로 표시하고 종료 1 사유를 적으며, lint 출력이 JSON이 아니면 실행 실패로 기록
+- 3) mcp_server.py v1.13: search의 ORDER BY만 변경(① 파일명 정확 일치 문서 맨 앞 ② bm25 × 위키 층 가중치 1.14 ③ chunk_id). 시험 질의 7종 total 전부 불변. '방송심의규정 제46조' 조문 페이지 15위 → 전체·kind=wiki 1위, '객관성' 위키 0 → 9/10, '공정성' 0 → 10/10. 적용하려면 Claude 데스크톱 재시작 필요
+- 확인 결과: aliases는 별도 색인되지 않으나 머리말 원문이 문서 첫 조각에 들어 있어 본문 검색으로는 찾힘(260개 조각). reindex는 색인 대상 파일을 바꾸지 않아 요청하지 않음
+- 승인 후 반영(미반영): AGENTS_절차.md 6.6절·10절에 log 링크는 broken_links_log로 따로 세고 고치지 않는다는 문구 추가(②등급); aliases 색인·문서 단위 묶기·2글자 검색어 우선 조회(색인기 변경·전체 재구축·offset 의미 변경 동반, 2단계)
+- 커밋 대상 파일: J:\AI 자료 저장소: Claude outputs/update_stats_2026.py, Claude outputs/wiki_lint.py, Claude outputs/maintenance_check.py, Claude outputs/README.md, .claude/skills/stats-monthly-update/SKILL.md, 0 wiki/log.md / J:\MCP\ai-vault-mcp 저장소: mcp_server.py, README.md (Claude Code가 직접 커밋)
