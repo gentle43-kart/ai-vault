@@ -307,3 +307,10 @@ type: log
 - 확인 결과: aliases는 별도 색인되지 않으나 머리말 원문이 문서 첫 조각에 들어 있어 본문 검색으로는 찾힘(260개 조각). reindex는 색인 대상 파일을 바꾸지 않아 요청하지 않음
 - 승인 후 반영(미반영): AGENTS_절차.md 6.6절·10절에 log 링크는 broken_links_log로 따로 세고 고치지 않는다는 문구 추가(②등급); aliases 색인·문서 단위 묶기·2글자 검색어 우선 조회(색인기 변경·전체 재구축·offset 의미 변경 동반, 2단계)
 - 커밋 대상 파일: J:\AI 자료 저장소: Claude outputs/update_stats_2026.py, Claude outputs/wiki_lint.py, Claude outputs/maintenance_check.py, Claude outputs/README.md, .claude/skills/stats-monthly-update/SKILL.md, 0 wiki/log.md / J:\MCP\ai-vault-mcp 저장소: mcp_server.py, README.md (Claude Code가 직접 커밋)
+
+## [2026-11-12] schema | AGENTS v1.39 → v1.40: AGENTS_절차.md 6.6절·10절에 log 링크 처리 문구 추가(②) | Claude Sonnet 5.5
+- 등급·승인: ②등급. 2026-11-12 사용자가 위 fix 항목의 승인 대기 제안(6.6절·10절 문구)을 가리켜 "승인, 반영"이라고 승인
+- 변경: 6.6절 "존재하지 않는 페이지로 향하는 링크" 항목 아래에 broken_links / broken_links_log 구분과 wiki_lint 종료 코드(0·1, 1의 조건) 문장 추가. 10절 끝에 log의 [[링크]]는 당시 이름 그대로 두고 lint는 broken_links_log로 따로 센다는 문장 추가. AGENTS.md는 판 번호·개정일만 갱신
+- 백업: Claude outputs/schema_backup/AGENTS_v1.39_20261112.md, Claude outputs/schema_backup/AGENTS_절차_v1.39_20261112.md. 치환 스크립트로 수정하고 바꿀 문장이 한 번만 있음을 확인
+- 검증: wiki_lint v1.6 재실행 broken_links 0, broken_links_log 38(변화 없음)
+- 커밋 대상 파일: AGENTS.md, AGENTS_절차.md, Claude outputs/schema_backup/AGENTS_v1.39_20261112.md, Claude outputs/schema_backup/AGENTS_절차_v1.39_20261112.md, 0 wiki/log.md
