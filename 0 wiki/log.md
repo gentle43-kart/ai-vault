@@ -442,3 +442,15 @@ type: log
 - 반영: [[2026-11-13 의결번호 연결 후보·미연결 목록]] 5절
 - 커밋 대상 파일: 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md
 - 커밋 메시지 초안: fix: 광고소위 호수 범위 보류 7범위 정리
+
+## [2026-11-13] setup | 통계 정형 색인(decision_rows·decision_articles)과 query_decisions 도구 | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자 승인(2026-11-13): "재구성 방식으로 진행"(설계), "승인, 반영"(운영 반영·전체 재색인)
+- 작업 1(집계 대상 점검): decisions 14,291행 = 방송심의 12,768(보정본 6,136 + 18-25 분할본 6,210 + 2026 잠정 422) + 선방위 1,523. 파일 사이 중복 없음. 잠정본 중 의결일 2026-06-30 이하 214행만 넣으면 12,560행으로 통계기준 검증 범위와 일치. 기존 decisions 표 한계: 보정본 6,136행의 채널·프로그램 칸이 비어 있고 의결번호를 날짜로 읽은 47행(예: 제2014-04-070호 → 2014-04-07), 의결번호 없음 643행(스크립트는 625행) → decisions는 재사용하지 않고 새 표를 만듦
+- 작업 2: 저장소 J:\MCPi-vault-mcp에 decision_parse.py v0.1(통계기준 규칙·조문 파서를 stats_articles/ad/hyup/sangpan/grade_articles.py에서 옮김, 항·호는 신규), check_decision_parse.py. build_index.py v1.16(PARSER_VERSION 2.0→2.1)이 decision_rows(12,768행)·decision_articles(16,877행)를 채움. 대조: 12,560행 원본 스크립트와 행 단위 차이 0, 검증값 일치(방송심의규정 제46조 1,351 / 제44조 760 / 제27조 777 / 제14조 1,117 / 제9조 332, 광고심의규정 3,277, 협찬고지규칙 216, 상품판매방송규정 1,337, 등급분류규칙 76, 의결일 미식별 1,135). 미해석: 관련조항이 있는 11,296행 중 119행(1.05%), 기타규정 20행
+- 작업 3: mcp_server.py v1.17 query_decisions(decision_query.py). unit(row|case) 필수, 재현 정보·검증값·의결번호 목록 자동 첨부
+- 작업 4: 질문 3개를 기존 스크립트와 새 도구로 비교해 모두 일치(제14조 연도·결과별 2020~2025 426행, MBN 주의 이상 61행, 제46조 결과별 1,351행: 권고 489 등). 호출은 3회 이상 → 1회, 응답 1,600~2,800자(추정)
+- 재색인: build_index.py --full, 2026-11-13 16:35~16:38, 성공 0 실패, 1,432개·140,676조각, quick_check ok, 세대 64. 옛 DB는 data/search.db.bak_20261113_1638로 보관. 운영 DB에서 검증값·질문 3개·search_case 연결(제2019-방송-76-0882↔제2020-02-0004) 재확인
+- 주의: 사용자가 Claude 데스크톱을 재시작해야 query_decisions가 보인다
+- 미처리: 작업 5(스키마 반영 diff 승인 대기: 4.1 reviewed 절차, 외부 확인 대기 목록·wiki_lint, 6.1·7.1 query_decisions 사용 규칙), 작업 6(다음 단계)
+- 커밋 대상 파일: J:\AI 자료 — 0 wiki/log.md / J:\MCPi-vault-mcp — build_index.py, mcp_server.py, decision_parse.py, decision_query.py, check_decision_parse.py
+- 커밋 메시지 초안: setup: 통계 정형 색인과 query_decisions(MCP v1.17, 색인기 v1.16)
