@@ -452,5 +452,5 @@ type: log
 - 재색인: build_index.py --full, 2026-11-13 16:35~16:38, 성공 0 실패, 1,432개·140,676조각, quick_check ok, 세대 64. 옛 DB는 data/search.db.bak_20261113_1638로 보관. 운영 DB에서 검증값·질문 3개·search_case 연결(제2019-방송-76-0882↔제2020-02-0004) 재확인
 - 주의: 사용자가 Claude 데스크톱을 재시작해야 query_decisions가 보인다
 - 미처리: 작업 5(스키마 반영 diff 승인 대기: 4.1 reviewed 절차, 외부 확인 대기 목록·wiki_lint, 6.1·7.1 query_decisions 사용 규칙), 작업 6(다음 단계)
-- 커밋 대상 파일: J:\AI 자료 — 0 wiki/log.md / J:\MCPi-vault-mcp — build_index.py, mcp_server.py, decision_parse.py, decision_query.py, check_decision_parse.py
+- 커밋 대상 파일: J:\AI 자료 — 0 wiki/log.md / J:/MCP/ai-vault-mcp — build_index.py, mcp_server.py, decision_parse.py, decision_query.py, check_decision_parse.py
 - 커밋 메시지 초안: setup: 통계 정형 색인과 query_decisions(MCP v1.17, 색인기 v1.16)
