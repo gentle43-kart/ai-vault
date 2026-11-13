@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-link_ad_ranges.py v0.2 (2026-11-13)
+link_ad_ranges.py v0.3 (2026-11-13: 사용자 결정 --approvals 추가)
 
 목적
   광고소위 원본 회의록에서 보고자가 연도·차수 없이 말하는 호수 범위("519호부터 532호까지")를
@@ -69,6 +69,8 @@ def load_labels():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
+    ap.add_argument("--approvals", default="J:/MCP/ai-vault-mcp/data/ad_range_approvals.csv",
+                    help="사용자(위임 포함)가 정한 candidate 처리(열: year,a,b,decision(approve|reject),labels,note). 없으면 무시")
     a = ap.parse_args()
     lab = load_labels()
     rows = []
@@ -130,10 +132,34 @@ def main():
                 mt, reason = "candidate", "같은 일련번호에 번호 둘 이상"
             rows.append([os.path.basename(f), line, y, flat[max(0, m.start() - 6):m.end() + 6],
                          x, z, mt, ns_pick, len(labels), ";".join(labels), reason])
+    # 사용자 결정 반영: candidate만 대상. approve는 confirmed(decided_by=user, labels 지정 시 그 번호만), reject는 none.
+    # 스크립트가 스스로 candidate를 승격하지는 않는다.
+    dec = {}
+    if os.path.exists(a.approvals):
+        with open(a.approvals, encoding="utf-8-sig", newline="") as fh:
+            for d in csv.DictReader(fh):
+                dec[(d["year"], d["a"], d["b"])] = d
+    napp = nrej = 0
+    for r in rows:
+        r.append("script")
+        d = dec.get((str(r[2]), str(r[4]), str(r[5])))
+        if d and r[6] == "candidate":
+            if d["decision"] == "approve":
+                if d.get("labels"):
+                    r[9] = d["labels"]
+                    r[8] = len(d["labels"].split(";"))
+                r[6], r[11], r[10] = "confirmed", "user", "사용자 확정: " + d.get("note", "") + " / 이전: " + r[10]
+                napp += 1
+            elif d["decision"] == "reject":
+                r[6], r[11], r[9], r[8], r[10] = "none", "user", "", 0, "사용자 기각: " + d.get("note", "") + " / 이전: " + r[10]
+                nrej += 1
+    if dec:
+        print("사용자 결정 반영: 확정 %d행, 기각 %d행 (결정 %d개 범위)" % (napp, nrej, len(dec)))
+
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(["file", "line", "year", "text", "a", "b", "match_type", "ns", "n_resolved", "labels", "reason"])
+        w.writerow(["file", "line", "year", "text", "a", "b", "match_type", "ns", "n_resolved", "labels", "reason", "decided_by"])
         w.writerows(rows)
     print("범위 추출:", len(rows), " 분포:", dict(collections.Counter(r[6] for r in rows)))
     print("연도별:", {y: dict(collections.Counter(r[6] for r in rows if r[2] == y)) for y in sorted({r[2] for r in rows})})

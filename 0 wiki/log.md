@@ -428,3 +428,10 @@ type: log
 - 보고서 2절 12번 선택·설명 갱신. 재색인: reindex_last.log exit=0 확인(2026-11-13 16:15)
 - 커밋 대상 파일: 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md
 - 커밋 메시지 초안: fix: 제2020-18-0169호 연결 확정
+
+## [2026-11-13] fix | 호수 범위 candidate 처리(link_ad_ranges.py v0.3) | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자 위임(2026-11-13, "네가 가려서 확정해"). 고유 범위 candidate 67건: 광고 번호로 풀린 17범위 확정(이름·방송일 일치, 일부만 풀린 범위는 풀린 번호만, 2015년 602~610호는 603~610호), 방송 번호로만 풀린 44범위 기각(내용 불일치, confirmed는 전부 광고 번호), 7범위 보류
+- 변경: link_ad_ranges.py v0.3에 --approvals 추가(candidate만 대상). 처리 목록 J:/MCP/ai-vault-mcp/data/ad_range_approvals.csv(자료창고 밖). 연결표 재생성: 파일 단위 confirmed 259 / candidate 15 / none 151
+- 반영: [[2026-11-13 의결번호 연결 후보·미연결 목록]] 5절. search_case에서 확정 17범위 중 1범위가 기존 조회에 없던 조각을 추가(나머지는 색인이 이미 같은 조각을 찾음)
+- 커밋 대상 파일: Claude outputs/link_ad_ranges.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md
+- 커밋 메시지 초안: fix: 광고소위 호수 범위 candidate 처리(link_ad_ranges.py v0.3)
