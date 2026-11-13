@@ -546,3 +546,11 @@ type: log
 - 후속: SOURCE_REGISTRY.yaml의 minutes_plenary_decisions `period`·`notes`가 2019년만 적혀 있어 2020년 반영 필요(②등급, 사용자 승인 대기)
 - 커밋 대상 파일: Claude outputs/convert_decisions.py, 0 wiki/log.md (1 documents_md·3 source_raw는 .gitignore 대상)
 - 커밋 메시지 초안: ingest: 전체회의 의결서 2020년분 변환, 변환 스크립트 연도 인자화
+
+## [2026-11-13] schema | SOURCE_REGISTRY v1.53 minutes_plenary_decisions period·notes 2020년 반영 | Claude Sonnet 5.5
+- 등급: ②(기존 항목 수정). 승인: 사용자 2026-11-13 "승인"(제안: period를 "2019~2020(107개 파일)"로, notes에 2020년분 추가, 버전 1.53)
+- 변경: SOURCE_REGISTRY.yaml v1.52 → v1.53, minutes_plenary_decisions의 period·notes만 수정. path·보안 필드·ingest는 그대로
+- 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.52_20261113.yaml
+- 검증: YAML 파싱, id 89개 중복 없음, path·raw_source 존재. 색인 영향 없음(경로·검색 대상 변화 없음)
+- 커밋 대상 파일: SOURCE_REGISTRY.yaml, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.52_20261113.yaml, 0 wiki/log.md
+- 커밋 메시지 초안: schema: minutes_plenary_decisions period·notes에 2020년분 반영(v1.53)

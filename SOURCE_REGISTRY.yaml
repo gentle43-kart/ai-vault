@@ -3,7 +3,7 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.52"
+version: "1.53"
 updated: 2026-11-13
 root: "J:/AI 자료"
 
@@ -517,11 +517,11 @@ sources:
     type: meeting_minutes
     ingest: search_only
     raw_source: "3 source_raw/회의록_raw/전체회의/의결서_raw/"
-    period: "2019 제1~24차(47개 파일, 의결번호 201건)"
+    period: "2019~2020(107개 파일: 2019년 47, 2020년 60)"
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "전체회의 의결서(사건별 의결문: 주문·기초사실·판단·제재조치) 변환본. 2019년분 47개(2026-11-13 Claude 변환, AGENTS.md 6.7, pdfplumber, 쪽 주석 <!-- p.N -->, 사건 제목 ## 의결번호와 ### 주문·이유 제목만 추가, Claude outputs/convert_decisions_2019.py). 원본 PDF는 3 source_raw/회의록_raw/전체회의/의결서_raw/2019/(SHA-256 대조 완료). 2019년 중 제외: 제01차 지상파방송 0598-0(글꼴 문제로 숫자·따옴표 추출 실패), OCR 필요 12건. 다른 연도는 변환하지 않음. 쪽 머리말·꼬리말(예: 지상파방송팀 - 1)이 문장 중간에 끼는 곳이 있으며 원본 PDF 배치 그대로임. 보안등급 public은 사용자 기본값(public)에 따름(AGENTS_절차 2.1, 2026-10-16 결정). 최종 의결 내용은 stats(통계 CSV)가 우선하고 이 자료는 결정 사유 검색용"
+    notes: "전체회의 의결서(사건별 의결문: 주문·기초사실·판단·제재조치) 변환본. 2019년분 47개(2026-11-13 Claude 변환, AGENTS.md 6.7, pdfplumber, 쪽 주석 <!-- p.N -->, 사건 제목 ## 의결번호와 ### 주문·이유 제목만 추가, Claude outputs/convert_decisions_2019.py). 원본 PDF는 3 source_raw/회의록_raw/전체회의/의결서_raw/2019/(SHA-256 대조 완료). 2019년 중 제외: 제01차 지상파방송 0598-0(글꼴 문제로 숫자·따옴표 추출 실패), OCR 필요 12건. 다른 연도는 변환하지 않음. 쪽 머리말·꼬리말(예: 지상파방송팀 - 1)이 문장 중간에 끼는 곳이 있으며 원본 PDF 배치 그대로임. 보안등급 public은 사용자 기본값(public)에 따름(AGENTS_절차 2.1, 2026-10-16 결정). 2020년분 60개는 2026-11-13 같은 방법으로 추가(원본 3 source_raw/회의록_raw/전체회의/의결서_raw/2020/, SHA-256 대조 완료, 스크립트 Claude outputs/convert_decisions.py 2020, 제외: OCR 필요 7건, 쪽 꼬리말의 NUL 문자는 공백으로 바꿈, 사용자 승인 2026-11-13). 최종 의결 내용은 stats(통계 CSV)가 우선하고 이 자료는 결정 사유 검색용"
 
   # ── 통신소위 회의록 ───────────────────────────────────────
   - id: minutes_telecom
