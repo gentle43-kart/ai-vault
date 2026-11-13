@@ -483,3 +483,12 @@ type: log
 - 보고서 [[2026-11-13 통계 대조 열린 항목 점검]] 7절 항목을 닫음
 - 커밋 대상 파일: J:/AI 자료 — AGENTS.md, Claude outputs/schema_backup/AGENTS_v1.44_20261113.md, 0 wiki/분석/2026-11-13 통계 대조 열린 항목 점검.md, 0 wiki/log.md / J:/MCP/ai-vault-mcp — mcp_server.py, decision_query.py, article_map.py
 - 커밋 메시지 초안: schema: query_decisions 현행 조 번호 기준 옵션(MCP v1.18, AGENTS v1.45)
+
+## [2026-11-13] fix | 외부 확인 대기 목록 생성과 열린 항목 70개 이동 | Claude Sonnet 5.5
+- 생성: [[외부 확인 대기]]
+- 세션: Claude Code. 사용자 확인(2026-11-13, "목록 만들고 옮기기"). AGENTS_절차.md 6.6절 "외부 확인 대기"(v1.44)에 따름
+- 대상: 열린 항목 중 판결·소송 결과, 자료창고에 없는 원본·의결서·개정 사유서, 사무처 내부 문서·공문, 유권해석, 사용자 판단으로 가려낸 81개(키워드 기계 분류, 법령 원문이 근거인 10개는 법령 MCP로 확인할 수 있어 제외). 그중 classification internal 페이지의 판결·소송 11개는 internal 내용을 목록으로 옮기지 않으려고 이동하지 않고 각 페이지에 남김(AGENTS.md 8절)
+- 이동: 51쪽의 70개를 `- [→] 요지 → [[외부 확인 대기]]` 한 줄로 바꾸고 전체 문장은 목록으로 옮김(원본·의결서 30, 판결·소송 18, 내부 문서 11, 유권해석 9, 사용자 판단 2). 페이지의 사실·수치·판단은 바꾸지 않아 status 유지
+- lint: wiki_lint.py v1.7 `_wait` 판정을 `.md` 접미로 고침. 종료 0, external_wait moved_marks 70·waiting 70, 열린 항목 638 → 568(278쪽), 깨진 링크 0, 색인 누락 0
+- 커밋 대상 파일: 0 wiki/분석/외부 확인 대기.md, 0 wiki/분석/_index.md, 이동한 51쪽(0 wiki/ 아래 조문·쟁점·문서·분석·사례), Claude outputs/wiki_lint.py, 0 wiki/log.md
+- 커밋 메시지 초안: fix: 외부 확인 대기 목록 생성과 열린 항목 70개 이동

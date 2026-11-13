@@ -206,7 +206,7 @@ for k in content:
     open_items[k] = dict(open=o, done=len(d), plain=plain, external=ext)
 R['_open_items'] = open_items
 # v1.7: 분석/외부 확인 대기.md의 대기(- [ ]) 항목 수와 페이지에서 옮긴 표시([→]) 수
-_wait = [k for k in pages if k.endswith('외부 확인 대기')]
+_wait = [k for k in pages if k.endswith('외부 확인 대기.md')]
 R['external_wait'] = dict(moved_marks=sum(len(v.get('external', [])) for v in open_items.values()),
                           waiting=sum(len(re.findall(r'^\s*- \[ \] ', pages[k]['body'], re.M)) for k in _wait),
                           list_pages=_wait)
