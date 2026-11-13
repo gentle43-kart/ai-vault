@@ -391,13 +391,13 @@ type: log
 ## [2026-11-13] schema | 소위↔전체회의 의결번호 연결(link_cases.py·case_links.csv·search_case v1.15), AGENTS v1.42 | Claude Sonnet 5.5
 - 세션: Claude Code. 인계메모 작업 1~4·6. 사용자 승인(2026-11-13, "승인, 진행"): 연결표 저장, search_case 수정, 후보·미연결 보고서, 스키마 기재(②등급)
 - 스크립트: Claude outputs/link_cases.py v0.1. 입력 18-25_part01~13.csv 전체회의 형식 번호 1,527행 + 방송소위 정제본 5,089건. 결과 confirmed 611 / candidate 15 / none 901(시험 측정 단순 일치는 확정 499). confirmed 표본 20건 수작업 대조 오류 0, 제2019-방송-76-0882호↔제2020-02-0004호 양방향 확인
-- 연결표: J:\MCPi-vault-mcp\data\case_links.csv (자료창고 밖)
+- 연결표: J:\MCP\ai-vault-mcp\data\case_links.csv (자료창고 밖)
 - MCP: mcp_server.py v1.15 — search_case가 연결된 번호의 조각을 뒤에 붙임('(연결 …)', candidate는 '(후보 연결 …)', link·linked_case 필드). 연결표 없으면 v1.14와 같음. 사용자가 Claude 데스크톱을 재시작해야 적용
 - 보고서: [[2026-11-13 의결번호 연결 후보·미연결 목록]] (후보 15행은 사용자 선택 대기, 미연결 901행의 성격)
 - 스키마: AGENTS.md v1.41→v1.42(개정일), AGENTS_절차.md 6.3절 회의록·통계 CSV 행에 연결표 위치·재생성 시점 기재(②등급). 백업 Claude outputs/schema_backup/AGENTS_v1.41_20261113.md, AGENTS_절차_v1.41_20261113.md
 - 미처리: 후보 확정(사용자 선택 후), 작업 5(광고소위 호수 범위 연결, 1~4 결과 보고 후 결정)
 - 검증: wiki_lint 종료 0(끊긴 링크·sources·yaml 오류 없음)
-- 커밋 대상 파일: J:\AI 자료 — AGENTS.md, AGENTS_절차.md, Claude outputs/link_cases.py, Claude outputs/schema_backup/AGENTS_v1.41_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.41_20261113.md, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/분석/_index.md, 0 wiki/log.md / J:\MCPi-vault-mcp — mcp_server.py (case_links.csv는 데이터이므로 제외)
+- 커밋 대상 파일: J:\AI 자료 — AGENTS.md, AGENTS_절차.md, Claude outputs/link_cases.py, Claude outputs/schema_backup/AGENTS_v1.41_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.41_20261113.md, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/분석/_index.md, 0 wiki/log.md / J:\MCP\ai-vault-mcp — mcp_server.py (case_links.csv는 데이터이므로 제외)
 - 커밋 메시지 초안: schema: 소위·전체회의 의결번호 연결표와 search_case 연결 조회(AGENTS v1.42, MCP v1.15)
 
 ## [2026-11-13] fix | 의결번호 연결 후보 14행 사용자 확정, link_cases.py v0.2 | Claude Sonnet 5.5
@@ -413,7 +413,7 @@ type: log
 - 연결표: J:/MCP/ai-vault-mcp/data/ad_range_links.csv (자료창고 밖). MCP mcp_server.py v1.16: search_case가 호수 범위 연결 조각을 붙임('(호수 범위 연결 …)', 후보는 '후보 호수 범위 연결'). 사용자가 Claude 데스크톱을 재시작해야 적용
 - 보고서: [[2026-11-13 의결번호 연결 후보·미연결 목록]] 5절 추가
 - 미처리: candidate 67건 선택, AGENTS_절차.md 6.3절에 link_ad_ranges.py·표 위치 기재(②등급, 승인 대기)
-- 커밋 대상 파일: J:\AI 자료 — Claude outputs/link_ad_ranges.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md / J:\MCPi-vault-mcp — mcp_server.py
+- 커밋 대상 파일: J:\AI 자료 — Claude outputs/link_ad_ranges.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md / J:\MCP\ai-vault-mcp — mcp_server.py
 - 커밋 메시지 초안: fix: 광고소위 회의록 호수 범위 연결(link_ad_ranges.py)과 search_case v1.16
 
 ## [2026-11-13] schema | AGENTS_절차.md 6.3절에 link_ad_ranges.py·호수 범위 연결표 기재, AGENTS v1.43 | Claude Sonnet 5.5
@@ -446,7 +446,7 @@ type: log
 ## [2026-11-13] setup | 통계 정형 색인(decision_rows·decision_articles)과 query_decisions 도구 | Claude Sonnet 5.5
 - 세션: Claude Code. 사용자 승인(2026-11-13): "재구성 방식으로 진행"(설계), "승인, 반영"(운영 반영·전체 재색인)
 - 작업 1(집계 대상 점검): decisions 14,291행 = 방송심의 12,768(보정본 6,136 + 18-25 분할본 6,210 + 2026 잠정 422) + 선방위 1,523. 파일 사이 중복 없음. 잠정본 중 의결일 2026-06-30 이하 214행만 넣으면 12,560행으로 통계기준 검증 범위와 일치. 기존 decisions 표 한계: 보정본 6,136행의 채널·프로그램 칸이 비어 있고 의결번호를 날짜로 읽은 47행(예: 제2014-04-070호 → 2014-04-07), 의결번호 없음 643행(스크립트는 625행) → decisions는 재사용하지 않고 새 표를 만듦
-- 작업 2: 저장소 J:\MCPi-vault-mcp에 decision_parse.py v0.1(통계기준 규칙·조문 파서를 stats_articles/ad/hyup/sangpan/grade_articles.py에서 옮김, 항·호는 신규), check_decision_parse.py. build_index.py v1.16(PARSER_VERSION 2.0→2.1)이 decision_rows(12,768행)·decision_articles(16,877행)를 채움. 대조: 12,560행 원본 스크립트와 행 단위 차이 0, 검증값 일치(방송심의규정 제46조 1,351 / 제44조 760 / 제27조 777 / 제14조 1,117 / 제9조 332, 광고심의규정 3,277, 협찬고지규칙 216, 상품판매방송규정 1,337, 등급분류규칙 76, 의결일 미식별 1,135). 미해석: 관련조항이 있는 11,296행 중 119행(1.05%), 기타규정 20행
+- 작업 2: 저장소 J:\MCP\ai-vault-mcp에 decision_parse.py v0.1(통계기준 규칙·조문 파서를 stats_articles/ad/hyup/sangpan/grade_articles.py에서 옮김, 항·호는 신규), check_decision_parse.py. build_index.py v1.16(PARSER_VERSION 2.0→2.1)이 decision_rows(12,768행)·decision_articles(16,877행)를 채움. 대조: 12,560행 원본 스크립트와 행 단위 차이 0, 검증값 일치(방송심의규정 제46조 1,351 / 제44조 760 / 제27조 777 / 제14조 1,117 / 제9조 332, 광고심의규정 3,277, 협찬고지규칙 216, 상품판매방송규정 1,337, 등급분류규칙 76, 의결일 미식별 1,135). 미해석: 관련조항이 있는 11,296행 중 119행(1.05%), 기타규정 20행
 - 작업 3: mcp_server.py v1.17 query_decisions(decision_query.py). unit(row|case) 필수, 재현 정보·검증값·의결번호 목록 자동 첨부
 - 작업 4: 질문 3개를 기존 스크립트와 새 도구로 비교해 모두 일치(제14조 연도·결과별 2020~2025 426행, MBN 주의 이상 61행, 제46조 결과별 1,351행: 권고 489 등). 호출은 3회 이상 → 1회, 응답 1,600~2,800자(추정)
 - 재색인: build_index.py --full, 2026-11-13 16:35~16:38, 성공 0 실패, 1,432개·140,676조각, quick_check ok, 세대 64. 옛 DB는 data/search.db.bak_20261113_1638로 보관. 운영 DB에서 검증값·질문 3개·search_case 연결(제2019-방송-76-0882↔제2020-02-0004) 재확인
