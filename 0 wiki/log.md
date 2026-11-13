@@ -415,3 +415,10 @@ type: log
 - 미처리: candidate 67건 선택, AGENTS_절차.md 6.3절에 link_ad_ranges.py·표 위치 기재(②등급, 승인 대기)
 - 커밋 대상 파일: J:\AI 자료 — Claude outputs/link_ad_ranges.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md / J:\MCPi-vault-mcp — mcp_server.py
 - 커밋 메시지 초안: fix: 광고소위 회의록 호수 범위 연결(link_ad_ranges.py)과 search_case v1.16
+
+## [2026-11-13] schema | AGENTS_절차.md 6.3절에 link_ad_ranges.py·호수 범위 연결표 기재, AGENTS v1.43 | Claude Sonnet 5.5
+- 세션: Claude Code. ②등급. 사용자 승인(2026-11-13, "승인, 기재")
+- 변경: 6.3절 "회의록, 통계 CSV" 행의 연결표 문장에 link_ad_ranges.py, ad_range_links.csv 위치, search_case 표시, candidate 확정 원칙, 재생성 시점 추가. AGENTS.md 개정일 v1.42→v1.43
+- 백업: Claude outputs/schema_backup/AGENTS_v1.42_20261113.md, AGENTS_절차_v1.42_20261113.md
+- 커밋 대상 파일: AGENTS.md, AGENTS_절차.md, Claude outputs/schema_backup/AGENTS_v1.42_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.42_20261113.md, 0 wiki/log.md
+- 커밋 메시지 초안: schema: 호수 범위 연결표 기재(AGENTS v1.43)
