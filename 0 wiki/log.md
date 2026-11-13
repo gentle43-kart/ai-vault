@@ -406,3 +406,12 @@ type: log
 - 반영: [[2026-11-13 의결번호 연결 후보·미연결 목록]] 2절 선택 열과 설명
 - 커밋 대상 파일: Claude outputs/link_cases.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md
 - 커밋 메시지 초안: fix: 의결번호 연결 후보 14행 사용자 확정 반영(link_cases.py v0.2)
+
+## [2026-11-13] fix | 광고소위 회의록 호수 범위 연결(link_ad_ranges.py v0.2), search_case v1.16 | Claude Sonnet 5.5
+- 세션: Claude Code. 인계메모 작업 5. 사용자 지시(2026-11-13, "작업 5 진행해줘")
+- 스크립트: Claude outputs/link_ad_ranges.py v0.2. 광고소위 회의록 2012년 이후 파일의 연도 없는 호수 범위를 (연도, 일련번호)로 통계 CSV 번호에 연결. 파일 단위 425건, 고유 범위 175건: confirmed 101 / candidate 67 / none 7. confirmed 40건 문맥 대조 어긋남 0
+- 연결표: J:/MCP/ai-vault-mcp/data/ad_range_links.csv (자료창고 밖). MCP mcp_server.py v1.16: search_case가 호수 범위 연결 조각을 붙임('(호수 범위 연결 …)', 후보는 '후보 호수 범위 연결'). 사용자가 Claude 데스크톱을 재시작해야 적용
+- 보고서: [[2026-11-13 의결번호 연결 후보·미연결 목록]] 5절 추가
+- 미처리: candidate 67건 선택, AGENTS_절차.md 6.3절에 link_ad_ranges.py·표 위치 기재(②등급, 승인 대기)
+- 커밋 대상 파일: J:\AI 자료 — Claude outputs/link_ad_ranges.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md / J:\MCPi-vault-mcp — mcp_server.py
+- 커밋 메시지 초안: fix: 광고소위 회의록 호수 범위 연결(link_ad_ranges.py)과 search_case v1.16
