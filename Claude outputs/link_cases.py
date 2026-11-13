@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-link_cases.py v0.1 (2026-11-13)
+link_cases.py v0.2 (2026-11-13: 사용자 확정 목록 --approvals 추가)
 
 목적
   통계 CSV(2018~2025)의 '전체회의 형식 의결번호'(제YYYY-NN-NNNN호) 행을
@@ -15,11 +15,12 @@ link_cases.py v0.1 (2026-11-13)
 
 출력 (--out 경로, UTF-8 BOM CSV. 자료창고 밖에 둔다. 기본 저장 위치는 사용자 승인 뒤 정함)
   열: full_no, full_no_raw, decision_date, broadcaster, program, broadcast_dt,
-      match_type(confirmed|candidate|none), tier, sub_no(확정 또는 후보를 ';'로 이음),
+      match_type(confirmed|candidate|none), decided_by(script|user), tier, sub_no(확정 또는 후보를 ';'로 이음),
       n_candidates, note
   match_type 정의
     confirmed : 강한 단계(T1: 채널+프로그램+방송일+시작시각, T2: 프로그램+방송일+시작시각 + 채널 일부 일치)에서
                 소위 안건이 정확히 1건이고, 소위 회의일 <= 전체회의 의결일이며, 역방향(그 소위 안건을 고른 다른 번호)이 없음
+    (사용자 확정: --approvals 목록에 있는 candidate만 confirmed/decided_by=user로 올린다)
     candidate : 후보가 있으나 위 조건을 모두 만족하지 못함 (후보 둘 이상, 단계가 약함, 날짜 순서 불일치, 역방향 충돌)
     none      : 후보 없음
   LLM·사람은 candidate의 선택만 제안하고 확정은 사용자 승인 뒤에 한다 (2026-11-13 결정).
@@ -126,6 +127,8 @@ def split_program(raw):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
+    ap.add_argument("--approvals", default="J:/MCP/ai-vault-mcp/data/case_link_approvals.csv",
+                    help="사용자가 확정한 candidate 목록(열: full_no, sub_no, approved_at, note). 없으면 무시")
     ap.add_argument("--sample", type=int, default=0)
     ap.add_argument("--seed", type=int, default=1)
     a = ap.parse_args()
@@ -228,14 +231,33 @@ def main():
                     note.append("방송일시 일부 없음")
         rec["note"] = "; ".join(note)
 
+    # 사용자 승인 반영: (full_no, sub_no)가 승인 목록에 있고 후보에 포함되면 confirmed(decided_by=user)로 올린다.
+    # 스크립트가 스스로 candidate를 승격하는 일은 없다.
+    appr = {}
+    if os.path.exists(a.approvals):
+        with open(a.approvals, encoding="utf-8-sig", newline="") as fh:
+            for r in csv.DictReader(fh):
+                appr[(r["full_no"].strip(), r["sub_no"].strip())] = r.get("approved_at", "")
+    used = 0
+    for rec in recs:
+        rec["by"] = "script"
+        if rec["mt"] == "candidate":
+            hit = [x for x in rec["cands"] if (rec["full_no"], x["no"]) in appr]
+            if hit:
+                rec["cands"], rec["mt"], rec["by"] = hit[:1], "confirmed", "user"
+                rec["note"] = ("사용자 확정 " + appr[(rec["full_no"], hit[0]["no"])] + "; 이전: " + rec["note"]).strip()
+                used += 1
+    if appr:
+        print("사용자 확정 반영: %d / 승인 목록 %d" % (used, len(appr)))
+
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["full_no", "full_no_raw", "decision_date", "broadcaster", "program", "broadcast_dt",
-                    "match_type", "tier", "sub_no", "n_candidates", "note"])
+                    "match_type", "decided_by", "tier", "sub_no", "n_candidates", "note"])
         for rec in recs:
             w.writerow([rec["full_no"], rec["raw"], rec["date"], rec["chan"], rec["prog"],
-                        (rec["d"] + " " + rec["t"]).strip(), rec["mt"], rec["tier"],
+                        (rec["d"] + " " + rec["t"]).strip(), rec["mt"], rec["by"], rec["tier"],
                         ";".join(x["no"] for x in rec["cands"]), len(rec["cands"]), rec["note"]])
 
     cnt = Counter(r["mt"] for r in recs)

@@ -399,3 +399,10 @@ type: log
 - 검증: wiki_lint 종료 0(끊긴 링크·sources·yaml 오류 없음)
 - 커밋 대상 파일: J:\AI 자료 — AGENTS.md, AGENTS_절차.md, Claude outputs/link_cases.py, Claude outputs/schema_backup/AGENTS_v1.41_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.41_20261113.md, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/분석/_index.md, 0 wiki/log.md / J:\MCPi-vault-mcp — mcp_server.py (case_links.csv는 데이터이므로 제외)
 - 커밋 메시지 초안: schema: 소위·전체회의 의결번호 연결표와 search_case 연결 조회(AGENTS v1.42, MCP v1.15)
+
+## [2026-11-13] fix | 의결번호 연결 후보 14행 사용자 확정, link_cases.py v0.2 | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자 승인(2026-11-13, "제안대로 확정"): 후보 15행 중 보고서 제안대로 14행 확정, 12번(제2020-18-0169호) 보류
+- 변경: link_cases.py v0.2에 --approvals 추가(승인 목록의 candidate만 confirmed, decided_by=user). 승인 목록은 J:/MCP/ai-vault-mcp/data/case_link_approvals.csv(자료창고 밖). 연결표 재생성: confirmed 625 / candidate 1 / none 901, 검증값 제2020-02-0004호 유지
+- 반영: [[2026-11-13 의결번호 연결 후보·미연결 목록]] 2절 선택 열과 설명
+- 커밋 대상 파일: Claude outputs/link_cases.py, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md
+- 커밋 메시지 초안: fix: 의결번호 연결 후보 14행 사용자 확정 반영(link_cases.py v0.2)
