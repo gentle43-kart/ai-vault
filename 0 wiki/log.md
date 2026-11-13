@@ -473,3 +473,13 @@ type: log
 - lint 대상: 없음(수정 없음)
 - 커밋 대상 파일: 0 wiki/분석/2026-11-13 통계 대조 열린 항목 점검.md, 0 wiki/분석/_index.md, 0 wiki/log.md
 - 커밋 메시지 초안: query: 통계 대조 열린 항목 점검 보고
+
+## [2026-11-13] schema | query_decisions article_basis=current(MCP v1.18), AGENTS v1.45 | Claude Sonnet 5.5
+- 세션: Claude Code. ②등급(AGENTS.md 6.1절 문구). 사용자 승인(2026-11-13, "옵션 추가")
+- 배경: 위키 조문 페이지 번호는 2026.9.29. 시행 새 규칙(제8·10호) 번호이고 통계 CSV는 구 번호(제150·151호)라 위키 번호를 그대로 넣으면 다른 조의 행이 나온다([[2026-11-13 통계 대조 열린 항목 점검]] 4절)
+- 변경: MCP 저장소 article_map.py(조문 시기 대응표 2A절을 읽음), decision_query.py v0.2, mcp_server.py v1.18에 article_basis('csv' 기본 | 'current') 추가. 'current'이면 방송심의규정·광고심의규정의 위키 조 번호를 구 번호로 바꿔 세고, 응답에 article_basis·article_mapping_notes와 article 묶음의 article_current를 싣는다. 항·호는 변환하지 않음(notes에 경고). 기본값은 v1.17과 같음
+- 검증: 점검 수치 주장 14건(위키 번호 + current)이 모두 항목의 수치와 일치, 기본(csv) 제46조 1,351행 유지, 대응 없는 조는 0행과 안내문. DB·색인 변경 없음. Claude 데스크톱 재시작 필요
+- 스키마: AGENTS.md v1.44→v1.45(6.1절에 article_basis 안내 한 문장), 백업 Claude outputs/schema_backup/AGENTS_v1.44_20261113.md
+- 보고서 [[2026-11-13 통계 대조 열린 항목 점검]] 7절 항목을 닫음
+- 커밋 대상 파일: J:/AI 자료 — AGENTS.md, Claude outputs/schema_backup/AGENTS_v1.44_20261113.md, 0 wiki/분석/2026-11-13 통계 대조 열린 항목 점검.md, 0 wiki/log.md / J:/MCP/ai-vault-mcp — mcp_server.py, decision_query.py, article_map.py
+- 커밋 메시지 초안: schema: query_decisions 현행 조 번호 기준 옵션(MCP v1.18, AGENTS v1.45)
