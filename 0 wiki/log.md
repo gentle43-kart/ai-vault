@@ -387,3 +387,15 @@ type: log
 - 주의: 사용자가 Claude 데스크톱을 재시작해야 적용된다. 응답의 total 의미가 '조각 수'에서 '문서 수'로 바뀌었다(per_doc=0 제외)
 - 커밋 대상 파일: 0 wiki/log.md (J:\MCP\ai-vault-mcp 저장소는 mcp_server.py, README.md를 이미 커밋)
 - 커밋 메시지 초안: fix: 로그 — MCP 서버 v1.14 문서 단위 묶기
+
+## [2026-11-13] schema | 소위↔전체회의 의결번호 연결(link_cases.py·case_links.csv·search_case v1.15), AGENTS v1.42 | Claude Sonnet 5.5
+- 세션: Claude Code. 인계메모 작업 1~4·6. 사용자 승인(2026-11-13, "승인, 진행"): 연결표 저장, search_case 수정, 후보·미연결 보고서, 스키마 기재(②등급)
+- 스크립트: Claude outputs/link_cases.py v0.1. 입력 18-25_part01~13.csv 전체회의 형식 번호 1,527행 + 방송소위 정제본 5,089건. 결과 confirmed 611 / candidate 15 / none 901(시험 측정 단순 일치는 확정 499). confirmed 표본 20건 수작업 대조 오류 0, 제2019-방송-76-0882호↔제2020-02-0004호 양방향 확인
+- 연결표: J:\MCPi-vault-mcp\data\case_links.csv (자료창고 밖)
+- MCP: mcp_server.py v1.15 — search_case가 연결된 번호의 조각을 뒤에 붙임('(연결 …)', candidate는 '(후보 연결 …)', link·linked_case 필드). 연결표 없으면 v1.14와 같음. 사용자가 Claude 데스크톱을 재시작해야 적용
+- 보고서: [[2026-11-13 의결번호 연결 후보·미연결 목록]] (후보 15행은 사용자 선택 대기, 미연결 901행의 성격)
+- 스키마: AGENTS.md v1.41→v1.42(개정일), AGENTS_절차.md 6.3절 회의록·통계 CSV 행에 연결표 위치·재생성 시점 기재(②등급). 백업 Claude outputs/schema_backup/AGENTS_v1.41_20261113.md, AGENTS_절차_v1.41_20261113.md
+- 미처리: 후보 확정(사용자 선택 후), 작업 5(광고소위 호수 범위 연결, 1~4 결과 보고 후 결정)
+- 검증: wiki_lint 종료 0(끊긴 링크·sources·yaml 오류 없음)
+- 커밋 대상 파일: J:\AI 자료 — AGENTS.md, AGENTS_절차.md, Claude outputs/link_cases.py, Claude outputs/schema_backup/AGENTS_v1.41_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.41_20261113.md, 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/분석/_index.md, 0 wiki/log.md / J:\MCPi-vault-mcp — mcp_server.py (case_links.csv는 데이터이므로 제외)
+- 커밋 메시지 초안: schema: 소위·전체회의 의결번호 연결표와 search_case 연결 조회(AGENTS v1.42, MCP v1.15)
