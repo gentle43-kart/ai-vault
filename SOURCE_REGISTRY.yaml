@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.51"
-updated: 2026-11-11
+version: "1.52"
+updated: 2026-11-13
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -510,6 +510,18 @@ sources:
     classification_confirmed: true
     remote_allowed: true
     notes: "2026년 제1~14차(2026.3.12.~9.7.)는 회차별 파일 '(YYMMDD) 제N차(정기|임시) 발언내용(공개).md' 14개로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, Claude outputs/convert_minutes_pdf.py v1.0, 원본 3 source_raw/회의록_raw/전체회의/추가분(26.9월~)/). 공개 발언내용만 변환함: 제1·2차 '발언내용(비공개)' PDF는 '대외비(영구)' 표시가 있어 이 폴더(public·원격 허용)에 넣지 않음. 제4차는 '(공개)'와 '(공개)_수정' 두 판 중 나중 판(_수정, 2026.5.18. 작성, 신상발언 부분 포함)만 변환함. 종전 period '2008~2026 제13차'는 실제와 달랐음(2026-10-13 정정, 그때까지 2026년분은 이 폴더에 없었음)"
+
+  - id: minutes_plenary_decisions
+    path: "1 documents_md/회의록_md/전체회의_md/의결서_md/"
+    layer: normalized
+    type: meeting_minutes
+    ingest: search_only
+    raw_source: "3 source_raw/회의록_raw/전체회의/의결서_raw/"
+    period: "2019 제1~24차(47개 파일, 의결번호 201건)"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: "전체회의 의결서(사건별 의결문: 주문·기초사실·판단·제재조치) 변환본. 2019년분 47개(2026-11-13 Claude 변환, AGENTS.md 6.7, pdfplumber, 쪽 주석 <!-- p.N -->, 사건 제목 ## 의결번호와 ### 주문·이유 제목만 추가, Claude outputs/convert_decisions_2019.py). 원본 PDF는 3 source_raw/회의록_raw/전체회의/의결서_raw/2019/(SHA-256 대조 완료). 2019년 중 제외: 제01차 지상파방송 0598-0(글꼴 문제로 숫자·따옴표 추출 실패), OCR 필요 12건. 다른 연도는 변환하지 않음. 쪽 머리말·꼬리말(예: 지상파방송팀 - 1)이 문장 중간에 끼는 곳이 있으며 원본 PDF 배치 그대로임. 보안등급 public은 사용자 기본값(public)에 따름(AGENTS_절차 2.1, 2026-10-16 결정). 최종 의결 내용은 stats(통계 CSV)가 우선하고 이 자료는 결정 사유 검색용"
 
   # ── 통신소위 회의록 ───────────────────────────────────────
   - id: minutes_telecom

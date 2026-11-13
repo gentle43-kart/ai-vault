@@ -518,3 +518,17 @@ type: log
 - lint 대상: 분석 페이지 1쪽, _index. 반영은 사용자 확인 뒤
 - 커밋 대상 파일: 0 wiki/분석/2026-11-13 인용 법령·시행령 현행 대조 점검.md, 0 wiki/분석/_index.md, 0 wiki/log.md
 - 커밋 메시지 초안: query: 인용 법령·시행령 현행 대조 점검 보고
+
+## [2026-11-13] ingest | 전체회의 의결서 2019년분 변환·검색 등록 | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자 요청(인계메모 2, 승인 2026-11-13: 변환 위치·원본 복사 위치·레지스트리 안). 위키 페이지는 고치지 않음
+- 원본: E:\1 대구사무소\01-심의\00 회의자료\01.전체회의\전체회의 의결서(모음_자료용)\AI 크롤링 결과물(출범~ )_업데이트 중\텍스트 추출 가능\2019년*.pdf 48건(읽기만). '방송심의 자료용' 2019년 9건은 크롤링 종편보도채널 9건과 바이트까지 같아 제외
+- 변환본: 1 documents_md/회의록_md/전체회의_md/의결서_md/2019/ 47개(2.0MB). 도구 pdfplumber(표본 5건에서 pdftotext·PyMuPDF와 비교, 조문 번호·의결번호·날짜·따옴표·띄어쓰기 보존이 가장 좋음), 스크립트 Claude outputs/convert_decisions_2019.py. 쪽 주석 <!-- p.N -->, 사건 제목 `## ■ 제YYYY-NN-NNNN호`와 `### 주문`·`### 이유`만 추가, 본문 그대로
+- 원본 복사: 3 source_raw/회의록_raw/전체회의/의결서_raw/2019/ 47건, SHA-256 E: 원본과 전부 일치
+- 제외: 제01차 지상파방송 0598-0(숫자·따옴표 추출 실패), OCR 필요 12건(2017년 이전 이미지 PDF와 같이 이번에 OCR하지 않음). 2019년 외 연도는 변환하지 않음
+- 품질 점검: 쪽 수=쪽 주석 수 47/47, 제목 줄을 뺀 본문 글자 수 PDF 추출과 47/47 일치, 깨진 글자 0, 사건 제목 201개(중복 없음). 제목 6개(제2019-09-151호 등)는 원본이 3자리로 적은 표기 그대로
+- 레지스트리: SOURCE_REGISTRY.yaml v1.51 → v1.52, 새 id minutes_plenary_decisions(①등급, 보안등급 public은 사용자 기본값(public)에 따름). 백업 Claude outputs/schema_backup/SOURCE_REGISTRY_v1.51_20261113.yaml. 검증: YAML 파싱, id 89개 중복 없음, path·raw_source 존재
+- 색인: build_index.py·PARSER_VERSION 변경 없음(`## ■` 제목을 기존 CASE_HEAD_RE가 읽음). 증분 색인 exit=0, 추가 47/실패 0, 664조각
+- 시험 측정: ① search_case("2019-21-0315")가 판단 조각('이유')을 포함해 의결서 2조각·회의록·통계 행을 돌려줌 ② 변환본 사건 번호 195개(전체회의 형식) 중 190개가 통계 CSV 2019 전체회의 형식 번호 246개와 일치, CSV에만 있는 56개는 제외·OCR 보류 파일의 사건으로 추정(2019-08 8, 2019-12 7, 2019-17 7 등), 변환본에만 있는 5개(2019-04-0039, 2019-20-0311~0314)는 CSV에 없음 ③ 검색 3건: 사건 키워드 검색은 의결서가 2위로 추가되고 다른 결과는 밀리지 않음, 나머지 2건은 모든 단어 일치 조건이라 변화 없음. 조문 번호 20건 수동 비교는 하지 않음(표본 5건에서 확인)
+- 후속: 다른 연도 확대, OCR 12건과 0598-0 처리는 사용자 결정 대기
+- 커밋 대상 파일: SOURCE_REGISTRY.yaml, Claude outputs/convert_decisions_2019.py, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.51_20261113.yaml, 0 wiki/log.md (1 documents_md·3 source_raw는 .gitignore 대상)
+- 커밋 메시지 초안: ingest: 전체회의 의결서 2019년분 변환 및 minutes_plenary_decisions 등록
