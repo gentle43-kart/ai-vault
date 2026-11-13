@@ -422,3 +422,9 @@ type: log
 - 백업: Claude outputs/schema_backup/AGENTS_v1.42_20261113.md, AGENTS_절차_v1.42_20261113.md
 - 커밋 대상 파일: AGENTS.md, AGENTS_절차.md, Claude outputs/schema_backup/AGENTS_v1.42_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.42_20261113.md, 0 wiki/log.md
 - 커밋 메시지 초안: schema: 호수 범위 연결표 기재(AGENTS v1.43)
+
+## [2026-11-13] fix | 제2020-18-0169호 후보 확정 | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자 위임(2026-11-13, "니가 확인하고 적절한 걸로 확정"). 제2020-18-0169호 ↔ 제2020-방송-26-0245호(tvN 사이코지만 괜찮아): CSV 6.21 시각 21:45는 소위 21:15와 달라 보이나 6.21·6.27·7.4 방송분을 묶은 같은 안건이고 OtvN 0170↔0246도 같은 구조 → 오기로 판단, 승인 목록에 추가해 연결표 재생성(confirmed 626 / candidate 0 / none 901)
+- 보고서 2절 12번 선택·설명 갱신. 재색인: reindex_last.log exit=0 확인(2026-11-13 16:15)
+- 커밋 대상 파일: 0 wiki/분석/2026-11-13 의결번호 연결 후보·미연결 목록.md, 0 wiki/log.md
+- 커밋 메시지 초안: fix: 제2020-18-0169호 연결 확정
