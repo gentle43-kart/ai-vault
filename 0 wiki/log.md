@@ -464,3 +464,12 @@ type: log
 - 미처리: 외부 확인 대기 목록 페이지 생성과 기존 항목 이동(사용자 확인 후), 작업 6(열린 항목 정리)
 - 커밋 대상 파일: AGENTS.md, AGENTS_절차.md, AGENTS_통계기준.md, Claude outputs/wiki_lint.py, Claude outputs/maintenance_check.py, Claude outputs/schema_backup/AGENTS_v1.43_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.43_20261113.md, Claude outputs/schema_backup/AGENTS_통계기준_v1.43_20261113.md, 0 wiki/log.md
 - 커밋 메시지 초안: schema: reviewed 요청 방식·외부 확인 대기 목록·query_decisions 사용 규칙(AGENTS v1.44)
+
+## [2026-11-13] query | 통계 대조 열린 항목 241개 점검 | Claude Sonnet 5.5
+- 생성: [[2026-11-13 통계 대조 열린 항목 점검]]
+- 세션: Claude Code. 사용자 요청(2026-11-13, "통계 대조 242곳 점검"). 읽기 전용: 위키 페이지의 항목·수치는 고치지 않음
+- 결과: C 101 + E 140 = 241개(통신 94·선거 27은 query_decisions 범위 밖, 방송심의 120). 방송심의의 수치·기간 주장 31건을 운영 DB로 재집계해 30건 일치, 1건은 비교 불가(키워드 검색 결과 vs 조 전체 행 수)
+- 발견: 위키 조문 페이지 번호는 2026.9.29. 시행 새 규칙(제8·10호) 번호이고 통계 CSV는 구 번호(제150·151호)다. 조문 시기 대응표 2A절로 구 번호에 바꿔 조회해야 항목의 수치와 맞는다(예: 광고심의규정 제48조 = 구 제40조 29행). 도구 옵션 추가는 사용자 승인 후
+- lint 대상: 없음(수정 없음)
+- 커밋 대상 파일: 0 wiki/분석/2026-11-13 통계 대조 열린 항목 점검.md, 0 wiki/분석/_index.md, 0 wiki/log.md
+- 커밋 메시지 초안: query: 통계 대조 열린 항목 점검 보고
