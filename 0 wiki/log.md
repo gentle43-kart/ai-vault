@@ -492,3 +492,12 @@ type: log
 - lint: wiki_lint.py v1.7 `_wait` 판정을 `.md` 접미로 고침. 종료 0, external_wait moved_marks 70·waiting 70, 열린 항목 638 → 568(278쪽), 깨진 링크 0, 색인 누락 0
 - 커밋 대상 파일: 0 wiki/분석/외부 확인 대기.md, 0 wiki/분석/_index.md, 이동한 51쪽(0 wiki/ 아래 조문·쟁점·문서·분석·사례), Claude outputs/wiki_lint.py, 0 wiki/log.md
 - 커밋 메시지 초안: fix: 외부 확인 대기 목록 생성과 열린 항목 70개 이동
+
+## [2026-11-13] query | A 유형 조문 문언 대조 점검 | Claude Sonnet 5.5
+- 생성: [[2026-11-13 조문 문언 대조 점검]]
+- 세션: Claude Code. 사용자 요청(2026-11-13, "조문 문언 대조"). 읽기 전용: 위키 페이지의 항목은 고치지 않음
+- 방법: 법령 MCP search_law·search_admin_rule(history)·get_admin_rule·compare_admin_rule_old_new. 9개 규정의 기준 판이 현행과 같음을 확인(법령 단위 현행성)
+- 결과: 제141호 시행일 8개 항목의 답(공표일 2019.9.27., 부칙 표제 9.23.), 방송심의규정 제9조 1개, 협찬고지규칙 제1·3·6·7조 판 확인, 협찬고지규칙에 제51호(2018.10.1.) 판이 있음 발견. 부분 확인 3개(협찬 제2·8·9조), 인용 법령·시행령 개정 여부 등 약 60개는 미점검
+- lint 대상: 없음(수정 없음). 반영은 사용자 확인 뒤
+- 커밋 대상 파일: 0 wiki/분석/2026-11-13 조문 문언 대조 점검.md, 0 wiki/분석/_index.md, 0 wiki/log.md
+- 커밋 메시지 초안: query: 조문 문언 대조 점검 보고
