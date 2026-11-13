@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-wiki_lint.py v1.6 (2026-11-12; v1.6: 판정 정리 — ① log.md·0 wiki/log/ 조각에서 나온 끊긴 링크(옛 조 번호 등 과거 기록)는 broken_links_log(참고)로 따로 내고
+wiki_lint.py v1.7 (2026-11-13; v1.7: '추가 확인 필요' 절의 `- [→]` 항목(외부 확인 대기 목록으로 옮긴 것)을 external로 읽고 R['external_wait']로 따로 집계한다. 출력은 v1.6에 항목만 더했다;
+  v1.6: 판정 정리 — ① log.md·0 wiki/log/ 조각에서 나온 끊긴 링크(옛 조 번호 등 과거 기록)는 broken_links_log(참고)로 따로 내고
   broken_links에는 내용 페이지에서 나온 것만 남긴다 ② 종료 코드 1의 조건을 broken_sources 외에 broken_links·yaml_error·sources_bad까지 넓힌다(종료 코드는 0·1만 쓴다).
   그 밖의 출력은 v1.5와 같다;
   v1.5: AGENTS.md v1.38 8절 단서 — internal 출처가 모두 registry type statistics이고 링크·언급 단서가 없는 페이지는
@@ -201,8 +202,14 @@ for k in content:
     o = re.findall(r'^\s*- \[ \] (.*)$', sec, re.M)
     d = re.findall(r'^\s*- \[x\] ', sec, re.M | re.I)
     plain = [l for l in re.findall(r'^\s*[-*] (?!\[)(.*)$', sec, re.M)]
-    open_items[k] = dict(open=o, done=len(d), plain=plain)
+    ext = re.findall(r'^\s*- \[→\] (.*)$', sec, re.M)   # v1.7: 외부 확인 대기 목록으로 옮긴 항목(열린 항목에서 뺀다)
+    open_items[k] = dict(open=o, done=len(d), plain=plain, external=ext)
 R['_open_items'] = open_items
+# v1.7: 분석/외부 확인 대기.md의 대기(- [ ]) 항목 수와 페이지에서 옮긴 표시([→]) 수
+_wait = [k for k in pages if k.endswith('외부 확인 대기')]
+R['external_wait'] = dict(moved_marks=sum(len(v.get('external', [])) for v in open_items.values()),
+                          waiting=sum(len(re.findall(r'^\s*- \[ \] ', pages[k]['body'], re.M)) for k in _wait),
+                          list_pages=_wait)
 R['counts'] = dict(pages=len(pages), content=len(content), cases=len(cases), articles=len(arts))
 EXIT_KEYS = ('broken_sources', 'broken_links', 'yaml_error', 'sources_bad')
 R['exit_reasons'] = [k for k in EXIT_KEYS if R[k]]

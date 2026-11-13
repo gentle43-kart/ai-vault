@@ -90,6 +90,7 @@ if L is not None:
         conflict_marks_total=sum(L.get('conflict_marks', {}).values()),
         open_items_total=sum(len(v.get('open', [])) for v in oi.values()),
         open_items_pages=sum(1 for v in oi.values() if v.get('open')),
+        external_wait=L.get('external_wait', {}),
         yaml_error=len(L.get('yaml_error', {})), broken_links=len(L.get('broken_links', {})), broken_links_log=len(L.get('broken_links_log', {})),
         exit_reasons=L.get('exit_reasons', []),
         orphans=len(L.get('orphans', [])), index_missing=len(L.get('index_missing', [])),

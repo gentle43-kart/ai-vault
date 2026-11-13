@@ -454,3 +454,13 @@ type: log
 - 미처리: 작업 5(스키마 반영 diff 승인 대기: 4.1 reviewed 절차, 외부 확인 대기 목록·wiki_lint, 6.1·7.1 query_decisions 사용 규칙), 작업 6(다음 단계)
 - 커밋 대상 파일: J:\AI 자료 — 0 wiki/log.md / J:/MCP/ai-vault-mcp — build_index.py, mcp_server.py, decision_parse.py, decision_query.py, check_decision_parse.py
 - 커밋 메시지 초안: setup: 통계 정형 색인과 query_decisions(MCP v1.17, 색인기 v1.16)
+
+## [2026-11-13] schema | reviewed 요청 방식·외부 확인 대기 목록·query_decisions 사용 규칙, AGENTS v1.44 | Claude Sonnet 5.5
+- 세션: Claude Code. ②등급. 사용자 승인(2026-11-13, 변경안 diff를 보고 "승인, 반영")
+- 변경: ① AGENTS_절차.md 4.1절·AGENTS.md 4절 요지: reviewed는 답변·문서에 실제로 인용한 페이지만 그때 사용자가 검토(사용자 선택 2026-11-13) ② AGENTS_절차.md 6.6절: 외부 확인 대기 목록(분석/외부 확인 대기.md)과 `- [→]` 표시, 옮기는 일은 사용자 확인 뒤에만 ③ AGENTS.md 6.1절·AGENTS_통계기준.md 머리: 통계 건수·비율·분포는 query_decisions로 먼저 답하고 reproduction을 옮김, 지원 밖 집계나 검증값 불일치 때는 7.1절을 읽고 스크립트로 확인
+- 스크립트: Claude outputs/wiki_lint.py v1.7(`[→]` 항목을 external로 읽어 R['external_wait'] 집계), maintenance_check.py(요약 JSON에 external_wait 한 줄 추가, 다음 정기 실행에서 확인)
+- 백업: Claude outputs/schema_backup/AGENTS_v1.43_20261113.md, AGENTS_절차_v1.43_20261113.md, AGENTS_통계기준_v1.43_20261113.md
+- 검증: wiki_lint 실행 종료 0(끊긴 링크·출처·머리말 오류 0), external_wait 0(목록 페이지 아직 없음), 열린 항목 637곳(286쪽, `[ ]` 기준)
+- 미처리: 외부 확인 대기 목록 페이지 생성과 기존 항목 이동(사용자 확인 후), 작업 6(열린 항목 정리)
+- 커밋 대상 파일: AGENTS.md, AGENTS_절차.md, AGENTS_통계기준.md, Claude outputs/wiki_lint.py, Claude outputs/maintenance_check.py, Claude outputs/schema_backup/AGENTS_v1.43_20261113.md, Claude outputs/schema_backup/AGENTS_절차_v1.43_20261113.md, Claude outputs/schema_backup/AGENTS_통계기준_v1.43_20261113.md, 0 wiki/log.md
+- 커밋 메시지 초안: schema: reviewed 요청 방식·외부 확인 대기 목록·query_decisions 사용 규칙(AGENTS v1.44)
