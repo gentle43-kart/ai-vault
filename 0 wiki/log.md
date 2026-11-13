@@ -572,3 +572,12 @@ type: log
 - 후속: 의결 내용 칸 검색이 필요한 열린 항목 약 15개의 점검은 사용자 지시 대기
 - 커밋 대상 파일(J:\MCP\ai-vault-mcp): mcp_server.py, decision_query.py. (J:\AI 자료) 0 wiki/log.md
 - 커밋 메시지 초안: feat: query_decisions에 의결 내용 키워드 필터(content) 추가(MCP v1.19)
+
+## [2026-11-13] query | 의결 내용 칸 검색 열린 항목 점검 | Claude Sonnet 5.5
+- 생성: [[2026-11-13 의결 내용 칸 검색 열린 항목 점검]]. 수정: [[2026-11-13 통계 대조 열린 항목 점검]] 7절 마지막 항목 `[x]`, 분석/_index.md 등재
+- 세션: Claude Code. 사용자 요청(2026-11-13 "점검 시작"). 읽기 전용: 조문 페이지의 항목은 고치지 않음
+- 방법: query_decisions content 필터(MCP v1.19)와 같은 코드(decision_query.py v0.3)를 search.db 읽기 전용으로 직접 호출(Claude 데스크톱 재시작 전이라 MCP 도구에는 content가 아직 없음). 스크립트 Claude outputs/open_items_content_check.py, 검증값 12,560행 일치
+- 결과: 근거가 의결 내용 칸 검색인 광고심의규정 조문 15개 항목 점검. 제11조(친환경·무공해 28행 모두 구 제18조=현행 제21조)와 제40조(학습효과 구 제18조 3행·구 제23조 1행)는 닫을 후보, 제5·6·8·13조는 "다른 조로 의결한 예"를 키워드로 찾지 못함, 제16·7조는 키워드가 넓어 판단 불가, 나머지는 방향만 확인(부분). 제11·16·40조 항목의 "제18조(진실성)"는 구 번호(현행 제21조)임을 발견
+- lint 대상: 분석 페이지 1쪽, _index, 통계 대조 점검 1쪽. 반영(항목 닫기)은 사용자 확인 뒤
+- 커밋 대상 파일: 0 wiki/분석/2026-11-13 의결 내용 칸 검색 열린 항목 점검.md, 0 wiki/분석/_index.md, 0 wiki/분석/2026-11-13 통계 대조 열린 항목 점검.md, Claude outputs/open_items_content_check.py, 0 wiki/log.md
+- 커밋 메시지 초안: query: 의결 내용 칸 검색 열린 항목 점검 보고
