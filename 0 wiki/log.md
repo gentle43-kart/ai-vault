@@ -532,3 +532,17 @@ type: log
 - 후속: 다른 연도 확대, OCR 12건과 0598-0 처리는 사용자 결정 대기
 - 커밋 대상 파일: SOURCE_REGISTRY.yaml, Claude outputs/convert_decisions_2019.py, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.51_20261113.yaml, 0 wiki/log.md (1 documents_md·3 source_raw는 .gitignore 대상)
 - 커밋 메시지 초안: ingest: 전체회의 의결서 2019년분 변환 및 minutes_plenary_decisions 등록
+
+## [2026-11-13] ingest | 전체회의 의결서 2020년분 변환·검색 등록 | Claude Sonnet 5.5
+- 세션: Claude Code. 사용자 요청(2026-11-13 "2020년 의결서도 같은 절차로 진행해줘"). 위키 페이지는 고치지 않음
+- 원본: E: 전체회의 의결서(모음_자료용)\AI 크롤링 결과물\ 2020년 67건(텍스트 추출 가능 60, OCR 미처리 7, 서로 다른 파일). '방송심의 자료용/2020년' 14건은 크롤링 파일과 바이트까지 같아 제외. E:는 읽기만
+- 변환본: 1 documents_md/회의록_md/전체회의_md/의결서_md/2020/ 60개(1.6MB). 2019년과 같은 방법(pdfplumber, 쪽 주석, `## ■ 제YYYY-NN-NNNN호`·`### 주문`·`### 이유`만 추가). 스크립트는 연도 인자를 받도록 Claude outputs/convert_decisions.py로 일반화(2019년 스크립트 convert_decisions_2019.py는 그대로)
+- 변환 오류 처리: 제22차 지상파방송 0716-1 파일의 쪽 꼬리말에서 공백 글리프가 NUL로 추출되어(10곳) 공백으로 바꿈. 스크립트에도 같은 처리를 추가. 2019년 변환본에는 NUL 없음
+- 원본 복사: 3 source_raw/회의록_raw/전체회의/의결서_raw/2020/ 60건, SHA-256 E: 원본과 전부 일치
+- 제외: OCR 필요 7건(OCR하지 않음). 숫자·조문 추출 실패 파일 없음
+- 품질 점검: 쪽 주석·본문 글자 수 일치 60/60, 깨진 글자 0, 사건 제목 132개(중복 없음, 비표준 표기 없음)
+- 색인: 레지스트리 path가 의결서_md/ 전체라 스키마 변경 없이 증분 색인 exit=0, 추가 60/실패 0, minutes_plenary_decisions 107문서·1,178조각(2019+2020)
+- 시험 측정: search_case("2020-17-0158")가 의결서 조각 5개와 회의록 조각을 돌려줌. 변환본 사건 번호 132개 중 126개가 통계 CSV 2020 전체회의 형식 번호 182개와 일치, CSV에만 있는 56개는 OCR 보류 7건의 사건 등으로 추정(2020-20 16, 2020-07 10, 2020-21 8 등), 변환본에만 있는 6개는 2020-04-0012, 2020-17-0158~0162(CSV에 없음)
+- 후속: SOURCE_REGISTRY.yaml의 minutes_plenary_decisions `period`·`notes`가 2019년만 적혀 있어 2020년 반영 필요(②등급, 사용자 승인 대기)
+- 커밋 대상 파일: Claude outputs/convert_decisions.py, 0 wiki/log.md (1 documents_md·3 source_raw는 .gitignore 대상)
+- 커밋 메시지 초안: ingest: 전체회의 의결서 2020년분 변환, 변환 스크립트 연도 인자화
