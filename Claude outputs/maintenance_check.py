@@ -8,7 +8,7 @@ maintenance_check.py v1.1 (2026-11-12, Claude; v1.1: wiki_lint v1.6 대응 — �
 쓰기 범위: 위 두 파일뿐. 위키·스키마·통계 파일·search.db는 고치지 않는다. git은 읽기 명령만(--no-optional-locks) 쓴다.
 점검: ① wiki_lint.py 실행(종료 0·1은 정상 실행. 1은 broken_sources·broken_links·yaml_error·sources_bad 중 하나라도 있다는 뜻이며 사유를 요약에 적는다. 그 밖의 값이나 JSON이 아닌 출력은 '실행 실패') ② @Inbox 대기 수, @clippings 새 파일 수
       ③ 새 △ 통계 파일(registry stats_2026_recent의 period·notes에 파일명이 없는 것) ④ log.md 분할 필요
-      ⑤ 두 저장소의 미커밋 파일·미push 커밋·가장 오래된 미push 커밋 경과일 ⑥ reindex.failed, 이번 달 B 보고서 ⑦ 직전 실행 실패·8일 넘는 공백
+      ⑤ 두 저장소의 미커밋 파일·미push 커밋·가장 오래된 미push 커밋 경과일 ⑥ reindex.failed, 이번 달 B 보고서 ⑦ 직전 실행 실패·8일 넘는 공백 ⑧ 안건 작성예시 색인에 없는 예시 md(v1.2, index_drafting_examples.py --check 호출)
 재현성: '@clippings 새 파일'의 기준 시각은 '오늘보다 이전 날짜의 가장 최근 *_check.json'의 실행 시각이므로 같은 날 다시 실행해도 같은 값이 나온다.
         (이전 JSON이 없으면 기준 없음으로 보고 새 파일 수는 null)
 검증값(2026-11-12 기준, lint v1.6): broken_links 0, broken_links_log 38, broken_sources 0. 2026-11-11 lint 보고 12절 수치와 대조.
@@ -173,8 +173,22 @@ git = {'vault': git_state(VAULT), 'server': git_state(SERVER)}
 reindex_failed = os.path.exists(os.path.join(SERVER, 'data', 'reindex.failed'))
 b_reports = sorted(os.path.basename(p) for p in glob.glob(os.path.join(VAULT, '0 wiki', '분석', THIS_MONTH + '-* lint 보고.md')))
 
+# ---------- ⑦ 안건 작성예시 색인 추가분(v1.2) ----------
+ex_idx = {'new': None, 'gone': None, 'new_list': [], 'gone_list': []}
+try:
+    r = run([sys.executable, '-I', os.path.join(VAULT, 'Claude outputs', 'index_drafting_examples.py'), '--vault', VAULT, '--check'], timeout=120)
+    if r.returncode == 0:
+        m = re.search(r'새 파일 (\d+)개, 사라진 파일 (\d+)개', r.stdout)
+        ex_idx['new'], ex_idx['gone'] = int(m.group(1)), int(m.group(2))
+        ex_idx['new_list'] = [l[4:] for l in r.stdout.splitlines() if l.startswith('  + ')]
+        ex_idx['gone_list'] = [l[4:] for l in r.stdout.splitlines() if l.startswith('  - ')]
+    else:
+        ex_idx['error'] = (r.stderr or r.stdout)[-300:]
+except Exception as e:
+    ex_idx['error'] = str(e)
+
 # ---------- 결과 ----------
-res = dict(version='1.1', run_at=NOW.isoformat(), baseline_prev_check=prev_date, history=hist, lint=lint,
+res = dict(version='1.2', examples_index=ex_idx, run_at=NOW.isoformat(), baseline_prev_check=prev_date, history=hist, lint=lint,
            inbox_waiting=inbox, clippings_total=clip_total, clippings_new_since_prev=clip_new,
            stats_tri_files=tri_all, stats_tri_new=new_tri, log_first_month=log_first, log_split_needed=log_split_needed,
            git=git, reindex_failed=reindex_failed, b_report_this_month=b_reports)
@@ -209,6 +223,12 @@ for k, nm in (('vault', 'J:\\AI 자료'), ('server', 'J:\\MCP\\ai-vault-mcp')):
     else:
         old = f"{g['oldest_unpushed_days']}일" if g['unpushed'] else '-'
         S.append(f"- git {nm}: 미커밋 {g['uncommitted']}개 · 미push {g['unpushed']}개(가장 오래된 {old})" + (' → **push 권고**' if g['push_advised'] else ''))
+if ex_idx['new'] is None:
+    S.append(f"- 안건 작성예시 색인: 점검 실패({ex_idx.get('error', '')[:120]})")
+elif ex_idx['new'] or ex_idx['gone']:
+    S.append(f"- 안건 작성예시 색인: 새 예시 md **{ex_idx['new']}건**·사라진 파일 {ex_idx['gone']}건 → C: index_drafting_examples.py --rows --only-new (" + ', '.join((ex_idx['new_list'] + ex_idx['gone_list'])[:5]) + (' 등' if ex_idx['new'] + ex_idx['gone'] > 5 else '') + ')')
+else:
+    S.append('- 안건 작성예시 색인: 빠진 파일 없음')
 S.append('- reindex.failed: ' + ('**있음** → data\\index_failed.txt 확인' if reindex_failed else '없음'))
 S.append(f"- 이번 달 B 보고서: " + (', '.join(b_reports) if b_reports else '없음' + ('(B는 첫째 주 수요일 14:13 실행)' )))
 S.append('')
