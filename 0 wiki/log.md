@@ -907,3 +907,10 @@ type: log
 - 미반영: SOURCE_REGISTRY.yaml drafting_examples·raw_drafting_examples notes의 '7건'·'HCN뉴스와이드는 복사하지 않음' 문구는 ②등급이라 승인 대기(사용자에게 제안)
 - 커밋 대상 파일: 0 wiki/문서/대구사무소 안건(2023-2026).md, 0 wiki/문서/_index.md, 0 wiki/분석/안건 작성예시 색인.md, 0 wiki/쟁점/심의안건 작성 방식.md, 0 wiki/log.md (documents_md·source_raw는 .gitignore 대상)
 - 커밋 메시지 초안: ingest: 대구사무소 안건에 현대HCN 뉴스와이드(OCR 변환본) 추가, 색인 8건
+
+## [2026-11-22] schema | SOURCE_REGISTRY.yaml v1.65→v1.66(대구사무소 안건 notes 8건 반영) | Claude Sonnet 5.5
+- 승인: 사용자가 직전 제안("레지스트리 notes를 8건에 맞게 고칠까요?")에 "승인"(②등급)
+- 변경: drafting_examples·raw_drafting_examples notes의 7건→8건, 'HCN뉴스와이드는 복사하지 않음' 문구를 'PDF 1건 복사·OCR 변환' 설명으로 교체. 그 밖의 항목·경로는 그대로
+- 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.65_20261122.yaml. 검증: YAML 파싱, id 88개 중복 없음
+- 커밋 대상 파일: SOURCE_REGISTRY.yaml, 0 wiki/log.md, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.65_20261122.yaml
+- 커밋 메시지 초안: schema: SOURCE_REGISTRY v1.66 대구사무소 안건 notes 8건 반영
