@@ -887,3 +887,13 @@ type: log
 - 검증: wiki_lint 종료 0(yaml_error 0, broken_links 0, broken_sources 0, orphans 0, index_missing 0)
 - 커밋 대상 파일: 0 wiki/문서/대구사무소 안건(2023-2026).md, 0 wiki/문서/_index.md, 0 wiki/분석/안건 작성예시 색인.md, 0 wiki/쟁점/심의안건 작성 방식.md, 0 wiki/log.md, SOURCE_REGISTRY.yaml, Claude outputs/index_drafting_examples.py, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.64_20261122.yaml (documents_md·source_raw는 .gitignore 대상)
 - 커밋 메시지 초안: ingest: 대구사무소 안건(2023-2026) 7건과 색인 확장(registry v1.65)
+
+## [2026-11-22] ingest | 안건 작성예시 색인 확장(예시1~3·2026년 회의자료 안건별 행, 스크립트 v2.0) | Claude Sonnet 5.5
+- 사용자 요청 2026-11-22: 2026년 제32차 회의자료 같은 최근 회의자료 전체도 색인에 포함하고, 앞으로 같은 형태의 안건 예시가 늘어도 되게 해 달라("응 그렇게 진행해줘")
+- 스크립트: Claude outputs/index_drafting_examples.py v1.1→v2.0. 안건 폴더 전체를 읽고(새 폴더는 코드 수정 없이 인식, 시험으로 확인), 안건 머리 3가지 형식(HTML 표 머리, "## 프로그램 의결번호" 제목, 첫 줄 표)을 찾아 머리가 2개 이상인 파일은 안건마다 1행으로 만든다. 2009~2014년 폴더는 예전 방식(첫 줄 머리표) 유지. 적용조항은 사유 문장이 앞에 있어도 「…」 조항부터 적고 쪽 주석·표 제목은 뺀다. 이전 판 백업은 세션 임시 폴더에만 있음(v1.1은 같은 날 커밋 24f29b4에 있음)
+- Claude outputs/maintenance_check.py: --check 출력 문구 변경(새 행·사라진 행)에 맞춰 정규식을 '새 (파일|행)'으로 수정. A단계 기록 형식은 그대로
+- 갱신: [[안건 작성예시 색인]](절 '예시·회의자료' 79행 신설: 예시1 34, 예시2 8, 예시3 4, 2026-29 11, 2026-31 15, 2026-32 7. 대구사무소 방송사고 절에 CMB수성방송 행 추가. 대상·쓰는 법·갱신 방법 문장 수정), [[심의안건 작성 방식]] 8절 안내문. 스킬 broadcast-content-draft SKILL.md·서술규칙.md의 색인 설명(자료창고 밖)
+- 검증: 안건 수가 파일 안의 의결번호 수와 일치(예시1 34·예시2 8·예시3 4, 회의자료 11·15·7). 79행 모두 적용조항이 「 또는 ｢로 시작. --check 128개 파일·202행 중 새 행 0·사라진 행 0. wiki_lint 종료 0(yaml_error·broken_links·broken_sources·orphans·index_missing·sources_bad 모두 0)
+- 한계: 안건 머리는 위 3가지 형식만 찾는다(새 형식이 나오면 --check가 새 행을 0으로 보고하므로 md 수와 행 수를 함께 본다). 같은 의결번호를 다른 회의에서 다시 상정한 안건(예: 0196호는 제29·31차)은 따로 행이 된다. 프로그램 이름이 변환 중 줄바꿈으로 갈라진 경우 공백이 들어간다(KBO리 그)
+- 커밋 대상 파일: 0 wiki/분석/안건 작성예시 색인.md, 0 wiki/쟁점/심의안건 작성 방식.md, 0 wiki/log.md, Claude outputs/index_drafting_examples.py, Claude outputs/maintenance_check.py
+- 커밋 메시지 초안: ingest: 안건 작성예시 색인에 예시1~3·2026 회의자료 79행 추가, 색인 스크립트 v2.0(안건 폴더 전체·안건별 행)

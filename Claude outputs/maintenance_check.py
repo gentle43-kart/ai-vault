@@ -178,7 +178,7 @@ ex_idx = {'new': None, 'gone': None, 'new_list': [], 'gone_list': []}
 try:
     r = run([sys.executable, '-I', os.path.join(VAULT, 'Claude outputs', 'index_drafting_examples.py'), '--vault', VAULT, '--check'], timeout=120)
     if r.returncode == 0:
-        m = re.search(r'새 파일 (\d+)개, 사라진 파일 (\d+)개', r.stdout)
+        m = re.search(r'새 (?:파일|행) (\d+)개, 사라진 (?:파일|행) (\d+)개', r.stdout)  # v2.0 스크립트는 '행'
         ex_idx['new'], ex_idx['gone'] = int(m.group(1)), int(m.group(2))
         ex_idx['new_list'] = [l[4:] for l in r.stdout.splitlines() if l.startswith('  + ')]
         ex_idx['gone_list'] = [l[4:] for l in r.stdout.splitlines() if l.startswith('  - ')]
