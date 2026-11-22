@@ -897,3 +897,13 @@ type: log
 - 한계: 안건 머리는 위 3가지 형식만 찾는다(새 형식이 나오면 --check가 새 행을 0으로 보고하므로 md 수와 행 수를 함께 본다). 같은 의결번호를 다른 회의에서 다시 상정한 안건(예: 0196호는 제29·31차)은 따로 행이 된다. 프로그램 이름이 변환 중 줄바꿈으로 갈라진 경우 공백이 들어간다(KBO리 그)
 - 커밋 대상 파일: 0 wiki/분석/안건 작성예시 색인.md, 0 wiki/쟁점/심의안건 작성 방식.md, 0 wiki/log.md, Claude outputs/index_drafting_examples.py, Claude outputs/maintenance_check.py
 - 커밋 메시지 초안: ingest: 안건 작성예시 색인에 예시1~3·2026 회의자료 79행 추가, 색인 스크립트 v2.0(안건 폴더 전체·안건별 행)
+
+## [2026-11-22] ingest | 대구사무소 안건 현대HCN 'HCN뉴스와이드' OCR 변환본 추가 | Claude Sonnet 5.5
+- 사용자 요청 2026-11-22: "HCN뉴스와이드 OCR 변환해줘"(앞선 검토 보고에서 글자 층이 없는 그림 PDF로 보류했던 12번 파일)
+- 원본 추가(2.4절): 3 source_raw/작성예시_raw/안건/대구사무소 안건(2023-2026)/뉴스보도, 시사프로/붙임_현대HCN 새로넷방송 'HCN뉴스와이드'.pdf (Downloads 원본은 그대로)
+- 변환본(6.7절): 같은 구조의 1 documents_md/…/뉴스보도, 시사프로/…'HCN뉴스와이드'.md. PyMuPDF 1.28.2로 17쪽을 300dpi로 그린 뒤 tesseract 5(kor, --psm 4)로 쪽마다 읽음(원본에 글자 층 0자). 파일 첫머리에 OCR 주석, 쪽 주석 `<!-- p.N -->` 포함. 점검: 글자 19,027자 중 한글·영숫자·일반 부호 밖 문자 0.5%, U+FFFD 0. 한계: 표 구조와 방송화면 그림은 남지 않음, 영문 HCN·원문자·따옴표 일부 오인식, 방송화면 캡션 쪽(p.7)은 글자가 크게 깨짐
+- 갱신: [[대구사무소 안건(2023-2026)]](8건, 의결본 1건 설명), [[안건 작성예시 색인]](뉴스보도 절 3행, 대상 8개), [[심의안건 작성 방식]] 8절 1행, 문서/_index.md. 스킬 문서의 건수(8건)
+- 검증: index_drafting_examples.py --check 129개 파일·203행 중 새 행 0·사라진 행 0. wiki_lint 종료 0(yaml_error·broken_links·broken_sources·orphans·index_missing·sources_bad 모두 0)
+- 미반영: SOURCE_REGISTRY.yaml drafting_examples·raw_drafting_examples notes의 '7건'·'HCN뉴스와이드는 복사하지 않음' 문구는 ②등급이라 승인 대기(사용자에게 제안)
+- 커밋 대상 파일: 0 wiki/문서/대구사무소 안건(2023-2026).md, 0 wiki/문서/_index.md, 0 wiki/분석/안건 작성예시 색인.md, 0 wiki/쟁점/심의안건 작성 방식.md, 0 wiki/log.md (documents_md·source_raw는 .gitignore 대상)
+- 커밋 메시지 초안: ingest: 대구사무소 안건에 현대HCN 뉴스와이드(OCR 변환본) 추가, 색인 8건
