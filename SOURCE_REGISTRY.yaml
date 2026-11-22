@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.53"
-updated: 2026-11-13
+version: "1.64"
+updated: 2026-11-22
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -74,17 +74,6 @@ sources:
       2026-09-21 Claude 재변환(사용자 요청). PDF 펼침면을 좌우로 나누어 추출하고 옆면 탭·가운뎃점 문제를 없앰.
       쪽 표시 '책 N쪽 (PDF p.M)'. 줄바꿈 자리의 띄어쓰기가 일부 빠져 있음(예: '주요심의사례').
 
-  - id: commentary_2016_old
-    path: "1 documents_md/법령_md/방송_md/▲방송심의에관한 규정 해설집(2016).md"
-    layer: normalized
-    type: commentary
-    canonical: false
-    duplicate_of: commentary_2016_v2
-    searchable: false
-    ingest: none
-    classification: public
-    notes: "기존 변환본. 띄어쓰기 자리 가운뎃점(약 13,800곳)·문단 순서 뒤섞임으로 재변환본으로 대체"
-
   - id: law_broadcast_litigation
     path: "1 documents_md/법령_md/방송_md/▲위원회 관련 소송 현황(소송으로 심의결과 미확정 건).md"
     layer: normalized
@@ -153,17 +142,6 @@ sources:
     remote_allowed: true
     notes: "2026.10. 제정안(시행 전). 파일 단위 항목. 2026-10-15 internal로 등록했다가 같은 날 사용자 개별 승인(③등급)으로 public·원격 허용으로 변경. 원본이 2쪽 모아찍기라 쪽마다 좌·우 절반을 나누어 변환함"
 
-  - id: law_general_rulebook_dup
-    path: "1 documents_md/법령_md/일반_md/★방송통신심의위원회 규정집(2024).md"
-    layer: normalized
-    type: regulation
-    canonical: false
-    duplicate_of: law_broadcast
-    searchable: false
-    ingest: none
-    classification: public
-    notes: "방송_md/▲방송통신심의위원회 규정집(2024).md 와 같은 자료로 추정(내용 대조 필요)"
-
   - id: law_telecom
     path: "1 documents_md/법령_md/통신_md/"
     layer: normalized
@@ -191,17 +169,6 @@ sources:
     classification_confirmed: true
     remote_allowed: true
     notes: "기준본(2026-09-24 사용자 승인). 제1장 통신심의규정, 제2장 기본 법령, 제3장 정보 유형별 관련 법령 색인"
-
-  - id: telecom_rulebook_2023_dup
-    path: "1 documents_md/법령_md/통신_md/★2023 통신심의 관련 법령 규정집_제2장삭제.md"
-    layer: normalized
-    type: regulation
-    canonical: false
-    duplicate_of: telecom_rulebook_2023
-    searchable: false
-    ingest: none
-    classification: public
-    notes: "전체본에서 제2장(기본 법령)을 뺀 판. 중복본(2026-09-24 사용자 승인)"
 
   - id: itnet_act_2026
     path: "1 documents_md/법령_md/통신_md/정보통신망 이용촉진 및 정보보호 등에 관한 법률(법률)(제21305호)(20260707).md"
@@ -602,42 +569,6 @@ sources:
     ingest: none
     notes: "변환 오류(내용이 박종구 원고와 같음). 제외"
 
-  - id: research_papers_casebook_2020_dup
-    path: "1 documents_md/논문_md/2020 사례집.md"
-    layer: normalized
-    type: casebook
-    canonical: false
-    duplicate_of: telecom_casebook
-    searchable: false
-    ingest: none
-    period: "2020"
-    classification: public
-    notes: "통신심의 사례집 2020년판 단권 변환본. 병합본 telecom_casebook(p.224~445)과 중복. 중복본(2026-09-25 사용자 승인). ★후속 정리 대상: 모든 작업이 끝난 뒤 파일 정리"
-
-  - id: research_papers_casebook_2021_dup
-    path: "1 documents_md/논문_md/2021 사례집.md"
-    layer: normalized
-    type: casebook
-    canonical: false
-    duplicate_of: telecom_casebook
-    searchable: false
-    ingest: none
-    period: "2021"
-    classification: public
-    notes: "통신심의 사례집 2021년판 단권 변환본. 병합본 telecom_casebook(p.446~717)과 중복. 중복본(2026-09-25 사용자 승인). ★후속 정리 대상: 모든 작업이 끝난 뒤 파일 정리"
-
-  - id: research_papers_casebook_2022_dup
-    path: "1 documents_md/논문_md/2022 통신심의 사례집.md"
-    layer: normalized
-    type: casebook
-    canonical: false
-    duplicate_of: telecom_casebook
-    searchable: false
-    ingest: none
-    period: "2022"
-    classification: public
-    notes: "통신심의 사례집 2022년판 단권 변환본. 병합본 telecom_casebook(p.718~975)과 중복. 중복본(2026-09-25 사용자 승인). ★후속 정리 대상: 모든 작업이 끝난 뒤 파일 정리"
-  
   - id: research_yearbook_2017
     path: "1 documents_md/논문_md/2017 방송통신심의 연감.md"
     layer: normalized
@@ -718,20 +649,6 @@ sources:
       사용자가 정리한 2차 자료이므로 결론의 단독 근거로 쓰지 않고 검색·인용만 한다(사용자 확인 internal, 2026-09-23).
       Notion 첨부 원본(PDF 등)이 생기면 3 source_raw에 별도 폴더를 두고 raw_source에 적는다.
 
-  - id: law_broadcast_shopping152_dup
-    path: "1 documents_md/법령_md/방송_md/상품소개 및 판매방송 심의에 관한 규정(방송통신심의위원회규칙)(제152호)(20201228).md"
-    layer: normalized
-    type: regulation
-    canonical: false
-    duplicate_of: law_broadcast
-    searchable: false
-    ingest: none
-    classification: public
-    notes: >
-      상품판매방송규정 제152호의 기존 변환본. 기준본은 같은 폴더의 "상품소개_및_판매방송_심의에_관한_규정_제152호_20201228.md"
-      (2026-09-28 업로드본, 원본 3 source_raw/법령 등_raw/방송_raw/심의규정(법제처 다운)/ … (1).pdf)이다. 업로드본은 조문 끝 대괄호 개정 표시를
-      보존한 더 완전한 판이다(2026-09-28 ingest 기록). 이중 색인을 막기 위해 중복본으로 지정(사용자 승인 2026-10-08).
-
   - id: review_md
     path: "1 documents_md/검토_md/"
     layer: normalized
@@ -747,6 +664,35 @@ sources:
       보안등급 public·원격 허용은 사용자 개별 승인(2026-10-08, "원격 허용도 가능하니 반영해줘"). internal 자료는 넣지 않으며,
       검토에서 public이 아닌 파일이 확인되면 파일 단위 항목(classification: internal)을 추가하도록 제안한다.
       파일마다 자료 성격이 달라 type은 notes로 두었다(검색 kind는 internal로 묶임).
+
+  - id: review_md_cts_minutes_dup
+    path: "1 documents_md/검토_md/_처리완료/2026-11-16 CTS 기부금품/CTS 회의록(기부금품).md"
+    layer: normalized
+    type: meeting_minutes
+    canonical: false
+    duplicate_of: minutes_plenary
+    searchable: false
+    ingest: none
+    classification: public
+    notes: >
+      2010년 제18차 전체회의 의결사항 라.(CTS기독교TV 'CTS 창사 15주년 특별모금방송', 2010-18-231) 발언 부분의 변환본(PDF 쪽 표기 포함,
+      회의발언내용 58~66쪽). 기준본 minutes_plenary의 전체회의_회의록_2010.md 16505~16693행과 내용이 같아 이중 색인을 막기 위해
+      중복본으로 지정(사용자 승인 2026-11-16 "반영해줘", 검토 보고 ⑧ 5번). 같은 폴더의 'CTS 안건(기부금품).md'(안건 붙임)는 review_md로 색인한다.
+
+  - id: review_md_gaeseon_summary
+    path: "1 documents_md/검토_md/_처리완료/2026-11-19 개선계도 시행방식/개선계도 관련 공문·검토메모 정리본(2013-2023).md"
+    layer: normalized
+    type: internal_doc
+    ingest: search_only
+    raw_source: "3 source_raw/조직_raw/개선계도 시행방식 변경 관련/"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      「지역사무소 심의업무 개선방안」 관련 공문(2013.2.7.~2016.3.29.)과 2023 내부 검토 메모의 정리본. 같은 폴더의 OCR 변환본이 깨진 곳이 많아
+      사용자 지시(2026-11-19 "중복 내용 등 불필요한 것 제외하고, 주요 내용만 반영해줘")로 Claude가 원본 PDF 텍스트 층·쪽 이미지를 대조해 주요 내용만 옮겨 적음.
+      기계 변환본이 아니며(AGENTS_절차 6.7 예외, 사용자 지시), 옮긴 부분은 원문 문언 그대로이고 결재란·주소·중복 사본·원본에서도 빈 별첨 사례 본문은 넣지 않음. 위키: 쟁점/지역사무소 개선계도.
+      같은 폴더의 OCR 변환본 12개와 원본 중복 사본 PDF 4개는 사용자 지시로 삭제(2026-11-19). 정리본 머리말의 '넣지 않은 것'에 적힌 중복 사본 PDF는 이때 삭제됨.
 
   # ── 위키 (0 wiki) ─────────────────────────────────────────
   - id: wiki
@@ -1041,6 +987,18 @@ sources:
       PDF·HWP·XLSX 원본. 색인하지 않고, 변환본과 다를 때 최종 확인용으로만 연다.
       하위 폴더별 보안등급은 필요할 때 파일 단위 항목으로 추가한다.
 
+  - id: raw_review_inbox
+    path: "3 source_raw/_검토대기/"
+    layer: canonical_raw
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: public
+    notes: >
+      원본 수신 폴더(2026-11-20 신설, AGENTS_절차.md 6.7.1절). 사용자가 새 원본을 한글(HWP·HWPX)은 한글 그대로 넣는다.
+      Claude가 검토 보고를 하고, 사용자가 승인하면 md로 변환해 1 documents_md 대응 폴더에 넣고 원본은 3 source_raw 대응 폴더로 옮긴다.
+      처리 대기 원본만 두며 색인·ingest하지 않는다. 보안등급은 사용자 기본값(public)에 따름(사용자 결정 2026-10-16).
+
   - id: raw_org
     path: "3 source_raw/조직_raw/"
     layer: canonical_raw
@@ -1051,6 +1009,22 @@ sources:
     notes: >
       방송심의 외 주제(내부규정, 심의체계 개편, 법 개정, 국회 업무보고 등) 원본(사용자 확인 internal, 2026-09-23).
       변환본은 1 documents_md에 대응 폴더를 두고 별도 id로 등록한다.
+
+  - id: raw_org_gaeseon
+    path: "3 source_raw/조직_raw/개선계도 시행방식 변경 관련/"
+    layer: canonical_raw
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      「지역사무소 심의업무 개선방안」 관련 공문(2013.2.7. 방송심의기획팀-60 ~ 2016.3.29. -258)과 내부 검토 메모
+      '개선계도 시행방식 변경 관련_수정.pdf'(PDF 생성일 2023.3.14.) 원본 10개. 사용자가 직접 추가(2026-11-19). 처음 14개 중 중복 사본 4개
+      (부산사무소 접수본 「…」변경·시행 통보.pdf, 130207 (붙임)13-0206-개선방안v11.pdf, 붙임1-….pdf, 붙임2-….pdf)는 사용자 지시로 삭제(2026-11-19).
+      상위 raw_org는 internal이지만 사용자가 이 자료의 보안등급을 public으로 지정함(2026-11-19 "보안등급은 모두 퍼블릭이야").
+      정리본: review_md_gaeseon_summary(OCR 변환본 12개는 깨진 곳이 많아 사용자 지시로 삭제, 2026-11-19). 위키: 쟁점/지역사무소 개선계도
 
   - id: raw_telecom_casebook
     path: "3 source_raw/법령 등_raw/통신_raw/(사례집)통신심의사례집 병합(18-24).pdf"
@@ -1126,6 +1100,39 @@ sources:
     searchable: false
     ingest: none
     classification: public
+
+  # ── 작성 예시 (1 documents_md/작성예시_md, 3 source_raw/작성예시_raw) ──
+  - id: drafting_examples
+    path: "1 documents_md/작성예시_md/"
+    layer: normalized
+    type: internal_doc
+    ingest: wiki
+    raw_source: "3 source_raw/작성예시_raw/"
+    classification: public
+    classification_confirmed: true
+    remote_allowed: true
+    notes: >
+      안건·의결서 등 위원회 문서 작성 예시의 변환본(2026-11-20 신설, 사용자 지시로 3 source_raw/기타_raw/안건작성 예시/에서 옮김).
+      안건/에 예시1(2019년 제66·67차 방송심의소위원회 전체안건, 본문·붙임, 세부안건 34건), 예시2(2024.11.18. 제32차 전체회의 붙임 세부안건 8건),
+      예시3(대구·경북 지역 세부안건 4건, 3건은 의결번호 미기재 초안)과 images/(md가 상대경로로 링크하는 방송화면 그림)가 있다.
+      예시1 md는 원본 폴더의 같은 이름 txt를 정리한 것이다. 위키 허브는 쟁점 '심의안건 작성 방식'.
+      2026-11-20 추가: 안건/에 2026년 제29·31·32차 방송심의소위원회 회의자료 md 3개(kordoc 4.25.2 쪽 단위 변환, 쪽 주석, 그림 미추출. 방송화면은 원본 PDF 참조).
+      보안등급은 사용자 기본값(public)에 따름(사용자 결정 2026-10-16).
+      2026-11-22 추가: 안건/유형별 안건 모음(2009-2014)/에 부산사무소 백업의 2009~2014년 쟁점별 안건 115개 md(kordoc 4.25.2, 원본 폴더 구성 유지, 그림은 각 폴더 images/).
+      PDF 3건(겟잇뷰티 징계 안건, CTS 기부금품 안건·회의록)은 글꼴 인코딩 손상으로 tesseract(kor) OCR 변환본. 위키 허브는 쟁점 '방송내용 서술 방식', 문서 페이지 '유형별 안건 모음(2009-2014)'.
+      시청자민원 전문·방송사 답변서·특위 자문 의견이 들어 있으나 사용자 결정(2026-11-22)으로 public 유지.
+
+  - id: raw_drafting_examples
+    path: "3 source_raw/작성예시_raw/"
+    layer: canonical_raw
+    type: internal_doc
+    searchable: false
+    ingest: none
+    classification: public
+    notes: >
+      작성 예시 원본(2026-11-20 신설). 안건/에 예시2·예시3 PDF와 예시1 txt, 2026년 제29·31·32차 방송심의소위원회 회의자료 PDF(2026-11-20 사용자 추가). 예시1 PDF는 4 스킬, 프로젝트/안건, 의결서 등 작성/안건예시/에만 있다.
+      예시2·예시3 PDF는 그 폴더의 같은 이름 PDF와 해시가 같다(2026-11-20 확인).
+      2026-11-22 추가: 안건/유형별 안건 모음(2009-2014)/에 부산사무소 백업(D:\9 백업(이전부서) 등\91 백업(부산사무소)\…\0 유형별 안건 모음)에서 복사한 원본 115개(HWP 106, PDF 9). 중복·회순·표지·열리지 않는 파일·엑셀 등은 복사하지 않음(문서 페이지 1절).
 
   # ── 지침·가이드라인 (1 documents_md/지침_md) ───────────────
   - id: guidelines
