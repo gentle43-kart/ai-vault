@@ -914,3 +914,13 @@ type: log
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.65_20261122.yaml. 검증: YAML 파싱, id 88개 중복 없음
 - 커밋 대상 파일: SOURCE_REGISTRY.yaml, 0 wiki/log.md, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.65_20261122.yaml
 - 커밋 메시지 초안: schema: SOURCE_REGISTRY v1.66 대구사무소 안건 notes 8건 반영
+
+## [2026-11-22] ingest | 현대HCN 'HCN뉴스와이드' OCR 변환본을 HWP 초안본과 대조해 보완 | Claude Sonnet 5.5
+- 사용자 요청 2026-11-22: 3 source_raw/…/대구사무소 안건(2023-2026)/에 넣은 HCN 초안(HWP, 최종본 전 상정안)과 비교해 OCR 변환본을 보완
+- 대조: HWP를 kordoc 4.25.2로 세션 임시 폴더에만 변환(자료창고에 변환본 추가 안 함). 초안은 최종본과 달라(제2024-방송-00-0000호, 방송시간 20:00~20:30, 민원 7건·12건 차이, 방송화면 번호, 참고사항) 본문은 초안으로 바꾸지 않음. 붙임 1 보도 전문 6건은 문장이 같아(글자만 비교 시 일치율 97~98%) 초안을 근거로 보정
+- 변환본 보완(1 documents_md/…/뉴스보도, 시사프로/…'HCN뉴스와이드'.md): p.11~16 오인식 글자 54곳(출·혹·촉·충·총·창·훈 등)·A/B씨 표기·'HCN NEWS' 서명·YMCA·낱줄 잡음 5곳 보정(보정 후 초안과 글자 일치율 99.4%, 남은 차이는 쪽 꼬리말·쪽 주석·밑줄 표시뿐). 프로그램명 'HCN뉴스와이드'(p.1·2·3·4·정정보도문), '2019' 연도 2곳, '시립' 4곳, '1번보도' 보정. 첫머리 OCR 주석에 보완 내용 기록. 이전 판은 세션 임시 폴더에만 있음
+- 남은 한계: △·○ 부호가 '스·ㅅ·(7' 등으로, 표·방송화면 캡션·p.7이 그대로 깨져 있음. 정확한 내용은 원본 PDF
+- 갱신: [[대구사무소 안건(2023-2026)]] 문서 페이지에 초안본 존재와 보완 설명
+- 검증: index_drafting_examples.py --check 129개 파일·203행, 새 행 0·사라진 행 0, U+FFFD 0
+- 커밋 대상 파일: 0 wiki/문서/대구사무소 안건(2023-2026).md, 0 wiki/log.md (documents_md·source_raw는 .gitignore 대상)
+- 커밋 메시지 초안: ingest: HCN뉴스와이드 OCR 변환본을 HWP 초안과 대조해 보완
