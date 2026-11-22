@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-index_drafting_examples.py v1.0 (2026-11-22, Claude)
+index_drafting_examples.py v1.1 (2026-11-22, Claude)
 
 목적: 위키 분석 페이지 '안건 작성예시 색인'의 표를 만들고, 색인에 빠진 예시 파일(추가분)을 찾는다.
       '유형별 안건 모음(2009-2014)' 변환본 md의 머리표(방송사·프로그램, 의결번호, 의결일·차수, 방송일,
       프로그램유형)와 '적용조항' 절을 기계로 뽑는다. 판단·요약은 하지 않는다(그 칸은 사람이 채운다).
 입력: <vault>/1 documents_md/작성예시_md/안건/유형별 안건 모음(2009-2014)/ 아래 md 전체(images 폴더 제외),
+      <vault>/1 documents_md/작성예시_md/안건/대구사무소 안건(2023-2026)/ 아래 md 전체(v1.1 추가. 경로는 '안건/' 기준으로 적고 절 이름 앞에 폴더명을 붙인다),
       <vault>/0 wiki/분석/안건 작성예시 색인.md (--check·--rows에서 이미 실린 경로를 읽는 용도)
 출력: --check  표준출력에 새 파일·사라진 파일 목록(아무것도 쓰지 않는다)
       --rows   표준출력에 색인 표 행(--only-new면 색인에 없는 파일만)
       --build 경로  전체 표(쟁점 폴더별 절)를 그 경로 파일로 쓴다(위키 페이지 본문 조립용)
 쓰기 범위: --build가 지정한 파일뿐. 위키·자료창고는 고치지 않는다.
-검증값(2026-11-22): md 115개, 그중 머리표가 있는 세부안건 75개, 묶음 27개(쟁점 폴더 26개 + 폴더 밖 문서 5개의 '(폴더 밖)').
+검증값(2026-11-22): 유형별 안건 모음 md 115개, 그중 머리표가 있는 세부안건 75개, 묶음 27개(쟁점 폴더 26개 + 폴더 밖 문서 5개의 '(폴더 밖)').
+        v1.1 추가: 대구사무소 안건(2023-2026) md 7개(세부안건 7개, 쟁점 폴더 5개). 합계 md 122개.
         새 예시를 넣은 뒤에는 --check로 추가분을 보고, 반영하면 다시 --check가 0건이어야 한다.
 사용: python -I index_drafting_examples.py --check
       python -I index_drafting_examples.py --rows --only-new
@@ -32,7 +34,9 @@ a = ap.parse_args()
 
 VAULT = Path(a.vault)
 BASE = VAULT / "1 documents_md" / "작성예시_md" / "안건" / "유형별 안건 모음(2009-2014)"
+BASE2 = VAULT / "1 documents_md" / "작성예시_md" / "안건" / "대구사무소 안건(2023-2026)"
 PAGE = VAULT / "0 wiki" / "분석" / "안건 작성예시 색인.md"
+BASES = [(BASE, "", ""), (BASE2, BASE2.name + "/", BASE2.name + " · ")]  # (폴더, 경로 접두, 절 이름 접두)
 
 RE_HEAD = re.compile(r"^\|\s*([^|]+?)\s*\|\s*([^|\s]+)\s*\|\s*$")
 RE_MEET = re.compile(r"[<〈]\s*(\d{4}\.\s*\d+\.\s*\d+\.)\s*([^>〉]*?)\s*[>〉]")
@@ -57,15 +61,22 @@ def cell(s):
 
 def scan():
     rows = []
-    for p in sorted(BASE.rglob("*.md")):
-        rel = p.relative_to(BASE).as_posix()
+    for base, pre, gpre in BASES:
+        rows += scan_base(base, pre, gpre)
+    return rows
+
+
+def scan_base(base, pre, gpre):
+    rows = []
+    for p in sorted(base.rglob("*.md")):
+        rel = p.relative_to(base).as_posix()
         if "images/" in rel:
             continue
         text = p.read_text(encoding="utf-8", errors="replace")
         lines = text.lstrip().splitlines()
         m = RE_HEAD.match(lines[0]) if lines else None
         parts = rel.split("/")
-        group = parts[0] if len(parts) > 1 else "(폴더 밖)"
+        group = gpre + (parts[0] if len(parts) > 1 else "(폴더 밖)")
         stem = p.stem
         if m:
             kind, prog, no = "세부안건", clean(m.group(1)), m.group(2)
@@ -74,11 +85,11 @@ def scan():
             prog, no = stem, ""
         mm, air, pt, art = RE_MEET.search(text), RE_AIR.search(text), RE_PTYPE.search(text), RE_ART.search(text)
         feats = [v for k, v in FEATS if (k in text or k in rel)] if m else []
-        rows.append(dict(rel=rel, group=group, kind=kind, prog=prog, no=no,
+        rows.append(dict(rel=pre + rel, group=group, kind=kind, prog=prog, no=no,
                          meet=clean(mm.group(1) + " " + mm.group(2)) if mm else "",
                          air=clean(air.group(1)) if air else "",
                          pt=clean(pt.group(1)) if pt else "",
-                         art=re.sub(r"^[#○\s]+", "", clean(art.group(1)))[:200] if art else "", feats=" ".join(feats)))
+                         art=re.sub(r"^[#○\s]+", "", clean(re.sub(r"의결 - - \d+\(붙임\)", "", re.sub(r"!\[image\]\(images/.*?\.(?:png|jpe?g)\)", "", art.group(1)))))[:200] if art else "", feats=" ".join(feats)))
     return rows
 
 

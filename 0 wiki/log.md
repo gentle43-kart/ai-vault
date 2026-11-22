@@ -874,3 +874,16 @@ type: log
 - 백업: Claude outputs/schema_backup/AGENTS_v1.49_20261122.md, AGENTS_절차_v1.49_20261122.md
 - 커밋 대상 파일: Claude outputs/maintenance_check.py, Claude outputs/schema_backup/AGENTS_v1.49_20261122.md, Claude outputs/schema_backup/AGENTS_절차_v1.49_20261122.md (AGENTS.md·AGENTS_절차.md·log.md는 앞선 미커밋 변경과 섞여 있어 함께 커밋할 때 포함)
 - 커밋 메시지 초안: schema: 정기 점검 6.8절에 안건 작성예시 색인 점검 추가(v1.50)
+
+## [2026-11-22] ingest | 대구사무소 안건(2023-2026) 7건 추가, 안건 작성예시 색인 확장 | Claude Sonnet 5.5
+- 사용자 승인 2026-11-22: 검토 보고(Downloads\대구사무소 안건 12개 파일) 뒤 "반영해줘"(반영 목록 1~7번 전체). 12건 중 새 예시 6건, 예시3 건진법사 초안의 개정판 1건을 추가했고, 이미 자료창고에 있는 4건(예시2 굿데이, 예시3 TBC 8뉴스·푸른방송·피해자 신원 노출)과 글자 층이 없는 그림 PDF 1건(HCN뉴스와이드, 34쪽)은 추가하지 않았다
+- 원본 추가(2.4절): 3 source_raw/작성예시_raw/안건/대구사무소 안건(2023-2026)/ 아래 쟁점 폴더 5개(광고효과·뉴스보도·방송사고·선방위·자막고지)에 HWP 7건을 복사. Downloads 원본은 그대로 둠
+- 변환본(6.7절): 1 documents_md/작성예시_md/안건/대구사무소 안건(2023-2026)/ 같은 구조. kordoc 4.25.2, 글자 깨짐(U+FFFD) 0, 그림은 각 폴더 images/. 변환 오류·문서 안 불일치(포항MBC 방송시간 본문·표 상이, CMB 파일에 2건 중복)는 고치지 않음
+- 생성: [[대구사무소 안건(2023-2026)]]
+- 갱신: [[안건 작성예시 색인]](대구사무소 절 5개·쓰는 법·갱신 방법), [[심의안건 작성 방식]](8절 표 7행, sources, 관련 문서), 문서/_index.md
+- 스크립트: Claude outputs/index_drafting_examples.py v1.0→v1.1(두 폴더 스캔, 적용조항 칸의 그림 링크·쪽 꼬리말 제거). --check 122/122(새 파일 0, 사라진 파일 0)
+- 스키마(②등급): SOURCE_REGISTRY.yaml v1.64→v1.65(drafting_examples·raw_drafting_examples notes 추가). 승인은 위 반영 목록 6번. 백업 Claude outputs/schema_backup/SOURCE_REGISTRY_v1.64_20261122.yaml. YAML 파싱·id 88개 중복 없음. 보안등급은 사용자 기본값(public)에 따름
+- 스킬: ~/.claude/skills/broadcast-content-draft SKILL.md·references/서술규칙.md 2절에 대구사무소 예시 연결(자료창고 밖)
+- 검증: wiki_lint 종료 0(yaml_error 0, broken_links 0, broken_sources 0, orphans 0, index_missing 0)
+- 커밋 대상 파일: 0 wiki/문서/대구사무소 안건(2023-2026).md, 0 wiki/문서/_index.md, 0 wiki/분석/안건 작성예시 색인.md, 0 wiki/쟁점/심의안건 작성 방식.md, 0 wiki/log.md, SOURCE_REGISTRY.yaml, Claude outputs/index_drafting_examples.py, Claude outputs/schema_backup/SOURCE_REGISTRY_v1.64_20261122.yaml (documents_md·source_raw는 .gitignore 대상)
+- 커밋 메시지 초안: ingest: 대구사무소 안건(2023-2026) 7건과 색인 확장(registry v1.65)
