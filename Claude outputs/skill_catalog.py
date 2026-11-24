@@ -7,6 +7,7 @@
 검증값: broadcast-review-ppt는 버전 2026-11-19, 템플릿 4장, 설치본·부록 스크립트 일치.
 사용: python skill_catalog.py [--check]  (--check는 파일을 쓰지 않고, 문제가 있으면 exit 1)
 표준 라이브러리만 쓴다. 출력에 실행 시각을 넣지 않아 내용이 바뀔 때만 git 변경이 생긴다.
+카탈로그 내용이 바뀌면 `MCP/ai-vault-mcp/data/reindex.request`를 만들어 색인을 요청한다. reindex.failed가 있으면 요청하지 않고 알린다.
 """
 from __future__ import annotations
 
@@ -25,6 +26,7 @@ from pathlib import Path
 VAULT = Path(__file__).resolve().parents[1]
 ROOT = VAULT / "4 스킬, 프로젝트"
 CATALOG = ROOT / "_스킬_카탈로그.md"
+REINDEX_DIR = VAULT.parent / "MCP" / "ai-vault-mcp" / "data"
 FORM_EXT = {".pptx", ".potx", ".xlsx", ".xltx", ".hwpx"}
 EXCLUDE = ("테스트결과",)
 P = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
@@ -280,6 +282,15 @@ def catalog(items: list[dict]) -> str:
     return "\n".join(out) + "\n"
 
 
+def request_reindex() -> str:
+    if not REINDEX_DIR.is_dir():
+        return f"색인 요청 못 함: 폴더 없음({REINDEX_DIR})"
+    if (REINDEX_DIR / "reindex.failed").exists():
+        return "색인 요청 안 함: reindex.failed가 있음. data/index_failed.txt의 원인을 먼저 확인할 것"
+    (REINDEX_DIR / "reindex.request").touch()
+    return "카탈로그 변경: 검색 색인 요청함(5분 안에 반영)"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
@@ -300,7 +311,13 @@ def main() -> int:
         # 양식_구조.md를 새로 쓴 뒤의 git 상태로 카탈로그를 만든다.
         for info in items:
             info["dirty"] = inspect(info["folder"])[0]["dirty"]
-        CATALOG.write_text(catalog(items), encoding="utf-8", newline="\n")
+        new_catalog = catalog(items)
+        old_catalog = CATALOG.read_text(encoding="utf-8") if CATALOG.exists() else ""
+        if new_catalog != old_catalog:
+            CATALOG.write_text(new_catalog, encoding="utf-8", newline="\n")
+            print(request_reindex())
+        else:
+            print("카탈로그 변경 없음: 색인 요청 안 함")
     for i in items:
         print(f"{i['name']}: v{i['version']} install {i['same']}/{i['installs']} scripts {i['scripts'] - len(i['bad'])}/{i['scripts']} forms {len(i['forms'])} problems={i['problems']} dirty={i['dirty']}")
     return 1 if failed else 0
