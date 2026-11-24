@@ -300,11 +300,9 @@ def main() -> int:
     failed = False
     for info, doc in results:
         current = info["doc_path"].read_text(encoding="utf-8") if info["doc_path"].exists() else ""
-        if not doc:
-            continue
-        if args.check and current != doc:
+        if doc and args.check and current != doc:
             info["problems"].append("양식_구조 갱신 필요")
-        elif not args.check and current != doc:
+        elif doc and not args.check and current != doc:
             info["doc_path"].write_text(doc, encoding="utf-8", newline="\n")
         failed = failed or bool(info["problems"])
     if not args.check:
