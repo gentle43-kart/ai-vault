@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# broadcast-review-ppt toolkit version: 2026-10-26
+# broadcast-review-ppt toolkit version: 2026-11-19
 """deck_spec.json + 자체심의 템플릿 → 편집 가능한 PPTX와 감사 JSON.
 
 usage: python3 build_deck.py deck_spec.json TEMPLATE.pptx OUT.pptx
@@ -28,7 +28,7 @@ MAP = {
              "datetime": "Google Shape;109;p15", "related": "Google Shape;111;p15",
              "summary": "Google Shape;103;p15", "image": "Picture 3",  # 예시 사진(있으면 삭제)
              "image_card": "Google Shape;101;p15",  # 사진 카드 배경: 이 안쪽에 사진 배치
-             "image_box": (545, 168, 362, 284)},  # pt, 카드를 못 찾을 때 쓰는 영역
+             "image_box": (545, 136, 362, 378)},  # pt, 카드를 못 찾을 때 쓰는 영역
     "pair": {"slide": 4, "title": "Google Shape;131;p16",
              "left": {"label": "Google Shape;123;p16", "program": "Google Shape;127;p16",
                       "related": "Google Shape;128;p16", "summary": "Google Shape;124;p16"},
@@ -172,6 +172,9 @@ def prepared_image(path):
 
 
 def place_images(slide, paths, box, warns):
+    """사진 카드 안에 그림을 최대한 크게 배치한다.
+    열 수(1~n)를 바꿔 가며 같은 크기 칸으로 나눠 보고, 가장 작게 나오는 그림이 가장 커지는 배치를 고른다.
+    16:9 화면 2~3장이면 보통 위아래 한 줄씩 쌓인다. 남는 세로 공간은 위아래로 고르게 나눈다."""
     left, top, width, height = box
     ok = []
     for p in paths[:3]:
@@ -179,23 +182,29 @@ def place_images(slide, paths, box, warns):
             ok.append(prepared_image(p))
         except Exception as exc:
             warns.append(f"그림 삽입 실패({Path(p).name}): {exc}")
-    gap = 6
-    n = len(ok)
-    for i, (buf, (iw, ih)) in enumerate(ok):
-        if n == 1:
-            bx, by, bw, bh = left, top, width, height
-        elif n == 2:
-            bh = (height - gap) / 2
-            bx, by, bw = left, top + i * (bh + gap), width
-        else:
-            if i == 0:
-                bx, by, bw, bh = left, top, width, (height - gap) * 0.58
-            else:
-                bw, bh = (width - gap) / 2, (height - gap) * 0.42
-                bx, by = left + (i - 1) * (bw + gap), top + height - bh
-        scale = min(bw / iw, bh / ih)
-        w, h = iw * scale, ih * scale
-        slide.shapes.add_picture(buf, Pt(bx + (bw - w) / 2), Pt(by + (bh - h) / 2), Pt(w), Pt(h))
+    if not ok:
+        return
+    gap, n, best = 6, len(ok), None
+    for cols in range(1, n + 1):
+        rows = -(-n // cols)
+        cw, ch = (width - gap * (cols - 1)) / cols, (height - gap * (rows - 1)) / rows
+        sizes = [(iw * min(cw / iw, ch / ih), ih * min(cw / iw, ch / ih)) for _, (iw, ih) in ok]
+        score = min(w * h for w, h in sizes)
+        if best is None or score > best[0]:
+            best = (score, cols, cw, sizes)
+    _, cols, cw, sizes = best
+    row_h = [max(h for _, h in sizes[r:r + cols]) for r in range(0, n, cols)]
+    y = top + (height - sum(row_h) - gap * (len(row_h) - 1)) / 2
+    for r, rh in enumerate(row_h):
+        for c in range(cols):
+            k = r * cols + c
+            if k >= n:
+                break
+            buf, _ = ok[k]
+            w, h = sizes[k]
+            x = left + c * (cw + gap) + (cw - w) / 2
+            slide.shapes.add_picture(buf, Pt(x), Pt(y + (rh - h) / 2), Pt(w), Pt(h))
+        y += rh + gap
 
 
 def set_notes(slide, lines):
@@ -266,8 +275,7 @@ def main():
     protos = {k: originals[v["slide"] - 1] for k, v in MAP.items() if v["slide"] <= len(originals)}
     cover = protos["cover"]
     station = spec.get("station") or "방송사"
-    # 표지: 1줄 방송사명, 2줄 '자체심의 참고사항'(둘 다 표지 제목 서식). 괄호 부제 줄은 두지 않는다.
-    set_text(shape(cover, MAP["cover"]["title"]), [station, "자체심의 참고사항"])
+    set_cover_station(shape(cover, MAP["cover"]["title"]), station)
 
     audit = {"schema_version": "2.0", "template": str(tpl), "output": str(out), "station": station, "slides": []}
     sec_no = 0
@@ -301,6 +309,16 @@ def main():
         if x.get("review_warnings"):
             print(f"  [{x['type']}] {x['title']}: {x['review_warnings']}")
 
+
+def set_cover_station(shp, station):
+    """표지: 템플릿의 문단·서식(부제·기관명 줄 등)은 그대로 두고, 글자가 있는 첫 문단(방송사명)만 바꾼다."""
+    for p in shp.text_frame.paragraphs:
+        if p.runs and p.text.strip():
+            p.runs[0].text = station
+            for r in p.runs[1:]:
+                r._r.getparent().remove(r._r)
+            return
+    raise KeyError("표지 제목 상자에 방송사명 문단이 없음 (템플릿 확인 필요)")
 
 
 if __name__ == "__main__":

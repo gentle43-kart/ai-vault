@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# broadcast-review-ppt toolkit version: 2026-10-26
+# broadcast-review-ppt toolkit version: 2026-11-19
 """모니터 보고서(HWPX/HWP/DOCX/TXT/MD/PDF)를 사례 단위 JSON으로 추출한다.
 
 출력은 '원자료 추출본'이며 요약·제목은 만들지 않는다(제목·요약은 Claude가 작성).
@@ -40,7 +40,7 @@ IMG_EXT = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".webp"}
 def clean(text: str) -> str:
     text = (text or "").replace("\r", "").replace("\t", " ")
     text = re.sub(r"[\x00\x0b\x0c]", " ", text)
-    text = re.sub(r"[ \u00a0\u3000]+", " ", text)
+    text = re.sub(r"[  　]+", " ", text)
     return text.strip()
 
 
