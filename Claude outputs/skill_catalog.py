@@ -59,7 +59,9 @@ def changelog_meta(path: Path) -> dict:
     """CHANGELOG 줄머리의 `버전:`, `정본:`(4 스킬, 프로젝트 기준 경로), `주의:`를 읽는다."""
     text = path.read_text(encoding="utf-8-sig")
     ver = re.search(r"^버전:\s*(.+?)\s*$", text, re.M)
+    title = re.search(r"^이름:\s*(.+?)\s*$", text, re.M)
     return {
+        "name": title.group(1) if title else "",
         "version": ver.group(1) if ver else "",
         "docs": re.findall(r"^정본:\s*(.+?)\s*$", text, re.M),
         "notes": re.findall(r"^주의:\s*(.+?)\s*$", text, re.M),
@@ -233,6 +235,7 @@ def inspect(folder: Path) -> tuple[dict, str]:
     total, bad = script_mismatches(text, folder)
     log_version = changelog_version(folder / "CHANGELOG.md")
     meta = changelog_meta(folder / "CHANGELOG.md")
+    name = meta["name"] or name
     toolkit = version_of(text)
     version = toolkit or meta["version"] or log_version
     docs = [ROOT / d for d in meta["docs"]]
