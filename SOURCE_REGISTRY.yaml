@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.66"
-updated: 2026-11-22
+version: "1.67"
+updated: 2026-11-24
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -1162,6 +1162,15 @@ sources:
     ingest: none
     classification: internal
     notes: "업무 요청 시 지침으로만 참고한다"
+
+  - id: skill_catalog
+    path: "4 스킬, 프로젝트/_스킬_카탈로그.md"
+    layer: instruction
+    type: internal_doc
+    searchable: true
+    ingest: none
+    classification: internal
+    notes: "스킬·지침·양식의 버전과 위치 목록. 지침 본문은 검색 대상이 아니다"
 
   - id: complaint_rawdata
     path: "4 스킬, 프로젝트/클로드 민원답변 프로젝트 기초 파일/기초자료(로데이터)/"
