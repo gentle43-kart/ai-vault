@@ -55,6 +55,17 @@ def changelog_version(path: Path) -> str:
     return m.group(1) if m else ""
 
 
+def changelog_meta(path: Path) -> dict:
+    """CHANGELOG 줄머리의 `버전:`, `정본:`(4 스킬, 프로젝트 기준 경로), `주의:`를 읽는다."""
+    text = path.read_text(encoding="utf-8-sig")
+    ver = re.search(r"^버전:\s*(.+?)\s*$", text, re.M)
+    return {
+        "version": ver.group(1) if ver else "",
+        "docs": re.findall(r"^정본:\s*(.+?)\s*$", text, re.M),
+        "notes": re.findall(r"^주의:\s*(.+?)\s*$", text, re.M),
+    }
+
+
 def installed_paths(name: str) -> list[Path]:
     home = Path.home()
     local = Path(os.environ.get("LOCALAPPDATA", home / "AppData/Local"))
@@ -221,7 +232,10 @@ def inspect(folder: Path) -> tuple[dict, str]:
     same = [p for p in installs if text_sha(p) == src_hash]
     total, bad = script_mismatches(text, folder)
     log_version = changelog_version(folder / "CHANGELOG.md")
-    version = version_of(text) or log_version
+    meta = changelog_meta(folder / "CHANGELOG.md")
+    toolkit = version_of(text)
+    version = toolkit or meta["version"] or log_version
+    docs = [ROOT / d for d in meta["docs"]]
     extras = sorted({
         f.relative_to(p.parent).as_posix()
         for p in installs for f in p.parent.rglob("*")
@@ -234,10 +248,14 @@ def inspect(folder: Path) -> tuple[dict, str]:
         problems.append("설치본 불일치")
     if bad:
         problems.append("스크립트 불일치: " + ", ".join(bad))
-    if version != log_version:
+    if toolkit and toolkit != log_version:
         problems.append(f"CHANGELOG 버전 다름({log_version or '없음'})")
-    dirty = uncommitted([folder])
-    info = {"name": name, "folder": folder, "is_skill": is_skill, "version": version, "forms": forms,
+    missing = [d.name for d in docs if not d.is_file()]
+    if missing:
+        problems.append("정본 문서 없음: " + ", ".join(missing))
+    problems += meta["notes"]
+    dirty = uncommitted([folder] + [d for d in docs if d.is_file()])
+    info = {"name": name, "folder": folder, "is_skill": is_skill, "version": version, "forms": forms, "docs": docs,
             "installs": len(installs), "same": len(same), "scripts": total, "bad": bad, "extras": extras,
             "problems": problems, "dirty": dirty, "doc_path": doc_path}
     return info, doc
@@ -245,16 +263,17 @@ def inspect(folder: Path) -> tuple[dict, str]:
 
 def catalog(items: list[dict]) -> str:
     out = ["# 스킬 카탈로그", "", "`Claude outputs/skill_catalog.py`가 만든 문서이다. 직접 고치지 않는다.", "",
-           "| 항목 | 버전 | 정본 위치 | 설치본 | 부록 스크립트 | 양식 | 정본에 없는 부속 파일 | 상태 | 미커밋 |",
-           "|---|---|---|---|---|---|---|---|---|"]
+           "| 항목 | 버전 | 정본 위치 | 정본 문서 | 설치본 | 부록 스크립트 | 양식 | 정본에 없는 부속 파일 | 상태 | 미커밋 |",
+           "|---|---|---|---|---|---|---|---|---|---|"]
     for i in items:
         forms = "<br>".join(f.relative_to(ROOT).as_posix() for f in i["forms"]) or "-"
+        docs = "<br>".join(d.name for d in i["docs"]) or "-"
         scripts = f"{i['scripts'] - len(i['bad'])}/{i['scripts']} 일치" if i["scripts"] else "-"
-        installs = f"{i['same']}/{i['installs']} 일치" if i["is_skill"] else "양식 전용"
+        installs = f"{i['same']}/{i['installs']} 일치" if i["is_skill"] else "해당 없음"
         extras = "<br>".join(i["extras"]) or "-"
         status = "; ".join(i["problems"]) or "정상"
         where = i["folder"].relative_to(ROOT).as_posix()
-        out.append(f"| {i['name']} | {i['version'] or '-'} | {where} | {installs} | {scripts} | {forms} | {extras} | {status} | {len(i['dirty'])}개 |")
+        out.append(f"| {i['name']} | {i['version'] or '-'} | {where} | {docs} | {installs} | {scripts} | {forms} | {extras} | {status} | {len(i['dirty'])}개 |")
     return "\n".join(out) + "\n"
 
 
