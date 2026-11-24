@@ -3,7 +3,7 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.67"
+version: "1.68"
 updated: 2026-11-24
 root: "J:/AI 자료"
 
@@ -38,6 +38,12 @@ defaults:
 # 1) remote_allowed: true 는 classification: public 이고 classification_confirmed: true 일 때만 허용한다.
 # 2) 파일 단위 항목은 같은 경로를 포함하는 폴더 단위 항목보다 우선한다.
 # 3) 목록에 없는 파일은 searchable: false, remote_allowed: false 로 취급하고 lint가 보고한다.
+
+scan_dirs:
+  - "1 documents_md"
+  - "2 data_csv"
+  - "0 wiki"
+  - "4 스킬, 프로젝트/_스킬_카탈로그.md"
 
 sources:
 
