@@ -79,8 +79,8 @@ def api_bill(bill_number: str):
 
 
 @app.post("/api/sync")
-def api_sync():
-    return sync_service.start_background_sync(load_settings())
+def api_sync(days: int | None = Query(None, ge=0, description="최근 N일(없으면 설정값, 0이면 전체)")):
+    return sync_service.start_background_sync(load_settings(), days=days)
 
 
 @app.get("/api/sync/status")
@@ -97,7 +97,7 @@ def api_sync_status():
     if not last:
         return {"running": False, "status": None}
     keys = ("status", "total_found", "related_found", "inserted", "updated", "unchanged", "failed",
-            "started_at", "finished_at", "error_message", "warning")
+            "started_at", "finished_at", "error_message", "warning", "scope")
     out = {"running": last["status"] == "running", **{k: last.get(k) for k in keys}}
     if out["running"]:  # 명령줄에서 실행 중인 조사
         out["label"] = sync_service.PHASE_LABELS.get(last.get("phase") or "", "조사 중...")

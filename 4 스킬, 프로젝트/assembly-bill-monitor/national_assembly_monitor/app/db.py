@@ -90,6 +90,10 @@ def connect(path: Path) -> sqlite3.Connection:
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    # 2026-11-25 추가 열: 조사 범위(예: "최근 7일(2026-11-18 이후)")
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(sync_logs)")}
+    if "scope" not in cols:
+        conn.execute("ALTER TABLE sync_logs ADD COLUMN scope TEXT")
     conn.commit()
 
 

@@ -49,6 +49,18 @@ def test_search_bills_paginates_and_sends_user_agent(settings, monkeypatch):
     assert "KEY=test-key" in calls[0].full_url and "BILL_NAME=" in calls[0].full_url
 
 
+def test_since_stops_at_older_bill(settings, monkeypatch):
+    def page(rows):
+        return {"TVBPMBILL11": [{"head": [{"list_total_count": 500}, {"RESULT": {"CODE": "INFO-000"}}]},
+                                {"row": rows}]}
+    p1 = page([list_row("5", "방송법", date="2026-11-24"), list_row("4", "방송법", date="2026-11-20")])
+    p2 = page([list_row("3", "방송법", date="2026-11-18"), list_row("2", "방송법", date="2026-11-10")])
+    calls = _patch_urlopen(monkeypatch, [p1, p2, page([list_row("1", "방송법", date="2026-11-01")])])
+    rows = na.NationalAssemblyClient(settings).search_bills("방송", since="2026-11-18", page_size=2)
+    assert [r["BILL_NO"] for r in rows] == ["5", "4", "3"]   # 기준일 당일 포함, 이전은 제외
+    assert len(calls) == 2                                     # 오래된 의안이 나온 페이지에서 멈춤
+
+
 def test_no_data_returns_empty(settings, monkeypatch):
     _patch_urlopen(monkeypatch, [{"RESULT": {"CODE": "INFO-200", "MESSAGE": "해당하는 데이터가 없습니다."}}])
     assert na.NationalAssemblyClient(settings).search_bills("없는말") == []

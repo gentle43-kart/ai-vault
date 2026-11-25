@@ -1,6 +1,7 @@
 """명령줄 실행(스킬에서 사용).
 
-  python -m app.cli sync                 최신 조사 실행 후 결과 요약
+  python -m app.cli sync                 최신 조사(기본: 최근 7일 제안분) 후 결과 요약
+  python -m app.cli sync --days 30       최근 30일 / --all 이면 해당 대수 전체
   python -m app.cli list [--new] ...     저장된 관련 의안 목록
   python -m app.cli show 의안번호         의안 1건 + 제안이유 및 주요내용 원문
   python -m app.cli status               마지막 조사 결과
@@ -70,6 +71,9 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sp = sub.add_parser("sync")
+    g = sp.add_mutually_exclusive_group()
+    g.add_argument("--days", type=int, help="제안일 기준 최근 N일만 조사(기본: keywords.yaml의 recent_days)")
+    g.add_argument("--all", action="store_true", help="해당 대수 전체 조사(오래 걸림)")
     sp.add_argument("--json", action="store_true")
     sp.add_argument("--out")
 
@@ -108,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         def progress(name: str, c: dict) -> None:
             extra = f" {c['detail_done']}/{c['detail_total']}" if "detail_done" in c else ""
             print(f"[{sync_service.PHASE_LABELS.get(name, name)}]{extra}", file=sys.stderr, flush=True)
-        r = sync_service.run_sync(s, progress=progress)
+        r = sync_service.run_sync(s, progress=progress, days=0 if a.all else a.days)
         if a.json:
             _emit(json.dumps(r, ensure_ascii=False, indent=2), a.out)
         else:
@@ -118,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
                 text = f"조사 실패: {r.get('error_message')}"
             else:
                 text = "\n".join([
-                    f"조사 완료 ({r['finished_at']})",
+                    f"조사 완료 ({r['finished_at']}) · 조사 범위: {r['scope']}",
                     f"검색 결과 {r['total_found']}건 → 관련 의안 {r['related_found']}건: "
                     f"신규 {r['inserted']} / 변경 {r['updated']} / 변동 없음 {r['unchanged']} / 실패 {r['failed']}",
                     *([f"주의: {r['warning']}"] if r.get("warning") else []),
@@ -157,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
                 _emit(json.dumps(r, ensure_ascii=False, indent=2), None)
             else:
                 _emit(f"마지막 조사: {r['started_at']} ~ {r.get('finished_at') or '-'} [{r['status']}] "
+                      f"범위 {r.get('scope') or '-'} / "
                       f"관련 {r['related_found']} / 신규 {r['inserted']} / 변경 {r['updated']} / "
                       f"실패 {r['failed']}" + (f"\n오류: {r['error_message']}" if r.get("error_message") else "")
                       + (f"\n주의: {r['warning']}" if r.get("warning") else ""), None)

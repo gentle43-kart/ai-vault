@@ -21,6 +21,7 @@ class FakeApi:
                           "PRC_2223122": None}
         self.fail_summary = set()
         self.summary_calls = []
+        self.since_calls = []
         self.auth_error = False
 
 
@@ -28,10 +29,11 @@ class FakeApi:
 def fake(monkeypatch):
     f = FakeApi()
 
-    def search_bills(self, keyword, page_size=100, max_pages=50):
+    def search_bills(self, keyword, since=None, page_size=100, max_pages=50):
         if f.auth_error:
             raise na.AssemblyAuthError("국회 Open API 인증키 오류(ERROR-290): 인증키가 유효하지 않습니다.", "ERROR-290")
-        return [dict(r) for r in f.rows.get(keyword, [])]
+        f.since_calls.append(since)
+        return [dict(r) for r in f.rows.get(keyword, []) if not since or r["PROPOSE_DT"] >= since]
 
     def get_official_summary(self, bill_id):
         f.summary_calls.append(bill_id)
@@ -102,6 +104,30 @@ def test_auth_error_fails_sync(settings, fake):
     assert r["status"] == "failed"
     assert "ERROR-290" in r["error_message"] and "ASSEMBLY_API_KEY" in r["error_message"]
     assert db.last_sync(_conn(settings))["status"] == "failed"
+
+
+def test_recent_days_limits_scope(settings, fake):
+    from datetime import date, timedelta
+    recent = (date.today() - timedelta(days=2)).isoformat()
+    old = (date.today() - timedelta(days=30)).isoformat()
+    fake.rows["방송"] = [list_row("2223300", "방송법 일부개정법률안", date=recent),
+                       list_row("2220000", "방송법 일부개정법률안", date=old)]
+    fake.rows["통신"] = []
+    r = sync_service.run_sync(settings, days=7)
+    assert r["status"] == "completed"
+    assert r["scope"].startswith("최근 7일(")
+    assert [b["bill_number"] for b in r["new_bills"]] == ["2223300"]
+    assert fake.since_calls[0] == (date.today() - timedelta(days=7)).isoformat()
+    assert db.last_sync(_conn(settings))["scope"] == r["scope"]
+    # 0이면 전체
+    r_all = sync_service.run_sync(settings, days=0)
+    assert r_all["scope"] == "제22대 전체" and r_all["inserted"] == 1 and fake.since_calls[-1] is None
+
+
+def test_default_scope_from_settings(settings, fake):
+    settings.recent_days = 7
+    r = sync_service.run_sync(settings)
+    assert r["scope"].startswith("최근 7일(")
 
 
 def test_already_running(settings, fake):

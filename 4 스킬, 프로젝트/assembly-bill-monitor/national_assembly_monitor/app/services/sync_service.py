@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import threading
 import time
+from datetime import date, timedelta
 from typing import Any, Callable
 
 from app import db
@@ -41,8 +42,20 @@ def _set_state(**kw: Any) -> None:
         _state.update(kw)
 
 
-def run_sync(settings: Settings, progress: Callable[[str, dict], None] | None = None) -> dict[str, Any]:
-    """조사 1회 실행. 이미 실행 중이면 {"status": "already_running"}."""
+def resolve_scope(settings: Settings, days: int | None) -> tuple[str | None, str]:
+    """조사 범위. days가 None이면 설정값(recent_days), 0이면 전체.
+    반환: (기준일 YYYY-MM-DD 또는 None, 화면 표시용 문구)."""
+    n = settings.recent_days if days is None else days
+    if not n or n <= 0:
+        return None, f"제{settings.age}대 전체"
+    since = (date.today() - timedelta(days=n)).isoformat()
+    return since, f"최근 {n}일({since} 이후 제안)"
+
+
+def run_sync(settings: Settings, progress: Callable[[str, dict], None] | None = None,
+             days: int | None = None) -> dict[str, Any]:
+    """조사 1회 실행. 이미 실행 중이면 {"status": "already_running"}.
+    days: 제안일 기준 최근 N일만 조사(None=설정값, 0=전체)."""
     conn = db.connect(settings.database_path)
     db.init_db(conn)
     sync_id = db.try_start_sync(conn)
@@ -50,8 +63,11 @@ def run_sync(settings: Settings, progress: Callable[[str, dict], None] | None = 
         conn.close()
         return {"status": "already_running"}
 
+    since, scope = resolve_scope(settings, days)
+    db.update_sync(conn, sync_id, scope=scope)
     counts = {"total_found": 0, "related_found": 0, "inserted": 0, "updated": 0, "unchanged": 0, "failed": 0}
-    result: dict[str, Any] = {"sync_id": sync_id, "new_bills": [], "updated_bills": [], "failed_bills": []}
+    result: dict[str, Any] = {"sync_id": sync_id, "scope": scope, "new_bills": [], "updated_bills": [],
+                              "failed_bills": []}
     warning = None if settings.assembly_api_key else "인증키가 없어 샘플 모드(키워드당 최대 5건)로 조회했습니다."
 
     def phase(name: str, **extra: Any) -> None:
@@ -62,7 +78,7 @@ def run_sync(settings: Settings, progress: Callable[[str, dict], None] | None = 
 
     raw_logger = (lambda api, no, text: db.save_raw(conn, api, no, text)) if settings.save_raw_response else None
     client = NationalAssemblyClient(settings, raw_logger=raw_logger)
-    _set_state(running=True, started_at=db.now_iso(), finished_at=None, error_message=None)
+    _set_state(running=True, started_at=db.now_iso(), finished_at=None, error_message=None, scope=scope)
 
     try:
         if not settings.keywords:
@@ -72,7 +88,7 @@ def run_sync(settings: Settings, progress: Callable[[str, dict], None] | None = 
         phase("fetching_list")
         found: list[tuple[str, dict]] = []
         for kw in settings.keywords:
-            rows = client.search_bills(kw)
+            rows = client.search_bills(kw, since=since)
             counts["total_found"] += len(rows)
             # 2. API 부분일치 결과를 다시 한 번 확인
             for row in rows:
@@ -169,8 +185,8 @@ def _sync_one(conn, client: NationalAssemblyClient, settings: Settings, bill: di
     return outcome, fetch_error
 
 
-def start_background_sync(settings: Settings) -> dict[str, Any]:
-    """웹에서 호출: 별도 스레드로 조사 시작."""
+def start_background_sync(settings: Settings, days: int | None = None) -> dict[str, Any]:
+    """웹에서 호출: 별도 스레드로 조사 시작(days: None=설정값, 0=전체)."""
     if current_state().get("running"):
         return {"status": "already_running"}
     conn = db.connect(settings.database_path)
@@ -183,10 +199,10 @@ def start_background_sync(settings: Settings) -> dict[str, Any]:
 
     def worker() -> None:
         try:
-            if run_sync(settings).get("status") == "already_running":  # 명령줄 조사와 겹친 경우
+            if run_sync(settings, days=days).get("status") == "already_running":  # 명령줄 조사와 겹친 경우
                 _set_state(running=False, status="already_running", label="다른 조사가 실행 중입니다")
         except Exception as e:
             _set_state(running=False, status="failed", label=PHASE_LABELS["failed"], error_message=str(e))
 
     threading.Thread(target=worker, daemon=True).start()
-    return {"status": "started"}
+    return {"status": "started", "scope": resolve_scope(settings, days)[1]}

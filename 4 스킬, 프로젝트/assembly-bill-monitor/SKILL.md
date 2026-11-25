@@ -20,7 +20,9 @@ description: "국회에 발의된 방송·통신·시청각 관련 법률안을 
 
 ```powershell
 cd "J:\AI 자료\4 스킬, 프로젝트\assembly-bill-monitor\national_assembly_monitor"
-.\.venv\Scripts\python -m app.cli sync --out data\_sync.txt          # 최신 조사(국회 서버 조회)
+.\.venv\Scripts\python -m app.cli sync --out data\_sync.txt          # 최신 조사: 최근 7일 제안분(약 10초)
+.\.venv\Scripts\python -m app.cli sync --days 30 --out data\_sync.txt  # 기간 지정(최근 30일)
+.\.venv\Scripts\python -m app.cli sync --all --out data\_sync.txt    # 22대 전체(수 분, 백그라운드로 실행)
 .\.venv\Scripts\python -m app.cli list --new --out data\_list.txt     # 최근 발견(NEW) 목록
 .\.venv\Scripts\python -m app.cli list --keyword 방송 --limit 30 --out data\_list.txt
 .\.venv\Scripts\python -m app.cli list --q 방송법 --status pending --out data\_list.txt
@@ -31,7 +33,8 @@ cd "J:\AI 자료\4 스킬, 프로젝트\assembly-bill-monitor\national_assembly_
 `list` 옵션: `--new`(NEW만), `--keyword`, `--status pending|processed`, `--q 의안명검색어`, `--from/--to YYYY-MM-DD`(제안일), `--limit`, `--full`(원문 포함), `--json`.
 
 ## 요청별 처리
-1. **"새 법안 있어? / 최신 조사"** → `sync`를 실행한다(첫 조사는 수 분 걸리므로 백그라운드로 돌린다). 결과 파일에서 신규·변경·실패 건수와 신규 의안 목록을 표로 보고한다. 그다음 신규 의안의 원문을 볼지 묻는다.
+1. **"새 법안 있어? / 최신 조사"** → 기간 옵션 없이 `sync`를 실행한다(기본 최근 7일, `keywords.yaml`의 `recent_days`). 사용자가 기간을 말하면("한 달", "이번 달") `--days N`으로 바꾸고, "전체"를 말할 때만 `--all`을 쓴다. 결과 파일 첫 줄의 조사 범위와 신규·변경·실패 건수, 신규 의안 목록을 표로 보고한다. 그다음 신규 의안의 원문을 볼지 묻는다.
+   - 기간을 제한한 조사는 그 이전 의안의 진행 상황(가결 등)을 갱신하지 않는다. 진행 상황을 물으면 이 점을 알리고 `--all` 실행 여부를 묻는다.
 2. **"목록 보여줘"** → `list`로 조회해 의안번호·의안명·제안자·제안일·상태·키워드를 표로 보여준다. 국회 상세정보 링크는 `show` 결과에 있다.
 3. **"○○ 의안 내용"** → `show`로 조회해 기본정보와 `■ 제안이유 및 주요내용` 원문을 코드블록 없이 그대로 옮긴다. 마지막에 국회 상세정보 링크를 붙인다.
 4. **"화면 열어줘"** → `run.bat`을 안내하거나 `.\.venv\Scripts\python -m app.cli serve`를 백그라운드로 실행하고 `http://localhost:8000`을 알려준다.

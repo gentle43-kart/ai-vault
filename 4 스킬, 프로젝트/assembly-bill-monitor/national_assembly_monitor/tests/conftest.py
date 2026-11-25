@@ -16,10 +16,11 @@ def settings(tmp_path):
     s.detail_delay_seconds = 0
     s.api_retry_waits = (0, 0)
     s.assembly_api_key = "test-key"
+    s.recent_days = 0  # 기본은 전체. 기간 제한은 해당 테스트에서 days로 지정
     return s
 
 
-def list_row(no, name, result="", committee="과학기술정보방송통신위원회"):
+def list_row(no, name, result="", committee="과학기술정보방송통신위원회", date="2026-11-20"):
     return {"BILL_NO": no, "BILL_ID": f"PRC_{no}", "BILL_NAME": name, "PROPOSER": "홍길동의원 등 10인",
-            "PROPOSER_KIND": "의원", "PROPOSE_DT": "2026-11-20", "CURR_COMMITTEE": committee,
+            "PROPOSER_KIND": "의원", "PROPOSE_DT": date, "CURR_COMMITTEE": committee,
             "PROC_RESULT_CD": result, "LINK_URL": f"https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_{no}"}

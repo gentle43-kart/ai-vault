@@ -113,7 +113,7 @@ async function refreshStatus(afterRun) {
   if (state.polling) { clearInterval(state.polling); state.polling = null; }
   if (afterRun) {
     if (s.status === "completed") {
-      showMessage(`완료: 관련 ${s.related_found}건 (신규 ${s.inserted}, 변경 ${s.updated}, 변동 없음 ${s.unchanged}, 실패 ${s.failed})`
+      showMessage(`완료${s.scope ? ` [${s.scope}]` : ""}: 관련 ${s.related_found}건 (신규 ${s.inserted}, 변경 ${s.updated}, 변동 없음 ${s.unchanged}, 실패 ${s.failed})`
         + (s.warning ? ` — ${s.warning}` : ""), s.failed || s.warning ? "warn" : "ok");
     } else if (s.status === "failed") {
       showMessage("조사 실패: " + (s.error_message || "알 수 없는 오류"), "error");

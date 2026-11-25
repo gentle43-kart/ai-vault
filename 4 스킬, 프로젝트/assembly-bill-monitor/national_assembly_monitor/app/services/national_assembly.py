@@ -93,15 +93,31 @@ class NationalAssemblyClient:
         rows = blocks[1].get("row", []) if len(blocks) > 1 else []
         return total, rows
 
-    def search_bills(self, keyword: str, page_size: int = 100, max_pages: int = 50) -> list[dict]:
-        """의안명에 keyword가 들어간 법률안 목록(해당 대수 전체)."""
+    def search_bills(self, keyword: str, since: str | None = None,
+                     page_size: int = 100, max_pages: int = 50) -> list[dict]:
+        """의안명에 keyword가 들어간 법률안 목록.
+
+        since(YYYY-MM-DD)를 주면 제안일이 그 날짜 이후인 의안만 돌려준다.
+        API는 날짜 조건을 받지 않지만 결과가 제안일 최신순이므로
+        (2026-11-25 확인) 기준일보다 오래된 의안이 나오면 더 받지 않는다.
+        """
         rows: list[dict] = []
+        fetched = 0
+        if since:
+            page_size = min(page_size, 20)  # 최근 것만 볼 때는 작게 받아 빨리 멈춘다
         for page in range(1, max_pages + 1):
             total, chunk = self._rows(BILL_LIST_API, {
                 "AGE": self.s.age, "BILL_NAME": keyword, "pIndex": page, "pSize": page_size})
-            rows.extend(chunk)
+            fetched += len(chunk)
+            if since:
+                recent = [r for r in chunk if (r.get("PROPOSE_DT") or "") >= since]
+                rows.extend(recent)
+                if len(recent) < len(chunk):  # 기준일 이전 의안이 나옴 → 중단
+                    break
+            else:
+                rows.extend(chunk)
             # 인증키가 없으면 샘플 모드(최대 5건)라 페이지가 늘지 않는다.
-            if not chunk or len(rows) >= total or len(chunk) < page_size:
+            if not chunk or fetched >= total or len(chunk) < page_size:
                 break
         return rows
 

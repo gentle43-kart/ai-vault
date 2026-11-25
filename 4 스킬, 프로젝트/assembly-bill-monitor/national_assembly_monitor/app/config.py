@@ -34,6 +34,7 @@ class Settings:
     api_retry_waits: tuple[float, ...] = (2.0, 5.0)  # 1차 실패 후 2초, 2차 실패 후 5초
     keywords: list[str] = field(default_factory=list)
     age: int = 22
+    recent_days: int = 7  # 기본 조사 범위(제안일 기준 최근 N일). 0이면 해당 대수 전체
     new_days: int = 7
     detail_delay_seconds: float = 0.5
     auto_sync: bool = False
@@ -59,6 +60,7 @@ def load_settings() -> Settings:
         data = yaml.safe_load(s.keywords_file.read_text(encoding="utf-8")) or {}
     s.keywords = [str(k).strip() for k in data.get("keywords") or [] if str(k).strip()]
     s.age = int(data.get("age", s.age))
+    s.recent_days = int(data.get("recent_days") or 0) if "recent_days" in data else s.recent_days
     s.new_days = int(data.get("new_days", s.new_days))
     s.detail_delay_seconds = float(data.get("detail_delay_seconds", s.detail_delay_seconds))
     s.auto_sync = bool(data.get("auto_sync", s.auto_sync))
