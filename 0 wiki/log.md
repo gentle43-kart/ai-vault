@@ -1113,3 +1113,13 @@ type: log
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.69_20261126.yaml
 - 커밋 대상 파일: SOURCE_REGISTRY.yaml, 0 wiki/분석/2026-09-22 해설집 사례와 통계 활용 원칙.md, 0 wiki/log.md, 위 백업 1개
 - 커밋 메시지 초안: schema: 삭제된 백업_보정 전_csv 중복본의 registry 항목(stats_root_dup) 삭제, registry v1.70
+
+## [2026-11-26] fix | 폴더 이름 변경 후속: MCP 코드 점검·재색인·정기 점검·밀린 커밋 | Claude Opus 5.5
+- 세션: Claude Code(PC 셸). 채팅 세션 인계 메모(registry v1.69 폴더 이름 변경 후속 작업 1~4)
+- MCP 점검: J:\MCP\ai-vault-mcp 아래 *.py·*.bat·README에서 "제미나이"·"쳇지피팅"·"클로드용 폴더"·"총 병합"·"챗지피티용" 0건. 색인기(build_index.py Registry)·MCP 서버·decision_query는 경로를 SOURCE_REGISTRY.yaml의 sources에서 읽고 폴더명을 코드에 적지 않음. 옛 이름은 생성 보고서 data/md_quality_report.md(2026-09-21 작성)에만 남음. 코드 수정 없음
+- 재색인: reindex.failed 없음 확인 뒤 reindex.request 생성 → 2026-11-26 15:38 exit=0(추가 105·갱신 303·삭제 103·실패 0, 세대 114). DB 경로에 옛 이름 0건. 2026_잠정.csv는 기준본_분할_csv(stats_2026_recent), 회의록 기준본_분할_md 83개(방송소위 39·전체회의 25·선방위 19), 광고소위 병합본_md 1개. search 결과 path도 새 이름. query_decisions 기본 범위 12,560행·2026-07-01 이후 208행, 검증값 모두 일치
+- 정기 점검: maintenance_check.py 실행 exit=0, lint 종료 0(깨진 출처 0·깨진 링크 0·머리말 오류 0), 경고 없음. 결과 J:\MCP\ai-vault-mcp\data\maintenance\2026-11-26_요약.md
+- 커밋(방식A): 미커밋 log 항목을 나눠 커밋. ① 2026-11-22~23 원노트 4개 항목(같은 페이지를 함께 고쳐 한 커밋) ② 2026-11-23 세칙·지침 2건 ③ 2026-11-26 협찬고지 개정안 ingest ④ 2026-11-26 폴더 이름 변경 schema와 이 항목. ①~③은 폴더명 치환을 되돌린 내용으로 넣고 치환은 ④에 모음(협찬고지규칙 제7조·문서/_index.md는 항목별 중간본)
+- 같은 시각 다른 채팅 세션이 남긴 2026-11-26 항목 2개(예규 제정안 신구조문대비표 보충, registry v1.70)도 그 항목의 커밋 대상 파일대로 따로 커밋. registry는 ④에 v1.69 백업본(SOURCE_REGISTRY_v1.69_20261126.yaml)을 넣고 v1.70은 그 항목 커밋에 넣음
+- 커밋하지 않음(해당 log 항목 없음): 4 스킬, 프로젝트/ 아래 broadcast-review-ppt·합평회 CHANGELOG·_스킬_카탈로그.md 변경과 새 폴더, 0 wiki/Untitled.md, @clippings 새 파일. J:\MCP\ai-vault-mcp의 build_index.py v1.17(2026-11-24 수정, PARSER_VERSION 2.2) 미커밋 변경도 log 항목이 없어 그대로 둠
+- 별건(처리하지 않음): 광고소위 △2026년 회의록 모음_01-21.md가 연도별 광고소위 회의록 md파일 원본_md(minutes_ad)와 병합본_md(minutes_ad_2026)에 같은 내용(sha1 동일)으로 있어 두 번 색인됨
