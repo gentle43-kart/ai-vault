@@ -1095,3 +1095,12 @@ type: log
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.68_20261126.yaml, AGENTS_v1.53_20261126.md, AGENTS_절차_v1.53_20261126.md, AGENTS_통계기준_v1.53_20261126.md
 - 커밋 대상 파일: SOURCE_REGISTRY.yaml, AGENTS.md, AGENTS_절차.md, AGENTS_통계기준.md, .claude/skills/stats-monthly-update/SKILL.md, Claude outputs/*.py(14개+wiki_lint·maintenance_check), 0 wiki/ 300쪽, 0 wiki/log.md, 백업 4개. 1 documents_md·2 data_csv는 .gitignore 대상
 - 커밋 메시지 초안: schema: 통계·회의록 폴더명 변경(기준본_분할_csv·투입·병합본_csv·기준본_분할_md) 참조 일괄 치환, registry v1.69, lint의 registry 읽기 수정
+
+## [2026-11-26] fix | 안_「방송심의 관련 업무처리 예규」 제정안: 신구조문대비표 대조 결과 보충 | Claude Opus 5.5
+- 세션: 채팅(원격 기기 셸). 사용자가 대화에 '「방송심의 관련 업무처리 예규」 제정(안) 신구조문대비표'(hwp, 첨부 파일명 깨짐, 작성 주체·작성일 미확인)를 첨부하며 "신구조문 대비표를 추가로 찾았어" → 사용자 "추가 반영필요 내용 있는지에 대한 검토 요청" → 검토 보고(협찬고지 규칙이 아니라 예규 제정안 대비표임을 알림, 반영 후보 1~4) → 사용자 "3,4번만 해줘"(2026-11-26). 원본·변환본 추가(1·2번)는 하지 않음
+- 대조: 대화 첨부 파일을 자료창고 밖에서 kordoc@4.25.2로 변환(34행, 표 1개)해 위 페이지 3절 변경표와 조별 대조. 실질 변경은 모두 일치. 대비표에만 있는 것은 제3조 제3항 "위원회 위원장"→"위원장" 자구 정비. 대비표에 빠진 것은 제8조 제1항 번호 추가(지침 변환본 137행, 예규안 변환본 158행)와 제9조 제1항(예규안 160행)
+- 갱신: 문서/안_「방송심의 관련 업무처리 예규」 제정안 3절 제3조 행 보충, 표 아래 대조 결과 한 문단 추가, updated 2026-11-26. status draft 유지
+- 승인 문안과 다른 점: 반영 목록 3번은 "sources에 대비표 추가"였으나, 대비표가 자료창고에 없어 AGENTS_절차.md 4.1절의 세 가지 형식(로컬 경로·script·web)에 맞지 않으므로 sources에는 넣지 않고 본문 대조 문단에 대화 첨부 자료임을 밝힘
+- 색인 요청: 앞 항목과 같이 J:\MCP\ai-vault-mcp\data 접근이 없어 reindex.request를 만들지 못함
+- 커밋 대상 파일: 0 wiki/문서/안_「방송심의 관련 업무처리 예규」 제정안.md, 0 wiki/log.md
+- 커밋 메시지 초안: fix: 업무처리 예규 제정안 문서에 신구조문대비표 대조 결과 보충(제3조 제3항 자구 정비)
