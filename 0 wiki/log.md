@@ -1123,3 +1123,13 @@ type: log
 - 같은 시각 다른 채팅 세션이 남긴 2026-11-26 항목 2개(예규 제정안 신구조문대비표 보충, registry v1.70)도 그 항목의 커밋 대상 파일대로 따로 커밋. registry는 ④에 v1.69 백업본(SOURCE_REGISTRY_v1.69_20261126.yaml)을 넣고 v1.70은 그 항목 커밋에 넣음
 - 커밋하지 않음(해당 log 항목 없음): 4 스킬, 프로젝트/ 아래 broadcast-review-ppt·합평회 CHANGELOG·_스킬_카탈로그.md 변경과 새 폴더, 0 wiki/Untitled.md, @clippings 새 파일. J:\MCP\ai-vault-mcp의 build_index.py v1.17(2026-11-24 수정, PARSER_VERSION 2.2) 미커밋 변경도 log 항목이 없어 그대로 둠
 - 별건(처리하지 않음): 광고소위 △2026년 회의록 모음_01-21.md가 연도별 광고소위 회의록 md파일 원본_md(minutes_ad)와 병합본_md(minutes_ad_2026)에 같은 내용(sha1 동일)으로 있어 두 번 색인됨
+
+## [2026-11-26] schema | SOURCE_REGISTRY.yaml v1.71: 광고소위 △2026 회의록 모음 중복본(minutes_ad_2026) 삭제 | Claude Opus 5.5
+- 근거: 사용자 요청 "메인으로 쓰는 것 제외하고 중복본은 지워줘(중복으로 둘 필요가 없다면)"(2026-11-26). 등급 ②. 승인: 정리안 ①~④ 제시 뒤 사용자 선택 "휴지통으로 보내고 진행"(2026-11-26)
+- 판단: 메인은 연도별 광고소위 회의록 md파일 원본_md(minutes_ad, 전 연도, 2026 제22차 이후도 이 폴더에 추가). 병합본_md 사본은 sha1 동일. link_ad_ranges.py(ad_range_links.csv)는 메인 폴더만 읽어 영향 없음. 원본은 3 source_raw/회의록_raw/광고소위/
+- 삭제(휴지통, 복구 가능): 1 documents_md/회의록_md/광고소위_md/병합본_md/△2026년 광고소위 회의록 모음_01-21.md, 빈 병합본_md 폴더
+- registry: minutes_ad_2026 항목 삭제(id 87개, 중복 없음), minutes_ad notes에 기준본·삭제 사실 기록, version 1.71
+- 위키: 분석/2026-10-05 건강기능식품 기능성 인정 범위를 넘는 표현 sources 1곳을 메인 경로로 변경
+- 검증: wiki_lint exit=0(깨진 출처·링크·머리말 0), 재색인 16:05 exit=0, 색인에 이 파일은 minutes_ad 1건만, minutes_ad_2026 0건
+- 처리하지 않음(참고): 같은 폴더의 2013·2014년 파일이 공백·밑줄 이름 두 벌로 있고, 2021~2023년은 연도 통합 파일과 차수별 파일이 함께 있음(registry notes에 기존 기록)
+- 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.70_20261126.yaml
