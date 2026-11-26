@@ -13,7 +13,7 @@ link_ad_ranges.py v0.3 (2026-11-13: 사용자 결정 --approvals 추가)
 
 입력
   1 documents_md/회의록_md/광고소위_md/연도별 광고소위 회의록 md파일 원본_md/*.md (파일명의 연도 사용, 2012년 이후)
-  2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/18-25_part*.csv, 2026_잠정.csv
+  2 data_csv/통계_csv/방송/기준본_분할_csv/18-25_part*.csv, 2026_잠정.csv
   2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv
 출력 (--out, UTF-8 BOM CSV, 자료창고 밖에 둔다)
   file, line, year, text, a, b, match_type(confirmed|candidate|none), ns(광고|방송), n_resolved, labels, reason
@@ -37,7 +37,7 @@ import sys
 
 ROOT = "J:/AI 자료"
 MIN_DIR = ROOT + "/1 documents_md/회의록_md/광고소위_md/연도별 광고소위 회의록 md파일 원본_md"
-CSV_DIR = ROOT + "/2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv"
+CSV_DIR = ROOT + "/2 data_csv/통계_csv/방송/기준본_분할_csv"
 CSV_1217 = ROOT + "/2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv"
 
 LAB_RE = re.compile(r"(\d{4})\s*-\s*(광고|방송)\s*-\s*(\d{1,2})\s*-\s*(\d{3,4})")

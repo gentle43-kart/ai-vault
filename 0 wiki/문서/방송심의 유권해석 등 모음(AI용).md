@@ -8,7 +8,7 @@ base_date:
 sources:
   - "1 documents_md/판례_md/▲방송심의 유권해석 등 모음(AI용).md"
   - "3 source_raw/법령 등_raw/방송_raw/방송심의 유권해석 등 모음(AI용).pdf"
-  - "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/"
+  - "2 data_csv/통계_csv/방송/기준본_분할_csv/"
   - "script: Claude outputs/stats_articles.py"
 created: 2026-09-22
 updated: 2026-11-23

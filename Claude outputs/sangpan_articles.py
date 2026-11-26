@@ -9,7 +9,7 @@ sangpan_articles.py v1.0 (2026-11-12, Claude Sonnet 5.5) — AGENTS_통계기준
   읽기·날짜·결과 분류는 stats_articles.py의 함수를 그대로 쓴다. hyup_articles.py의 구조를 따른다.
 
 입력
-  stats_articles.py 와 같다(2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 방송심의 파일, 선방위 제외).
+  stats_articles.py 와 같다(2 data_csv/통계_csv/방송/기준본_분할_csv/ 의 방송심의 파일, 선방위 제외).
   옵션: --recent(2026.07 이후 잠정본 행 추가) --until YYYY-MM-DD --article "제6조" --rows --verify
 
 출력

@@ -8,7 +8,7 @@ hyup_articles.py v1.2 (2026-11-10) — v1.2: --until 추가(--recent와 함께, 
   조문별 적용 행 수와 결과 분포를 집계한다. 읽기·날짜·결과 분류는 stats_articles.py의 함수를 그대로 쓴다.
 
 입력
-  stats_articles.py 와 같다(2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 방송심의 파일, 선방위 제외).
+  stats_articles.py 와 같다(2 data_csv/통계_csv/방송/기준본_분할_csv/ 의 방송심의 파일, 선방위 제외).
 
 출력
   표준 출력(텍스트). 파일을 만들지 않는다.

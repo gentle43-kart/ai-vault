@@ -21,7 +21,7 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.
 W = os.path.join(ROOT, '0 wiki')
 LIT = '위원회 관련 소송 현황'
 reg = yaml.safe_load(open(os.path.join(ROOT, 'SOURCE_REGISTRY.yaml'), encoding='utf-8'))
-items = next(v for v in reg.values() if isinstance(v, list))
+items = reg['sources']  # v1.68에서 scan_dirs(list)가 sources 앞에 생겨 이름으로 고름(2026-11-26)
 noncanon = [i['path'] for i in items if i.get('canonical') is False]
 
 

@@ -148,7 +148,7 @@ tags: [방송심의]
 
 | 종류 | 형식 | 예 |
 |---|---|---|
-| 로컬 파일·폴더 | 이 폴더 기준 상대 경로 | `"2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/"` |
+| 로컬 파일·폴더 | 이 폴더 기준 상대 경로 | `"2 data_csv/통계_csv/방송/기준본_분할_csv/"` |
 | 분석 스크립트 | `"script: Claude outputs/{파일명}"` | `"script: Claude outputs/stats_articles.py"` |
 | 외부 자료 | `"web: {URL} (확인일 YYYY-MM-DD)"` | `"web: https://www.law.go.kr/... (확인일 2026-09-22)"` |
 
@@ -377,7 +377,7 @@ base_date:          # 문서의 기준일(발행일, 개정일 등)
 
 | 단계 | 주기·실행 수단 | 하는 일 | 쓰기 범위 |
 |---|---|---|---|
-| A 무인 기계 점검(토큰 사용 없음) | 매주 수요일 09:40, Windows 작업 스케줄러 "AI자료 정기점검"(`Claude outputs/maintenance_check.py`와 실행용 bat). 놓친 실행은 PC가 켜지면 실행한다 | `wiki_lint.py` 실행 결과(〔충돌〕·열린 항목 수 포함), 수신함 `status: 대기` 수, `@clippings` 새 파일 수, `쳇지피팅용 병합_csv`의 새 △ 파일(`stats_2026_recent` 이력에 없는 파일), log.md에 지난 달 항목이 남았는지, 두 저장소의 미커밋 파일 수·미push 커밋 수·가장 오래된 미push 커밋의 경과일, `reindex.failed` 존재, 이번 달 B 보고서 유무, 안건 작성예시 색인에 없는 예시 md 수와 사라진 파일 수(`Claude outputs/index_drafting_examples.py --check`, v1.50) | `J:\MCP\ai-vault-mcp\data\maintenance\`의 `{YYYY-MM-DD}_check.json`, `{YYYY-MM-DD}_요약.md`, `run_history.log`. 위키·스키마·통계 파일·search.db는 고치지 않는다 |
+| A 무인 기계 점검(토큰 사용 없음) | 매주 수요일 09:40, Windows 작업 스케줄러 "AI자료 정기점검"(`Claude outputs/maintenance_check.py`와 실행용 bat). 놓친 실행은 PC가 켜지면 실행한다 | `wiki_lint.py` 실행 결과(〔충돌〕·열린 항목 수 포함), 수신함 `status: 대기` 수, `@clippings` 새 파일 수, `투입·병합본_csv`의 새 △ 파일(`stats_2026_recent` 이력에 없는 파일), log.md에 지난 달 항목이 남았는지, 두 저장소의 미커밋 파일 수·미push 커밋 수·가장 오래된 미push 커밋의 경과일, `reindex.failed` 존재, 이번 달 B 보고서 유무, 안건 작성예시 색인에 없는 예시 md 수와 사라진 파일 수(`Claude outputs/index_drafting_examples.py --check`, v1.50) | `J:\MCP\ai-vault-mcp\data\maintenance\`의 `{YYYY-MM-DD}_check.json`, `{YYYY-MM-DD}_요약.md`, `run_history.log`. 위키·스키마·통계 파일·search.db는 고치지 않는다 |
 | B 월간 AI 정비 | 매월 첫째 주 수요일 14:13, claude.ai 예약 작업 "AI 자료창고 월간 정비(B)"(PC 연결 필요). 매주 수요일에 실행되며 1~7일이 아니면 바로 끝난다 | A 최신 요약을 읽고 ① 법령 현행성(조문 페이지 `text_basis`의 기준 판을 법령·규칙별로 묶어 법령 MCP의 현행 판·시행 예정 판과 비교) ② 시행일이 지난 "시행 예정" 열린 항목 ③ 〔충돌〕·열린 항목의 증감 ④ A의 관리 항목(새 △ 파일, 수신함, 미push 등) ⑤ 직전 보고서의 미처리 제안을 점검한다 | `분석/{YYYY-MM-DD} lint 보고.md`, `분석/_index.md` 등재 한 줄, `log.md` 끝에 lint 항목(커밋 대상 파일·커밋 메시지 초안 포함), `reindex.request`. 이 네 가지 외에는 쓰지 않는다 |
 | C 승인 후 처리 | 사용자가 요청할 때, Claude Code | 사용자가 B 보고서에서 고른 제안의 반영, `stats-monthly-update`, log 월별 분할(`split_log.py`), `vault-commit`(B가 남긴 log 항목 포함) | 각 작업의 절에 따른다 |
 

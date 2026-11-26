@@ -124,10 +124,10 @@ tri_all = []
 try:
     import yaml
     reg = yaml.safe_load(open(os.path.join(VAULT, 'SOURCE_REGISTRY.yaml'), encoding='utf-8'))
-    items = next(v for v in reg.values() if isinstance(v, list))
+    items = reg['sources']  # v1.68에서 scan_dirs(list)가 sources 앞에 생겨 이름으로 고름(2026-11-26)
     ent = next(i for i in items if i.get('id') == 'stats_2026_recent')
     txt = str(ent.get('period', '')) + '\n' + str(ent.get('notes', ''))
-    d = os.path.join(VAULT, '2 data_csv', '통계_csv', '방송', '쳇지피팅용 병합_csv')
+    d = os.path.join(VAULT, '2 data_csv', '통계_csv', '방송', '투입·병합본_csv')
     for f in sorted(os.listdir(d)):
         if f.startswith('△') and f.lower().endswith('.csv'):
             tri_all.append(f)

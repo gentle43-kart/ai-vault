@@ -7,8 +7,8 @@ update_stats_2026.py v1.1 (2026-11-12, Claude Sonnet 5.5; v1.0 2026-11-10)
         log.md 항목에 새 파일 sha256·기준일·실행 옵션 한 줄을 더했다. dry-run 동작과 종료 코드 2는 v1.0과 같다.
 
 목적
-  사용자가 넣은 새 △ 파일(예: 쳇지피팅용 병합_csv/△26.01-11.csv)로 2026년 방송심의 잠정본
-  (2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/2026_잠정.csv, registry stats_2026_recent)을 매월 갱신한다.
+  사용자가 넣은 새 △ 파일(예: 투입·병합본_csv/△26.01-11.csv)로 2026년 방송심의 잠정본
+  (2 data_csv/통계_csv/방송/기준본_분할_csv/2026_잠정.csv, registry stats_2026_recent)을 매월 갱신한다.
   기본은 dry-run(보고만). --apply를 줘야 파일을 바꾼다.
 
 검사(dry-run과 --apply 공통)
@@ -29,13 +29,13 @@ update_stats_2026.py v1.1 (2026-11-12, Claude Sonnet 5.5; v1.0 2026-11-10)
   6. 0 wiki/log.md 맨 아래에 schema 항목 추가(새 파일 sha256·기준일·실행 옵션 포함). 이 단계 예외도 5와 같이 되돌린다.
   7. J:\\MCP\\ai-vault-mcp\\data\\reindex.request 생성(같은 폴더에 reindex.failed가 있으면 만들지 않고 알림).
   검색 DB(search.db)에는 직접 쓰지 않는다.
-  쳇지피팅용 병합_csv의 이전 △ 파일은 지우지 않는다(보고만).
+  투입·병합본_csv의 이전 △ 파일은 지우지 않는다(보고만).
   위키 페이지의 기존 수치는 다시 계산하지 않는다(AGENTS_통계기준.md 7.1).
 
 종료 코드: 0 정상(dry-run 포함), 1 중단 또는 --apply 실패(되돌림 완료), 2 현 잠정본의 의결번호가 새 파일에서 빠짐.
 
 사용
-  python update_stats_2026.py "..\\2 data_csv\\통계_csv\\방송\\쳇지피팅용 병합_csv\\△26.01-11.csv"
+  python update_stats_2026.py "..\\2 data_csv\\통계_csv\\방송\\투입·병합본_csv\\△26.01-11.csv"
   python update_stats_2026.py "…\\△26.01-11.csv" --apply
 """
 import argparse
@@ -51,8 +51,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VAULT = os.environ.get("AI_VAULT", os.path.join(HERE, ".."))
-CUR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "제미나이 노트북용 분할_csv", "2026_잠정.csv")
-DROP_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "쳇지피팅용 병합_csv")
+CUR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "기준본_분할_csv", "2026_잠정.csv")
+DROP_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "투입·병합본_csv")
 REGISTRY = os.path.join(VAULT, "SOURCE_REGISTRY.yaml")
 LOG = os.path.join(VAULT, "0 wiki", "log.md")
 BACKUP_DIR = os.path.join(HERE, "schema_backup")
@@ -288,7 +288,7 @@ def append_log(old_ver, new_ver, schema_bk, basis_date, nrows, fname, res, mc, n
     nl = "\r\n" if "\r\n" in t else "\n"
     lines = [
         f"## [{today}] schema | 2026년 방송심의 잠정본 월별 갱신({fname}, {nrows}행, 기준일 {basis_date}), SOURCE_REGISTRY.yaml v{old_ver} → v{new_ver} | Claude Sonnet 5.5",
-        f"- 실행: update_stats_2026.py v1.1 --apply. 입력 `쳇지피팅용 병합_csv/{fname}`, 결과 `제미나이 노트북용 분할_csv/2026_잠정.csv`",
+        f"- 실행: update_stats_2026.py v1.1 --apply. 입력 `투입·병합본_csv/{fname}`, 결과 `기준본_분할_csv/2026_잠정.csv`",
         f"- 검사: 누락 {len(res['missing'])}, 추가 {len(res['added'])}, 내용 변경 {len(res['changed'])}, 순번 변경 {res['seq_changed']}행. 월별 " + ", ".join(f"{m} {v}" for m, v in sorted(mc.items())),
         f"- SOURCE_REGISTRY.yaml: {REG_ID}의 period(기준일·행 수)와 notes 이력만 갱신, 보안 필드는 바꾸지 않음. 백업 Claude outputs/schema_backup/{os.path.basename(schema_bk)}",
         f"- 무결성: 새 파일 sha256 {new_sha}, 기준일 {basis_date}, 실행 옵션 {options}",
@@ -374,7 +374,7 @@ def main():
     basis = report(res, new_path)
     others = [os.path.basename(p) for p in glob.glob(os.path.join(DROP_DIR, "△*")) if os.path.abspath(p) != new_path]
     if others:
-        print(f"참고: 쳇지피팅용 병합_csv에 다른 △ 파일이 있습니다 {others}. 이 스크립트는 지우지 않습니다(정리 여부는 사용자가 결정).")
+        print(f"참고: 투입·병합본_csv에 다른 △ 파일이 있습니다 {others}. 이 스크립트는 지우지 않습니다(정리 여부는 사용자가 결정).")
     if res["missing"]:
         print("중단: 현 잠정본의 의결번호가 새 파일에서 빠졌습니다. 잠정본을 바꾸지 않습니다.")
         sys.exit(2)

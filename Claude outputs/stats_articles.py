@@ -17,7 +17,7 @@ stats_articles.py v1.4 (2026-11-10, Claude Sonnet 5.5)
 
 입력
   2012~2017: 2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv (v1.3. 없으면 분할본 12-17_part*로 대신하고 경고)
-  2018~2025: 2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 18-25_*.csv.
+  2018~2025: 2 data_csv/통계_csv/방송/기준본_분할_csv/ 의 18-25_*.csv.
   2026: 같은 폴더의 2026_잠정.csv(registry stats_2026_recent). 기본은 의결일 2026-06-30 이하 행만 넣는다.
   선방위_* 파일은 뺀다. --recent 를 주면 2026-07-01 이후 행을 추가하고, --until YYYY-MM-DD 로 끝 날짜를 정한다
   (기본: 잠정본 전체. --until 은 --recent 와 함께 쓸 때 의미가 있다).
@@ -65,7 +65,7 @@ import re
 import sys
 
 VAULT = os.environ.get("AI_VAULT", os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-STATS_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "제미나이 노트북용 분할_csv")
+STATS_DIR = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "기준본_분할_csv")
 CORRECTED_1217 = os.path.join(VAULT, "2 data_csv", "통계_csv", "방송", "2012-2017 방송심의 통계(보정).csv")
 RECENT = os.path.join(STATS_DIR, "2026_잠정.csv")
 BASE_END = datetime.date(2026, 6, 30)   # 기본 집계의 끝(2012.01~2026.06). 07-01 이후는 --recent

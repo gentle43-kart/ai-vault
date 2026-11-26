@@ -10,7 +10,7 @@ link_cases.py v0.2 (2026-11-13: 사용자 확정 목록 --approvals 추가)
   모호한 건은 candidate로 남기며, candidate를 confirmed로 올리는 것은 사용자 승인 뒤 사람이 한다.
 
 입력
-  2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/18-25_part01~13.csv (NUL 문자는 읽을 때 제거)
+  2 data_csv/통계_csv/방송/기준본_분할_csv/18-25_part01~13.csv (NUL 문자는 읽을 때 제거)
   1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과_정제본/방송소위_회의결과_{2018..2024,2026}_정제.md
 
 출력 (--out 경로, UTF-8 BOM CSV. 자료창고 밖에 둔다. 기본 저장 위치는 사용자 승인 뒤 정함)
@@ -45,7 +45,7 @@ import sys
 from collections import defaultdict, Counter
 
 ROOT = r"J:\AI 자료"
-CSV_DIR = os.path.join(ROOT, "2 data_csv", "통계_csv", "방송", "제미나이 노트북용 분할_csv")
+CSV_DIR = os.path.join(ROOT, "2 data_csv", "통계_csv", "방송", "기준본_분할_csv")
 SUB_DIR = os.path.join(ROOT, "1 documents_md", "회의록_md", "방송소위_md",
                        "연도별_방송소위_회의결과_정제본")
 

@@ -2,8 +2,8 @@
 """
 목적: 선거방송심의위원회(선방위) 의결 내역 통계 CSV에서 「선거방송심의에 관한 특별규정」 조문별
       적용 행 수·결과 분포·선거별 분포를 집계한다(AGENTS.md 7.1 "선거방송심의 통계" 기준).
-입력: 2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/선방위_02-25_part01~04.csv (registry stats, 2002~2025)
-      2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/선방위 통계(02-26.7).csv (registry stats_election_recent, 2026년 행만)
+입력: 2 data_csv/통계_csv/방송/기준본_분할_csv/선방위_02-25_part01~04.csv (registry stats, 2002~2025)
+      2 data_csv/통계_csv/방송/투입·병합본_csv/선방위 통계(02-26.7).csv (registry stats_election_recent, 2026년 행만)
 출력: 표준출력(JSON). 인자로 조 번호를 주면 해당 조만 출력한다. 예) python3 election_articles.py 5 10 18
 규칙:
   - 집계 단위: CSV 행. 2026년 행은 (의결번호, 의결일, 관련조항, 결과)가 같은 중복 행을 1행으로 센다.
@@ -23,8 +23,8 @@
 import csv, glob, json, os, re, sys, collections
 
 BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '2 data_csv', '통계_csv')
-MAIN = sorted(glob.glob(os.path.join(BASE, '방송', '제미나이 노트북용 분할_csv', '선방위_02-25_part*.csv')))
-RECENT = os.path.join(BASE, '방송', '쳇지피팅용 병합_csv', '선방위 통계(02-26.7).csv')
+MAIN = sorted(glob.glob(os.path.join(BASE, '방송', '기준본_분할_csv', '선방위_02-25_part*.csv')))
+RECENT = os.path.join(BASE, '방송', '투입·병합본_csv', '선방위 통계(02-26.7).csv')
 
 def load():
     out = []

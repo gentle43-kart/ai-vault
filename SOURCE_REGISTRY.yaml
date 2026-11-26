@@ -3,8 +3,8 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.68"
-updated: 2026-11-24
+version: "1.69"
+updated: 2026-11-26
 root: "J:/AI 자료"
 
 # ── 필드 정의 ─────────────────────────────────────────────
@@ -404,7 +404,7 @@ sources:
 
   # ── 방송소위 회의록 ───────────────────────────────────────
   - id: minutes_broadcast
-    path: "1 documents_md/회의록_md/방송소위_md/제미나이 노트북용 분할본_md/"
+    path: "1 documents_md/회의록_md/방송소위_md/기준본_분할_md/"
     layer: normalized
     type: meeting_minutes
     ingest: search_only
@@ -413,7 +413,7 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "2008~2010년 파일 5개는 용량이 작지만 그대로 사용(2026-09-21 사용자 결정). 2026년 제22~24차(2026.9.15.~)는 회차별 파일 '2026년 제NN차 방송심의소위원회 회의록.md'로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, pdftotext 쪽 주석, 원본 3 source_raw/회의록_raw/방송소위/추가분(26.9월~)/)"
+    notes: "2008~2010년 파일 5개는 용량이 작지만 그대로 사용(2026-09-21 사용자 결정). 2026년 제22~24차(2026.9.15.~)는 회차별 파일 '2026년 제NN차 방송심의소위원회 회의록.md'로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, pdftotext 쪽 주석, 원본 3 source_raw/회의록_raw/방송소위/추가분(26.9월~)/). 폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 제미나이 노트북용 분할본_md → 기준본_분할_md"
 
   - id: minutes_broadcast_results
     path: "1 documents_md/회의록_md/방송소위_md/연도별_방송소위_회의결과/"
@@ -461,7 +461,7 @@ sources:
       2025년은 광고심의소위원회가 열리지 않음(사용자 확인 2026-10-21).
 
   - id: minutes_ad_2026
-    path: "1 documents_md/회의록_md/광고소위_md/챗지피티용_md/△2026년 광고소위 회의록 모음_01-21.md"
+    path: "1 documents_md/회의록_md/광고소위_md/병합본_md/△2026년 광고소위 회의록 모음_01-21.md"
     layer: normalized
     type: meeting_minutes
     ingest: search_only
@@ -469,11 +469,11 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "기준본에 없는 기간이므로 예외적으로 사용"
+    notes: "기준본에 없는 기간이므로 예외적으로 사용. 폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 챗지피티용_md → 병합본_md"
 
   # ── 전체회의 회의록 ───────────────────────────────────────
   - id: minutes_plenary
-    path: "1 documents_md/회의록_md/전체회의_md/제미나이 노트북용 분할본_md/"
+    path: "1 documents_md/회의록_md/전체회의_md/기준본_분할_md/"
     layer: normalized
     type: meeting_minutes
     ingest: search_only
@@ -482,7 +482,7 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "2026년 제1~14차(2026.3.12.~9.7.)는 회차별 파일 '(YYMMDD) 제N차(정기|임시) 발언내용(공개).md' 14개로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, Claude outputs/convert_minutes_pdf.py v1.0, 원본 3 source_raw/회의록_raw/전체회의/추가분(26.9월~)/). 공개 발언내용만 변환함: 제1·2차 '발언내용(비공개)' PDF는 '대외비(영구)' 표시가 있어 이 폴더(public·원격 허용)에 넣지 않음. 제4차는 '(공개)'와 '(공개)_수정' 두 판 중 나중 판(_수정, 2026.5.18. 작성, 신상발언 부분 포함)만 변환함. 종전 period '2008~2026 제13차'는 실제와 달랐음(2026-10-13 정정, 그때까지 2026년분은 이 폴더에 없었음)"
+    notes: "2026년 제1~14차(2026.3.12.~9.7.)는 회차별 파일 '(YYMMDD) 제N차(정기|임시) 발언내용(공개).md' 14개로 추가(2026-10-13 Claude 변환, AGENTS.md 6.7, Claude outputs/convert_minutes_pdf.py v1.0, 원본 3 source_raw/회의록_raw/전체회의/추가분(26.9월~)/). 공개 발언내용만 변환함: 제1·2차 '발언내용(비공개)' PDF는 '대외비(영구)' 표시가 있어 이 폴더(public·원격 허용)에 넣지 않음. 제4차는 '(공개)'와 '(공개)_수정' 두 판 중 나중 판(_수정, 2026.5.18. 작성, 신상발언 부분 포함)만 변환함. 종전 period '2008~2026 제13차'는 실제와 달랐음(2026-10-13 정정, 그때까지 2026년분은 이 폴더에 없었음). 폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 제미나이 노트북용 분할본_md → 기준본_분할_md"
 
   - id: minutes_plenary_decisions
     path: "1 documents_md/회의록_md/전체회의_md/의결서_md/"
@@ -511,7 +511,7 @@ sources:
 
   # ── 선거방송심의위원회 회의록 ─────────────────────────────
   - id: minutes_election
-    path: "1 documents_md/회의록_md/선방위_md/제미나이 노트북용 분할본_md/"
+    path: "1 documents_md/회의록_md/선방위_md/기준본_분할_md/"
     layer: normalized
     type: meeting_minutes
     ingest: search_only
@@ -520,6 +520,7 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
+    notes: "폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 제미나이 노트북용 분할본_md → 기준본_분할_md"
 
   - id: minutes_election_2026
     path: "1 documents_md/회의록_md/선방위_md/선방위 회의록 연도별 md 파일 원본_md/2026 제9회 전국동시지방선거(2026.6.3.) 3차-6차.md"
@@ -746,7 +747,7 @@ sources:
     
   # ── 통계 CSV ─────────────────────────────────────────────
   - id: stats
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/"
     layer: normalized
     type: statistics
     ingest: search_only
@@ -755,7 +756,7 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "심의의결 내역 전체. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인). 2012~2017 구간(12-17_part01~09)은 v1.47부터 stats_1217_corrected(보정본)가 기준본이고, 분할본은 아래 파일 단위 항목으로 원본 대조용(검색 제외)"
+    notes: "심의의결 내역 전체. 공개 자료, 원격 제공 허용(2026-09-21 사용자 확인). 2012~2017 구간(12-17_part01~09)은 v1.47부터 stats_1217_corrected(보정본)가 기준본이고, 분할본은 아래 파일 단위 항목으로 원본 대조용(검색 제외). 폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 제미나이 노트북용 분할_csv → 기준본_분할_csv(실제 제미나이 전용이 아니어서 혼동 방지)"
 
   - id: stats_1217_corrected
     path: "2 data_csv/통계_csv/방송/2012-2017 방송심의 통계(보정).csv"
@@ -777,7 +778,7 @@ sources:
       원격 허용은 사용자 결정으로 false(2026-10-21, ChatGPT 미연결)
 
   - id: stats_1217_part01
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part01.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part01.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -790,7 +791,7 @@ sources:
     notes: "보정 전 분할본(원본 대조용, v1.47). part02~09도 같은 처리"
 
   - id: stats_1217_part02
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part02.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part02.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -802,7 +803,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part03
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part03.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part03.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -814,7 +815,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part04
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part04.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part04.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -826,7 +827,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part05
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part05.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part05.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -838,7 +839,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part06
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part06.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part06.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -850,7 +851,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part07
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part07.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part07.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -862,7 +863,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part08
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part08.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part08.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -874,7 +875,7 @@ sources:
     remote_allowed: false
 
   - id: stats_1217_part09
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/12-17_part09.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/12-17_part09.csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -886,7 +887,7 @@ sources:
     remote_allowed: false
 
   - id: stats_2026_recent
-    path: "2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/2026_잠정.csv"
+    path: "2 data_csv/통계_csv/방송/기준본_분할_csv/2026_잠정.csv"
     layer: normalized
     type: statistics
     ingest: search_only
@@ -895,10 +896,10 @@ sources:
     classification: public
     classification_confirmed: true
     remote_allowed: true
-    notes: "2026년 방송심의 잠정본. 매월 새 누적본으로 덮어쓰고 파일명은 고정한다. 기준일·행 수는 이 항목에 적는다. 확정본이 나오면 확정본으로 교체한다(v1.49, 사용자 승인 2026-11-10). 이력: 2026-10-13 △26.01.-09(376행, 기준일 2026-09-29) → 2026-11-10 △26.01-10(422행, 기준일 2026-10-27, 2026.01~09 행은 의결번호·내용 동일하고 10월 46행 추가). 분할 폴더의 26.01-06.csv와 쳇지피팅용 병합_csv의 △26.01.-09.csv는 삭제함(새 파일에 모두 포함)"
+    notes: "2026년 방송심의 잠정본. 매월 새 누적본으로 덮어쓰고 파일명은 고정한다. 기준일·행 수는 이 항목에 적는다. 확정본이 나오면 확정본으로 교체한다(v1.49, 사용자 승인 2026-11-10). 이력: 2026-10-13 △26.01.-09(376행, 기준일 2026-09-29) → 2026-11-10 △26.01-10(422행, 기준일 2026-10-27, 2026.01~09 행은 의결번호·내용 동일하고 10월 46행 추가). 분할 폴더의 26.01-06.csv와 투입·병합본_csv의 △26.01.-09.csv는 삭제함(새 파일에 모두 포함)"
 
   - id: stats_election_recent
-    path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/선방위 통계(02-26.7).csv"
+    path: "2 data_csv/통계_csv/방송/투입·병합본_csv/선방위 통계(02-26.7).csv"
     layer: normalized
     type: statistics
     ingest: search_only
@@ -910,9 +911,10 @@ sources:
     notes: >
       기준본(stats)의 선방위 분할은 2025년까지이므로 집계에는 2026년 행만 사용한다.
       다만 "심의의결 내용" 칸의 소송 결과 기재("n심 패소 확정" 등)는 기준본에 없으므로 전 기간 행을 인용할 수 있다(사용자 승인 2026-09-24).
+      2026-11-26 경로 변경(v1.69): 쳇지피팅용 병합_csv → 투입·병합본_csv.
 
   - id: stats_merged
-    path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/"
+    path: "2 data_csv/통계_csv/방송/투입·병합본_csv/"
     layer: normalized
     type: statistics
     canonical: false
@@ -920,7 +922,7 @@ sources:
     searchable: false
     ingest: none
     classification: unknown
-    notes: "stats_election_recent는 파일 단위 항목이 우선. 이 폴더의 2026년 방송심의 △ 파일(예: △26.01-10.csv)은 stats_2026_recent의 사용자 투입본(중복본)이다(v1.49)"
+    notes: "stats_election_recent는 파일 단위 항목이 우선. 이 폴더의 2026년 방송심의 △ 파일(예: △26.01-10.csv)은 stats_2026_recent의 사용자 투입본(중복본)이다(v1.49). 폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 쳇지피팅용 병합_csv → 클로드용 폴더_csv(사용자) → 투입·병합본_csv. 하위 폴더 '총 병합'은 사용자가 없애고 그 안의 파일을 이 폴더 바로 아래로 옮김"
 
   - id: stats_root_dup
     path: "2 data_csv/통계_csv/방송/백업_보정 전_csv/2012-2017 방송심의 통계.csv"
@@ -953,7 +955,7 @@ sources:
     classification: unknown
 
   - id: stats_merged_all
-    path: "2 data_csv/통계_csv/방송/쳇지피팅용 병합_csv/총 병합/방송심의_전체통합(120101-260622).csv"
+    path: "2 data_csv/통계_csv/방송/투입·병합본_csv/방송심의_전체통합(120101-260622).csv"
     layer: normalized
     type: statistics
     canonical: false
@@ -965,6 +967,7 @@ sources:
     notes: >
       stats의 방송심의 파일(12-17 6,136행, 18-25 6,210행, 2026.01~06 214행)과 선방위_02-25(1,467행)를 한 파일로 합친 것이다(데이터셋 칸으로 구분, 14,027행).
       stats_election_recent의 2026년 선방위 행은 없다. 기준본은 stats이므로 집계에 쓰지 않는다(2026-09-28 등록, 사용자 승인 "다 진행해").
+      2026-11-26 경로 변경(v1.69): 쳇지피팅용 병합_csv/총 병합/ → 투입·병합본_csv/.
 
   - id: stats_telecom
     path: "2 data_csv/통계_csv/통신/연도별 심의내역 정리/"

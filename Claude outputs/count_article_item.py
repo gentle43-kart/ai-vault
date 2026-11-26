@@ -9,7 +9,7 @@ count_article_item.py v1.2 (2026-11-10) — v1.2: --until 추가(--recent와 함
   조문 식별(규정명 구간, 조 표기, 괄호 깊이)은 stats_articles.py의 함수를 그대로 가져다 쓴다.
 
 입력
-  stats_articles.load()와 같다: 2 data_csv/통계_csv/방송/제미나이 노트북용 분할_csv/ 의 방송심의 파일(선방위_* 제외).
+  stats_articles.load()와 같다: 2 data_csv/통계_csv/방송/기준본_분할_csv/ 의 방송심의 파일(선방위_* 제외).
   인자: --article 27 --item 4 (호) 또는 --para 2 (항). 조의m은 --sub m.
 
 출력
