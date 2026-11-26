@@ -1104,3 +1104,12 @@ type: log
 - 색인 요청: 앞 항목과 같이 J:\MCP\ai-vault-mcp\data 접근이 없어 reindex.request를 만들지 못함
 - 커밋 대상 파일: 0 wiki/문서/안_「방송심의 관련 업무처리 예규」 제정안.md, 0 wiki/log.md
 - 커밋 메시지 초안: fix: 업무처리 예규 제정안 문서에 신구조문대비표 대조 결과 보충(제3조 제3항 자구 정비)
+
+## [2026-11-26] schema | SOURCE_REGISTRY.yaml v1.70: 삭제된 백업_보정 전_csv의 stats_root_dup 항목 삭제 | Claude Opus 5.5
+- 세션: 채팅(원격 기기 셸). 사용자 질문 "백업_보정 전_csv 이 폴더 사용하는 곳 없으면 지워도 될까?" → 사용처·중복 확인 보고 → 사용자가 직접 폴더 삭제 후 "함께 고칠 곳 등 처리해줘"(2026-11-26)
+- 확인(삭제 전): 스크립트·AGENTS·스킬 참조 없음, registry stats_root_dup(canonical false, searchable false)만 등록. 파일 `2012-2017 방송심의 통계.csv`와 기준본 12-17_part01~09를 대조해 의결번호 있는 6,134행이 같음(31행은 줄바꿈 표기 `\r\n`↔`_x000D_` 차이만). 원본 xlsx는 3 source_raw/통계_raw/에 있음
+- 등급: ②(id 삭제). 승인: 위 보고 뒤 사용자 "처리해줘"(2026-11-26)
+- 변경: stats_root_dup 항목 삭제(id 88개, 중복 없음). 위키 분석/2026-09-22 해설집 사례와 통계 활용 원칙 144행에 삭제 사실 덧붙임
+- 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.69_20261126.yaml
+- 커밋 대상 파일: SOURCE_REGISTRY.yaml, 0 wiki/분석/2026-09-22 해설집 사례와 통계 활용 원칙.md, 0 wiki/log.md, 위 백업 1개
+- 커밋 메시지 초안: schema: 삭제된 백업_보정 전_csv 중복본의 registry 항목(stats_root_dup) 삭제, registry v1.70

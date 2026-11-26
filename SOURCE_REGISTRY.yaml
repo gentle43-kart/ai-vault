@@ -3,7 +3,7 @@
 # 읽는 주체: Claude(ingest·lint), 검색 색인기(search.db), MCP 서버(로컬·원격), ChatGPT
 # 수정 절차는 AGENTS.md 2.1절을 따른다(①직접 반영 ②승인 후 Claude 반영 ③개별 승인). 다른 AI는 수정하지 않는다.
 
-version: "1.69"
+version: "1.70"
 updated: 2026-11-26
 root: "J:/AI 자료"
 
@@ -923,16 +923,6 @@ sources:
     ingest: none
     classification: unknown
     notes: "stats_election_recent는 파일 단위 항목이 우선. 이 폴더의 2026년 방송심의 △ 파일(예: △26.01-10.csv)은 stats_2026_recent의 사용자 투입본(중복본)이다(v1.49). 폴더 이름 변경 2026-11-26(v1.69, 사용자 요청): 쳇지피팅용 병합_csv → 클로드용 폴더_csv(사용자) → 투입·병합본_csv. 하위 폴더 '총 병합'은 사용자가 없애고 그 안의 파일을 이 폴더 바로 아래로 옮김"
-
-  - id: stats_root_dup
-    path: "2 data_csv/통계_csv/방송/백업_보정 전_csv/2012-2017 방송심의 통계.csv"
-    layer: normalized
-    type: statistics
-    canonical: false
-    duplicate_of: stats
-    searchable: false
-    ingest: none
-    classification: unknown
 
   - id: stats_root_dup2
     path: "2 data_csv/통계_csv/방송/2018-2025 방송심의 통계.csv"
