@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-vault_check.py v1.1 (2026-11-27, Claude Opus 5.5; v1.1: 검증 목록에 election_articles.py --verify 추가, 7개)
+vault_check.py v1.2 (2026-11-27, Claude Opus 5.5; v1.2: 옛 폴더명 검색에서 '_'로 시작하는 폴더(4 스킬, 프로젝트/_보관 등) 제외. v1.1: 검증 목록에 election_articles.py --verify 추가, 7개)
 목적: 자료창고의 자료 쪽 규칙을 AI 없이 매번 같게 점검한다(위키 페이지 점검은 wiki_lint.py가 한다).
   G1 레지스트리: SOURCE_REGISTRY.yaml 파싱, id 중복, path·raw_source·scan_dirs 존재, duplicate_of가 가리키는 id 존재
   G2 기준본 CSV 지문: registry에서 2 data_csv/ 아래 canonical 항목(stats_2026_recent 제외)의 파일별 크기·sha1·줄 수를
@@ -47,7 +47,7 @@ VERIFY_CMDS = [  # (이름, 스크립트 경로, 인자)
 EXCLUDE_IDS = {"stats_2026_recent"}   # 매월 덮어쓰는 잠정본. 행 감소는 update_stats_2026.py가 막는다
 TEXT_EXT = (".md", ".py", ".bat", ".yaml", ".yml", ".json", ".txt")
 
-R = {"version": "1.1", "run_at": datetime.datetime.now().isoformat(timespec="seconds")}
+R = {"version": "1.2", "run_at": datetime.datetime.now().isoformat(timespec="seconds")}
 
 
 def P(rel):
@@ -157,7 +157,7 @@ def old_name_targets():
     skip_dirs = {"@clippings", "log", "schema_backup", "__pycache__", ".git", "data", "data_reading", "_to_delete"}
     for root in roots:
         for dp, dns, fns in os.walk(root):
-            dns[:] = [d for d in dns if d not in skip_dirs]
+            dns[:] = [d for d in dns if d not in skip_dirs and not d.startswith("_")]   # v1.2: _보관·_백업_… 등 과거 사본 제외
             for fn in fns:
                 f = os.path.join(dp, fn)
                 if fn.lower().endswith(TEXT_EXT) and not (dp == os.path.join(V, "0 wiki") and fn == "log.md") \
