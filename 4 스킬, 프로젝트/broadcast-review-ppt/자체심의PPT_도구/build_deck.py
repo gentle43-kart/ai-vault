@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# broadcast-review-ppt toolkit version: 2026-11-19
+# broadcast-review-ppt toolkit version: 2026-11-25
 """deck_spec.json + 자체심의 템플릿 → 편집 가능한 PPTX와 감사 JSON.
 
 usage: python3 build_deck.py deck_spec.json TEMPLATE.pptx OUT.pptx
 템플릿의 원형 슬라이드(표지 1, 구분 2, 단일사례 3, 2사례 4)를 복제해 채우고 원래 슬라이드는 표지만 남긴다.
+표지를 뺀 모든 슬라이드 우상단에 쪽 번호(자동 갱신되는 슬라이드 번호 필드)를 넣는다.
 """
 from __future__ import annotations
 
@@ -18,7 +19,8 @@ from lxml import etree
 from PIL import Image
 from pptx import Presentation
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from pptx.util import Pt
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.util import Emu, Pt
 
 # ---- 템플릿 도형 매핑(다른 템플릿이면 이 부분만 수정) ----
 MAP = {
@@ -37,10 +39,17 @@ MAP = {
 }
 # 텍스트 상자 수용 한계(폭 pt, 최대 줄 수, 기본 글꼴 pt, 줄간격 배수)
 FIT = {
-    "title": (914, 1, 30, 1.2), "program": (338, 1, 16, 1.2), "datetime": (338, 1, 16, 1.2),
+    "title": (798, 1, 30, 1.2), "program": (338, 1, 16, 1.2), "datetime": (338, 1, 16, 1.2),
     "related": (338, 2, 16, 1.2), "summary": (454, 6, 18, 1.6),
     "pair_label": (372, 1, 21, 1.2), "pair_program": (328, 1, 16, 1.2), "pair_summary": (355, 6, 18, 1.2),
 }
+# 쪽 번호(EMU): 오른쪽 끝을 빨간 줄 끝(571500+11049000)에 맞추고, 글자 아랫선을 제목 글자의 아랫선에 맞춘다.
+# 아랫선 = 상자 위쪽 + 글꼴 크기 × 비율(위쪽 정렬·여백 0, Noto Sans KR 실측: 제목 한글 1.074, 숫자 0.983).
+# 제목 상자가 없는 구분 슬라이드는 단일 사례 제목(top 571500, 30pt) 기준 위치를 쓴다.
+# 제목 상자가 번호 칸을 침범하면 gap만큼 띄워 제목 폭을 줄인다(FIT["title"] 798pt와 같은 값).
+PAGE_NO = {"right": 11620500, "width": 762000, "height": 304800, "gap": 152400,
+           "title_top": 571500, "title_size": 30, "title_ink": 1.074, "num_ink": 0.983,
+           "size": 16, "color": "64748B", "font": "Noto Sans KR"}
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 
@@ -207,6 +216,37 @@ def place_images(slide, paths, box, warns):
         y += rh + gap
 
 
+def add_page_number(slide, number, title=None):
+    """우상단에 쪽 번호를 넣는다. PowerPoint의 슬라이드 번호 필드라서 순서를 바꾸면 자동으로 다시 매겨진다.
+    템플릿 마스터가 머리글/바닥글을 꺼 두어(Google Slides 변환본) 삽입 메뉴로는 번호가 안 들어가므로 직접 넣는다."""
+    g = PAGE_NO
+    left = g["right"] - g["width"]
+    title_top, title_size = g["title_top"], g["title_size"]
+    if title is not None:
+        title_top = title.top
+        runs = title.text_frame.paragraphs[0].runs
+        if runs and runs[0].font.size:
+            title_size = runs[0].font.size.pt
+        if title.left + title.width > left - g["gap"]:
+            title.width = Emu(left - g["gap"] - title.left)
+    top = title_top + Pt(g["title_ink"] * title_size - g["num_ink"] * g["size"])
+    box = slide.shapes.add_textbox(Emu(left), Emu(top), Emu(g["width"]), Emu(g["height"]))
+    box.name = "쪽 번호"
+    tf = box.text_frame
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.word_wrap = False
+    para = tf.paragraphs[0]
+    para.alignment = PP_ALIGN.RIGHT
+    fld = etree.SubElement(para._p, A + "fld", id="{5C1E8F2A-3B4D-4E6F-9A1B-2C3D4E5F6A7B}", type="slidenum")
+    rpr = etree.SubElement(fld, A + "rPr", lang="ko-KR", sz=str(g["size"] * 100), b="0")
+    fill = etree.SubElement(rpr, A + "solidFill")
+    etree.SubElement(fill, A + "srgbClr", val=g["color"])
+    for tag in ("latin", "ea", "cs"):
+        etree.SubElement(rpr, A + tag, typeface=g["font"])
+    etree.SubElement(fld, A + "t").text = str(number)
+
+
 def set_notes(slide, lines):
     if lines:
         slide.notes_slide.notes_text_frame.text = "\n".join(lines)
@@ -279,6 +319,7 @@ def main():
 
     audit = {"schema_version": "2.0", "template": str(tpl), "output": str(out), "station": station, "slides": []}
     sec_no = 0
+    built = []  # (슬라이드, 종류): 쪽 번호용
     for s in spec["slides"]:
         kind = s.get("type", "case")
         if kind == "section":
@@ -287,12 +328,15 @@ def main():
             title = s["title"] if re.match(r"^\d+\.", s["title"]) else f"{sec_no}. {s['title']}"
             set_text(shape(slide, MAP["section"]["title"]), [title])
             set_text(shape(slide, MAP["section"]["subtitle"]), [s.get("subtitle", "")])
+            built.append((slide, "section"))
             audit["slides"].append({"type": "section", "title": title})
         elif kind == "pair":
-            _, w = build_pair(prs, protos["pair"], s)
+            slide, w = build_pair(prs, protos["pair"], s)
+            built.append((slide, "pair"))
             audit["slides"].append({"type": "pair", "title": s["title"], "review_warnings": w})
         else:
-            _, w = build_case(prs, protos["case"], s, spec_path.parent)
+            slide, w = build_case(prs, protos["case"], s, spec_path.parent)
+            built.append((slide, "case"))
             audit["slides"].append({"type": "case", "title": s.get("title"), "program": s.get("program"),
                                     "broadcast_datetime": s.get("broadcast_datetime"),
                                     "related_provisions": s.get("related_provisions"),
@@ -300,6 +344,9 @@ def main():
                                     "source_content": s.get("source_content", ""),
                                     "source_opinion": s.get("source_opinion", "")})
     delete_slides(prs, [sl for sl in originals if sl is not cover])
+    for number, (slide, kind) in enumerate(built, start=2):  # 1쪽은 표지(번호 없음)
+        title = shape(slide, MAP[kind]["title"]) if kind in ("case", "pair") else None
+        add_page_number(slide, number, title)
     prs.save(str(out))
     audit["slide_count"] = len(prs.slides)
     audit["warning_count"] = sum(len(x.get("review_warnings", [])) for x in audit["slides"])

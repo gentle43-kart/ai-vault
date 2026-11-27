@@ -3,7 +3,7 @@ name: "broadcast-review-ppt"
 description: "방송 모니터 보고서(HWPX·HWP·DOCX·TXT·MD·PDF)를 방송사 자체심의·심의책임자회의용 '자체심의 참고사항' PPTX로 변환할 때 사용. 자체심의 PPT, 지적사항 PPT, 모니터 보고서 PPT 변환 요청에 적용."
 ---
 
-# 방송 자체심의 PPT 자동화 (toolkit version: 2026-11-19)
+# 방송 자체심의 PPT 자동화 (toolkit version: 2026-11-25)
 
 모니터 보고서를 사례 단위로 추출하고, 회의용 제목·요약을 작성한 뒤, 지정 템플릿을 복제해 편집 가능한 PPTX와 감사 JSON을 만든다. 추출과 PPT 생성은 스크립트가 하고, 제목·요약 작성과 사실 대조는 Claude가 한다.
 
@@ -17,7 +17,7 @@ description: "방송 모니터 보고서(HWPX·HWP·DOCX·TXT·MD·PDF)를 방�
    - ④ 모두 없으면 템플릿 첨부를 요청하고 멈춘다
    - 어느 경로에서 가져온 템플릿을 썼는지 답변에 한 줄로 적는다.
    - 템플릿 계약: 1번 슬라이드=표지, 2번=구분 슬라이드, 3번=단일 사례, 4번=2사례 비교. 원본 전체 템플릿(14장)과 경량 템플릿(4장) 모두 쓸 수 있다.
-3. **스크립트**: 템플릿과 같은 폴더에 `extract_report.py`, `build_deck.py`가 있고 둘째 줄 버전이 `2026-11-19`이면 그것을 쓴다. 없거나 버전이 다르면 부록 A·B를 작업 공간의 `tools/`에 그대로 저장해 쓴다(버전이 다르면 사용자에게 알린다).
+3. **스크립트**: 템플릿과 같은 폴더에 `extract_report.py`, `build_deck.py`가 있고 둘째 줄 버전이 `2026-11-25`이면 그것을 쓴다. 없거나 버전이 다르면 부록 A·B를 작업 공간의 `tools/`에 그대로 저장해 쓴다(버전이 다르면 사용자에게 알린다).
 4. 실행 환경: Python 3, `python-pptx`, `Pillow`, `lxml`(없으면 `pip install --break-system-packages python-pptx`). HWP 입력은 `pyhwp`(스크립트가 자동 설치 시도). 렌더링 검증은 LibreOffice(`soffice`)와 `pdftoppm`. 연결 폴더의 파일도 생성·렌더링은 작업 공간에서 실행하고 결과만 원래 폴더에 기록한다.
 5. 다른 형식의 완성본 PPT가 함께 오면 사실 근거로 쓰지 말고 레이아웃·압축 수준 참고용으로만 쓴다.
 
@@ -33,10 +33,12 @@ description: "방송 모니터 보고서(HWPX·HWP·DOCX·TXT·MD·PDF)를 방�
 2. **deck_spec.json 작성**(2절 스키마, 3절 작성 규칙). 이 단계가 Claude의 핵심 작업이다.
 3. **생성**
    `python3 tools/build_deck.py deck_spec.json 템플릿.pptx 출력.pptx`
+   - 표지를 뺀 모든 슬라이드 우상단(빨간 줄 오른쪽 끝 위, 글자 아랫선을 제목 아랫선에 맞춤)에 쪽 번호가 자동으로 들어간다. PowerPoint 슬라이드 번호 필드라서 슬라이드 순서를 바꾸면 다시 매겨진다. 템플릿 마스터가 머리글/바닥글을 꺼 둔 Google Slides 변환본이라 삽입 메뉴로는 번호가 들어가지 않으므로 스크립트가 직접 넣는다.
+   - 생성 후 슬라이드를 PowerPoint에서 직접 추가하면 그 슬라이드에는 번호가 없다. 기존 슬라이드의 `쪽 번호` 상자를 복사해 같은 위치에 붙이면 번호가 자동으로 맞춰진다고 사용자에게 안내한다.
    - 같은 이름의 `.audit.json`이 함께 생성된다. 슬라이드별 경고는 PPT 슬라이드 노트에도 `[자동 검토]`로 기록된다.
    - 출력 파일명 기본값: `<보고서 파일명>_자체심의_참고자료_YYYYMMDD.pptx`
 4. **검증**(생략 금지)
-   - 렌더링: `soffice --headless --convert-to pdf 출력.pptx` → `pdftoppm -r 60 -png 출력.pdf s` → 슬라이드 이미지를 모두 열어 글자 넘침·겹침, 사진과 사례의 대응, 표지 문구를 확인한다. 표지 첫 줄이 방송사명으로 바뀌고, 템플릿의 나머지 줄(`자체심의 참고사항`, 작은 글씨 `(방송미디어통신심의위원회 대구사무소)`)이 그대로 남았는지 본다(템플릿 표지가 다른 형식이면 사용자에게 알린다). LibreOffice 렌더링은 글꼴 대체 때문에 실제 PowerPoint와 줄바꿈이 약간 다를 수 있다.
+   - 렌더링: `soffice --headless --convert-to pdf 출력.pptx` → `pdftoppm -r 60 -png 출력.pdf s` → 슬라이드 이미지를 모두 열어 글자 넘침·겹침, 사진과 사례의 대응, 표지 문구, 우상단 쪽 번호(2쪽부터 차례대로, 제목과 겹치지 않음)를 확인한다. 표지 첫 줄이 방송사명으로 바뀌고, 템플릿의 나머지 줄(`자체심의 참고사항`, 작은 글씨 `(방송미디어통신심의위원회 대구사무소)`)이 그대로 남았는지 본다(템플릿 표지가 다른 형식이면 사용자에게 알린다). LibreOffice 렌더링은 글꼴 대체 때문에 실제 PowerPoint와 줄바꿈이 약간 다를 수 있다.
    - 사실 대조: 아래 스니펫으로 프로그램명·방송일시·관련조항이 원문과 일치하는지 확인하고, 불일치는 원문 기준으로 고친다.
    - `분량 과다` 경고가 있으면 요약을 줄여 다시 생성한다.
    ```python
@@ -118,7 +120,7 @@ description: "방송 모니터 보고서(HWPX·HWP·DOCX·TXT·MD·PDF)를 방�
 
 ## 5. 다른 템플릿에 맞추기
 
-새 템플릿이면 먼저 도형 이름과 위치를 확인하고 `build_deck.py` 위쪽의 `MAP`(도형 이름)과 `FIT`(폭·최대 줄 수·글꼴 크기)만 고친다. 새 디자인을 덧씌우지 않는다.
+새 템플릿이면 먼저 도형 이름과 위치를 확인하고 `build_deck.py` 위쪽의 `MAP`(도형 이름)과 `FIT`(폭·최대 줄 수·글꼴 크기), 쪽 번호 위치 `PAGE_NO`(EMU)만 고친다. 새 디자인을 덧씌우지 않는다.
 ```python
 from pptx import Presentation
 p = Presentation("템플릿.pptx")
@@ -138,7 +140,7 @@ for i, s in enumerate(p.slides, 1):
 
 ```python
 #!/usr/bin/env python3
-# broadcast-review-ppt toolkit version: 2026-11-19
+# broadcast-review-ppt toolkit version: 2026-11-25
 """모니터 보고서(HWPX/HWP/DOCX/TXT/MD/PDF)를 사례 단위 JSON으로 추출한다.
 
 출력은 '원자료 추출본'이며 요약·제목은 만들지 않는다(제목·요약은 Claude가 작성).
@@ -441,11 +443,12 @@ if __name__ == "__main__":
 
 ```python
 #!/usr/bin/env python3
-# broadcast-review-ppt toolkit version: 2026-11-19
+# broadcast-review-ppt toolkit version: 2026-11-25
 """deck_spec.json + 자체심의 템플릿 → 편집 가능한 PPTX와 감사 JSON.
 
 usage: python3 build_deck.py deck_spec.json TEMPLATE.pptx OUT.pptx
 템플릿의 원형 슬라이드(표지 1, 구분 2, 단일사례 3, 2사례 4)를 복제해 채우고 원래 슬라이드는 표지만 남긴다.
+표지를 뺀 모든 슬라이드 우상단에 쪽 번호(자동 갱신되는 슬라이드 번호 필드)를 넣는다.
 """
 from __future__ import annotations
 
@@ -460,7 +463,8 @@ from lxml import etree
 from PIL import Image
 from pptx import Presentation
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from pptx.util import Pt
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.util import Emu, Pt
 
 # ---- 템플릿 도형 매핑(다른 템플릿이면 이 부분만 수정) ----
 MAP = {
@@ -479,10 +483,17 @@ MAP = {
 }
 # 텍스트 상자 수용 한계(폭 pt, 최대 줄 수, 기본 글꼴 pt, 줄간격 배수)
 FIT = {
-    "title": (914, 1, 30, 1.2), "program": (338, 1, 16, 1.2), "datetime": (338, 1, 16, 1.2),
+    "title": (798, 1, 30, 1.2), "program": (338, 1, 16, 1.2), "datetime": (338, 1, 16, 1.2),
     "related": (338, 2, 16, 1.2), "summary": (454, 6, 18, 1.6),
     "pair_label": (372, 1, 21, 1.2), "pair_program": (328, 1, 16, 1.2), "pair_summary": (355, 6, 18, 1.2),
 }
+# 쪽 번호(EMU): 오른쪽 끝을 빨간 줄 끝(571500+11049000)에 맞추고, 글자 아랫선을 제목 글자의 아랫선에 맞춘다.
+# 아랫선 = 상자 위쪽 + 글꼴 크기 × 비율(위쪽 정렬·여백 0, Noto Sans KR 실측: 제목 한글 1.074, 숫자 0.983).
+# 제목 상자가 없는 구분 슬라이드는 단일 사례 제목(top 571500, 30pt) 기준 위치를 쓴다.
+# 제목 상자가 번호 칸을 침범하면 gap만큼 띄워 제목 폭을 줄인다(FIT["title"] 798pt와 같은 값).
+PAGE_NO = {"right": 11620500, "width": 762000, "height": 304800, "gap": 152400,
+           "title_top": 571500, "title_size": 30, "title_ink": 1.074, "num_ink": 0.983,
+           "size": 16, "color": "64748B", "font": "Noto Sans KR"}
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 
@@ -649,6 +660,37 @@ def place_images(slide, paths, box, warns):
         y += rh + gap
 
 
+def add_page_number(slide, number, title=None):
+    """우상단에 쪽 번호를 넣는다. PowerPoint의 슬라이드 번호 필드라서 순서를 바꾸면 자동으로 다시 매겨진다.
+    템플릿 마스터가 머리글/바닥글을 꺼 두어(Google Slides 변환본) 삽입 메뉴로는 번호가 안 들어가므로 직접 넣는다."""
+    g = PAGE_NO
+    left = g["right"] - g["width"]
+    title_top, title_size = g["title_top"], g["title_size"]
+    if title is not None:
+        title_top = title.top
+        runs = title.text_frame.paragraphs[0].runs
+        if runs and runs[0].font.size:
+            title_size = runs[0].font.size.pt
+        if title.left + title.width > left - g["gap"]:
+            title.width = Emu(left - g["gap"] - title.left)
+    top = title_top + Pt(g["title_ink"] * title_size - g["num_ink"] * g["size"])
+    box = slide.shapes.add_textbox(Emu(left), Emu(top), Emu(g["width"]), Emu(g["height"]))
+    box.name = "쪽 번호"
+    tf = box.text_frame
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.word_wrap = False
+    para = tf.paragraphs[0]
+    para.alignment = PP_ALIGN.RIGHT
+    fld = etree.SubElement(para._p, A + "fld", id="{5C1E8F2A-3B4D-4E6F-9A1B-2C3D4E5F6A7B}", type="slidenum")
+    rpr = etree.SubElement(fld, A + "rPr", lang="ko-KR", sz=str(g["size"] * 100), b="0")
+    fill = etree.SubElement(rpr, A + "solidFill")
+    etree.SubElement(fill, A + "srgbClr", val=g["color"])
+    for tag in ("latin", "ea", "cs"):
+        etree.SubElement(rpr, A + tag, typeface=g["font"])
+    etree.SubElement(fld, A + "t").text = str(number)
+
+
 def set_notes(slide, lines):
     if lines:
         slide.notes_slide.notes_text_frame.text = "\n".join(lines)
@@ -721,6 +763,7 @@ def main():
 
     audit = {"schema_version": "2.0", "template": str(tpl), "output": str(out), "station": station, "slides": []}
     sec_no = 0
+    built = []  # (슬라이드, 종류): 쪽 번호용
     for s in spec["slides"]:
         kind = s.get("type", "case")
         if kind == "section":
@@ -729,12 +772,15 @@ def main():
             title = s["title"] if re.match(r"^\d+\.", s["title"]) else f"{sec_no}. {s['title']}"
             set_text(shape(slide, MAP["section"]["title"]), [title])
             set_text(shape(slide, MAP["section"]["subtitle"]), [s.get("subtitle", "")])
+            built.append((slide, "section"))
             audit["slides"].append({"type": "section", "title": title})
         elif kind == "pair":
-            _, w = build_pair(prs, protos["pair"], s)
+            slide, w = build_pair(prs, protos["pair"], s)
+            built.append((slide, "pair"))
             audit["slides"].append({"type": "pair", "title": s["title"], "review_warnings": w})
         else:
-            _, w = build_case(prs, protos["case"], s, spec_path.parent)
+            slide, w = build_case(prs, protos["case"], s, spec_path.parent)
+            built.append((slide, "case"))
             audit["slides"].append({"type": "case", "title": s.get("title"), "program": s.get("program"),
                                     "broadcast_datetime": s.get("broadcast_datetime"),
                                     "related_provisions": s.get("related_provisions"),
@@ -742,6 +788,9 @@ def main():
                                     "source_content": s.get("source_content", ""),
                                     "source_opinion": s.get("source_opinion", "")})
     delete_slides(prs, [sl for sl in originals if sl is not cover])
+    for number, (slide, kind) in enumerate(built, start=2):  # 1쪽은 표지(번호 없음)
+        title = shape(slide, MAP[kind]["title"]) if kind in ("case", "pair") else None
+        add_page_number(slide, number, title)
     prs.save(str(out))
     audit["slide_count"] = len(prs.slides)
     audit["warning_count"] = sum(len(x.get("review_warnings", [])) for x in audit["slides"])

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# broadcast-review-ppt toolkit version: 2026-11-19
+# broadcast-review-ppt toolkit version: 2026-11-25
 """모니터 보고서(HWPX/HWP/DOCX/TXT/MD/PDF)를 사례 단위 JSON으로 추출한다.
 
 출력은 '원자료 추출본'이며 요약·제목은 만들지 않는다(제목·요약은 Claude가 작성).
