@@ -35,7 +35,7 @@
 1. 수정 전 파일을 `Claude outputs/schema_backup/{파일명}_{판}_{YYYYMMDD}.{확장자}`로 복사한다. 같은 날 같은 판의 백업이 이미 있으면 덮어쓰지 않고 이름 끝에 순번을 붙인다.
 2. 파일을 다시 입력하지 않고, 치환 스크립트로 수정하면서 바꿀 문장이 파일 안에 한 번만 있는지 확인한다.
 3. AGENTS.md는 판 번호·개정일을, SOURCE_REGISTRY.yaml은 `version`·`updated`를 갱신한다.
-4. 검증한다: YAML 파싱, id 중복, 새로 적은 `path`의 존재 여부.
+4. 검증한다: `Claude outputs/vault_check.py --skip-verify`를 실행해 레지스트리 위반이 0인지 확인한다(YAML 파싱·id 중복·경로 존재는 스크립트가 본다, v1.56).
 5. `log.md`에 `schema` 항목을 적는다: 판 번호, 변경 요약, 등급, 승인 일자와 승인 발언 요지(②·③), 백업 경로.
 6. 사용자에게 수정 전후 요약을 보고한다.
 
@@ -325,17 +325,14 @@ base_date:          # 문서의 기준일(발행일, 개정일 등)
 ### 6.6 lint (정기 점검)
 
 점검 항목:
+- **기계 점검은 `Claude outputs/wiki_lint.py`가 한다(v1.56):** 출처 경로·중복본 출처, 끊긴 링크(log 기록은 따로 셈), 고립 페이지, `_index.md` 누락, `verified_at` 없이 쓴 "현행 조문", 머리말 형식. 항목과 종료 코드는 스크립트 첫머리에 있다. `web:` 출처는 경로를 보지 않고 확인일만 점검한다. 아래는 판단이 필요한 항목이다.
 - 페이지 사이의 모순, `〔충돌〕` 표시가 남은 곳
 - `reviewed_at` 이후 `sources` 파일이 변경된 페이지
 - 개정되었는데 개정 이력에 반영되지 않은 조문
 - **더 최신 자료가 반영되지 않은 페이지:** 페이지의 `updated`가, `SOURCE_REGISTRY.yaml`에 있는 같은 법령·규정·주제 자료의 `base_date`(또는 파일 수정일)보다 이전이고, 그 자료가 페이지 `sources`에 없는 경우
 - `decision_status: interim`인데 후속 결정이 확인되는 사례
-- `verified_at` 없이 "현행 조문"으로 쓴 조문 페이지
 - 각 페이지 "추가 확인 필요" 절의 미해결 항목. 판례·소송 결과, 원본 입수, 유권해석처럼 외부 확인에 기대는 항목은 `분석/외부 확인 대기.md` 한 목록으로 옮기고(아래 "외부 확인 대기"), 옮긴 항목은 열린 항목에서 빼고 따로 센다
-- `sources`가 없거나 존재하지 않는 경로, 중복본(`canonical: false`)을 가리키는 페이지. 다만 `web:` 항목은 경로 존재 여부를 점검하지 않고 확인일만 점검하며, `script:` 항목은 `Claude outputs/`에 해당 파일이 있는지 점검한다
 - 계산 수치를 적었는데 7절의 재현 정보(대상·조건·단위·검증값 또는 스크립트)가 없는 페이지
-- 고립 페이지, 존재하지 않는 페이지로 향하는 링크, `_index.md`에 빠진 페이지
-  - 끊긴 링크는 내용 페이지의 것(`broken_links`)과 `log.md`·`log/` 기록의 것(`broken_links_log`, 참고)으로 나눈다. 로그는 과거 기록이라 옛 이름이 남아 있어도 고치지 않는다(10절). `wiki_lint.py`의 종료 코드는 0·1만 쓰며, `broken_sources`·`broken_links`·`yaml_error`·`sources_bad` 중 하나라도 있으면 1이다(v1.40, 사용자 승인 2026-11-12).
 - **탐색성이 떨어지는 반복 개념:** 서로 다른 3개 이상의 페이지 본문에 일반 텍스트로 등장하지만 독립 쟁점·문서 페이지가 없고 "작성 필요" 목록에도 없는 용어
 - 연결되어야 할 조문·쟁점·사례 사이의 누락된 교차참조(예: 조문 페이지의 "관련 쟁점"에 있는 쟁점 페이지가 그 조문으로 되돌아 링크하지 않는 경우)
 - 시기별·판별 비교인데 위원회 기수 경계가 병기되지 않은 서술(7.1)
@@ -379,7 +376,7 @@ base_date:          # 문서의 기준일(발행일, 개정일 등)
 
 | 단계 | 주기·실행 수단 | 하는 일 | 쓰기 범위 |
 |---|---|---|---|
-| A 무인 기계 점검(토큰 사용 없음) | 매주 수요일 09:40, Windows 작업 스케줄러 "AI자료 정기점검"(`Claude outputs/maintenance_check.py`와 실행용 bat). 놓친 실행은 PC가 켜지면 실행한다 | `wiki_lint.py` 실행 결과(〔충돌〕·열린 항목 수 포함), 수신함 `status: 대기` 수, `@clippings` 새 파일 수, `투입·병합본_csv`의 새 △ 파일(`stats_2026_recent` 이력에 없는 파일), log.md에 지난 달 항목이 남았는지, 두 저장소의 미커밋 파일 수·미push 커밋 수·가장 오래된 미push 커밋의 경과일, `reindex.failed` 존재, 이번 달 B 보고서 유무, 안건 작성예시 색인에 없는 예시 md 수와 사라진 파일 수(`Claude outputs/index_drafting_examples.py --check`, v1.50) | `J:\MCP\ai-vault-mcp\data\maintenance\`의 `{YYYY-MM-DD}_check.json`, `{YYYY-MM-DD}_요약.md`, `run_history.log`. 위키·스키마·통계 파일·search.db는 고치지 않는다 |
+| A 무인 기계 점검(토큰 사용 없음) | 매주 수요일 09:40, Windows 작업 스케줄러 "AI자료 정기점검"(`Claude outputs/maintenance_check.py`와 실행용 bat). 놓친 실행은 PC가 켜지면 실행한다 | `maintenance_check.py`가 정한 점검(wiki_lint·vault_check 결과와 수신함·통계·log·git·색인 관리 항목. 목록은 스크립트 첫머리, v1.56) | `J:\MCP\ai-vault-mcp\data\maintenance\`의 `{YYYY-MM-DD}_check.json`, `{YYYY-MM-DD}_요약.md`, `run_history.log`. 위키·스키마·통계 파일·search.db는 고치지 않는다 |
 | B 월간 AI 정비 | 매월 첫째 주 수요일 14:13, claude.ai 예약 작업 "AI 자료창고 월간 정비(B)"(PC 연결 필요). 매주 수요일에 실행되며 1~7일이 아니면 바로 끝난다 | A 최신 요약을 읽고 ① 법령 현행성(조문 페이지 `text_basis`의 기준 판을 법령·규칙별로 묶어 법령 MCP의 현행 판·시행 예정 판과 비교) ② 시행일이 지난 "시행 예정" 열린 항목 ③ 〔충돌〕·열린 항목의 증감 ④ A의 관리 항목(새 △ 파일, 수신함, 미push 등) ⑤ 직전 보고서의 미처리 제안을 점검한다 | `분석/{YYYY-MM-DD} lint 보고.md`, `분석/_index.md` 등재 한 줄, `log.md` 끝에 lint 항목(커밋 대상 파일·커밋 메시지 초안 포함), `reindex.request`. 이 네 가지 외에는 쓰지 않는다 |
 | C 승인 후 처리 | 사용자가 요청할 때, Claude Code | 사용자가 B 보고서에서 고른 제안의 반영, `stats-monthly-update`, log 월별 분할(`split_log.py`), `vault-commit`(B가 남긴 log 항목 포함) | 각 작업의 절에 따른다 |
 

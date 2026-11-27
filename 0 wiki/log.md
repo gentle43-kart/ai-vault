@@ -1158,3 +1158,10 @@ type: log
 - 수정: wiki_lint.py v1.8(fm_missing·fm_bad_value·old_article_alias_links 출력 추가, 종료 코드 조건 그대로), maintenance_check.py v1.3(vault_check 호출·요약 추가), sangpan_articles.py·grade_articles.py v1.1(--verify 불일치 때 종료 코드 1, 집계 로직 그대로), README.md
 - 검증: vault_check 전체 실행 exit=0(레지스트리 위반 0, CSV 변동 0/49, 검증 스크립트 6/6 일치, 옛 폴더명 0, 52초). 임시 폴더의 가짜 기준값·옛 이름 파일로 바뀜·새 파일·사라짐·옛 이름 검출 확인. maintenance_check exit=0(54초). wiki_lint exit=0, 새 항목은 fm_missing 1쪽(Untitled.md, stray와 같음) 외 0
 - 처리하지 않음: 선방위 election_articles.py 검증 추가, AGENTS_절차.md 6.8절 A 행의 점검 목록 갱신(제안 예정, 승인 후 반영)
+
+## [2026-11-27] schema | AGENTS.md v1.56: 기계 점검 규칙을 스크립트 참조로 줄임(절차 2.1 4단계, 6.6, 6.8 A행) | Claude Opus 5.5
+- 근거: 작업 4 완료 보고의 문서 줄이기 제안 3건에 사용자 "Apply all 3"(2026-11-27). 등급 ②
+- 2.1 반영 4단계: YAML 파싱·id 중복·path 존재 → vault_check.py --skip-verify로 레지스트리 위반 0 확인
+- 6.6: 기계 점검 4개 항목(verified_at 없는 "현행 조문", sources 경로·중복본, 고립·끊긴 링크·_index 누락과 broken_links_log 설명)을 "wiki_lint.py가 한다" 한 줄로. 종료 코드 규정(v1.40)은 wiki_lint.py 첫머리, log 링크를 당시 이름으로 두는 규칙은 10절에 그대로 있음
+- 6.8 A행 '하는 일': 점검 목록을 maintenance_check.py 첫머리 참조로(vault_check 추가로 목록이 실제와 어긋나던 문제 해소). 일정·실행 수단·쓰기 범위는 그대로
+- 백업: Claude outputs/schema_backup/AGENTS_v1.55_20261127.md, AGENTS_절차_v1.55_20261127.md
