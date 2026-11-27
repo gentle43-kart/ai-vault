@@ -1165,3 +1165,9 @@ type: log
 - 6.6: 기계 점검 4개 항목(verified_at 없는 "현행 조문", sources 경로·중복본, 고립·끊긴 링크·_index 누락과 broken_links_log 설명)을 "wiki_lint.py가 한다" 한 줄로. 종료 코드 규정(v1.40)은 wiki_lint.py 첫머리, log 링크를 당시 이름으로 두는 규칙은 10절에 그대로 있음
 - 6.8 A행 '하는 일': 점검 목록을 maintenance_check.py 첫머리 참조로(vault_check 추가로 목록이 실제와 어긋나던 문제 해소). 일정·실행 수단·쓰기 범위는 그대로
 - 백업: Claude outputs/schema_backup/AGENTS_v1.55_20261127.md, AGENTS_절차_v1.55_20261127.md
+
+## [2026-11-27] schema | CLAUDE.md: 일괄 작업 전 커밋 규칙 추가 | Claude Opus 5.5
+- 근거: 인계메모 작업 5. 문안 제시 뒤 사용자 "Approve, add it"(2026-11-27). 등급 ②
+- 내용: "git 커밋(방식A)" 항목 바로 아래에 한 줄. 링크 일괄 치환·파일 일괄 이동·잠정본 덮어쓰기·폴더 이름 변경 직전에 git 커밋을 하나 만든다(방식A와 같은 대상·add 범위·메시지 규칙). 코워크는 작업 전 Claude Code 커밋을 권한다
+- 판 번호: CLAUDE.md에는 판 번호 칸이 없어 AGENTS.md(v1.56)는 그대로 둠
+- 백업: Claude outputs/schema_backup/CLAUDE_v1.56_20261127.md
