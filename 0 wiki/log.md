@@ -1177,3 +1177,10 @@ type: log
 - election_articles.py v1.1: --verify(검증값 8개: 02-25 1,467행, 2026 원 행 56·고유 51, 제5조 232, 제18조 193, 제10조 157, 제17조(여론조사의 보도) 150, 제17조(출처명시) 4. AGENTS_통계기준.md·스크립트 머리말의 기존 값 그대로), 불일치면 종료 코드 1. 집계 로직 그대로(옵션 없는 기본 출력이 이전 판과 바이트 단위로 같음을 확인)
 - vault_check.py v1.1: 검증 목록에 election_articles 추가(7개). 전체 실행 exit=0, 7개 모두 통과
 - README.md 설명 갱신. 주의: 선방위 투입본을 새 파일로 바꾸면 스크립트의 RECENT 경로와 2026년 검증값을 함께 고친다
+
+## [2026-11-27] fix | broadcast-review-ppt 2026-11-25판 커밋, skill_catalog.py 오경고 수정 | Claude Opus 5.5
+- 근거: 사용자 "Do both"(2026-11-27. (가) 미커밋 11-25 변경 커밋, (나) 카탈로그 오경고 수정)
+- (가) 다른 세션에서 고치고 log 항목 없이 남아 있던 broadcast-review-ppt 2026-11-25판(쪽 번호 자동 삽입, 제목 폭 798pt, CHANGELOG 기재)의 CHANGELOG.md·SKILL.md·자체심의PPT_도구/build_deck.py·extract_report.py를 커밋. 내용은 고치지 않음. _to_delete/·_백업_2026-11-19판/은 넣지 않음
+- (나) 원인: 카탈로그가 SKILL.md 부록 코드를 폴더에서 처음 찾은 같은 이름의 파일과 비교했는데, 그것이 _백업_2026-11-19판의 옛 스크립트였음(처음 보고한 '줄 끝 공백 차이'는 잘못된 진단). 수정: '_'로 시작하는 폴더(_백업_…, _to_delete) 안의 사본은 비교 대상 뒤로 보내고, 별도 스킬·양식으로도 세지 않음
+- 결과: skill_catalog.py --check exit=0. broadcast-review-ppt 부록 스크립트 2/2 일치·정상, 백업 폴더 행 사라짐, 양식은 템플릿 1개만(양식_구조.md 재생성, _to_delete 시험 pptx 2개 제외)
+- 커밋하지 않음: 합평회 자료 작성/CHANGELOG.md(다른 작업, log 항목 없음), 유튜브스크립트 output 등 사용자 파일

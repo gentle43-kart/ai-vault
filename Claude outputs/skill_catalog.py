@@ -7,6 +7,7 @@
 검증값: broadcast-review-ppt는 버전 2026-11-19, 템플릿 4장, 설치본·부록 스크립트 일치.
 사용: python skill_catalog.py [--check]  (--check는 파일을 쓰지 않고, 문제가 있으면 exit 1)
 표준 라이브러리만 쓴다. 출력에 실행 시각을 넣지 않아 내용이 바뀔 때만 git 변경이 생긴다.
+변경(2026-11-27, Claude Opus 5.5): 부록 스크립트와 비교할 파일을 고를 때 '_'로 시작하는 폴더(_백업_…, _to_delete) 안의 사본을 뒤로 보낸다(전에는 백업 판과 비교되어 스크립트 불일치로 잘못 표시됨). 같은 '_' 폴더는 별도 스킬·양식으로도 세지 않는다.
 카탈로그 내용이 바뀌면 `MCP/ai-vault-mcp/data/reindex.request`를 만들어 색인을 요청한다. reindex.failed가 있으면 요청하지 않고 알린다.
 """
 from __future__ import annotations
@@ -84,7 +85,8 @@ def script_mismatches(skill_text: str, folder: Path) -> tuple[int, list[str]]:
     blocks = re.findall(r"^## 부록 [A-Z]\. tools/(\S+)\s*\n+```python\n(.*?)\n```", skill_text, re.S | re.M)
     bad = []
     for fname, code in blocks:
-        hits = list(folder.rglob(fname))
+        # 2026-11-27: '_'로 시작하는 폴더(_백업_…, _to_delete 등) 안의 사본은 뒤로 보낸다(백업 판과 비교되던 오경고 방지)
+        hits = sorted(folder.rglob(fname), key=lambda p: under_underscore(p.parent, folder))
         if not hits or norm(hits[0].read_text(encoding="utf-8-sig")) != norm(code):
             bad.append(fname)
     return len(blocks), bad
@@ -192,7 +194,13 @@ def forms_of(folder: Path) -> list[Path]:
     return sorted(
         p for p in folder.rglob("*")
         if p.suffix.lower() in FORM_EXT and not p.name.startswith("~$") and not any(x in p.name for x in EXCLUDE)
+        and not under_underscore(p.parent, folder)   # 2026-11-27: _to_delete·_백업_… 안의 파일은 양식이 아니다
     )
+
+
+def under_underscore(path: Path, base: Path) -> bool:
+    """base 아래 경로 중 '_'로 시작하는 폴더(_백업_…, _to_delete 등) 안에 있으면 True."""
+    return any(s.startswith("_") for s in path.relative_to(base).parts)
 
 
 def structure_doc(folder: Path, forms: list[Path]) -> str:
@@ -219,7 +227,8 @@ def skill_name(text: str, folder: Path) -> str:
 
 
 def managed_folders() -> list[Path]:
-    found = {p.parent for pattern in ("*/CHANGELOG.md", "*/*/CHANGELOG.md") for p in ROOT.glob(pattern)}
+    found = {p.parent for pattern in ("*/CHANGELOG.md", "*/*/CHANGELOG.md") for p in ROOT.glob(pattern)
+             if not under_underscore(p.parent, ROOT)}   # 2026-11-27: _백업_… 등은 별도 스킬로 보지 않는다
     return sorted(found, key=lambda p: p.relative_to(ROOT).as_posix())
 
 
