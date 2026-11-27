@@ -1196,3 +1196,9 @@ type: log
 - 이동(파일 수 대조 4/4, 9/9, 내용 변경 없음): 4 스킬, 프로젝트/broadcast-review-ppt/_백업_2026-11-19판/ → 4 스킬, 프로젝트/_보관/백업/broadcast-review-ppt_2026-11-19판/, broadcast-review-ppt/_to_delete/ → _보관/삭제예정/2026-11-25 broadcast-review-ppt 쪽번호 시험/
 - broadcast-review-ppt/CHANGELOG.md 2026-11-25 항목의 이전판 위치를 새 경로로 고침. skill_catalog.py 재실행 --check exit=0
 - 커밋: 백업(텍스트 4개, 80KB)은 커밋, 삭제예정(pptx·png 6.7MB)은 커밋하지 않음(사용자가 확인 후 지울 예정). 그대로 둔 것: broadcast-review-ppt/자체심의PPT_테스트결과_1.pptx(옮기라는 대상에 없음)
+
+## [2026-11-27] setup | 삭제예정 폴더 커밋 제외·주간 알림, maintenance_check v1.4 | Claude Opus 5.5
+- 근거: 사용자 "큰 파일은 커밋하지 말라는 식으로 니가 안내를 띄워 주는 걸로 바꿔줘. 내가 확인하고 처리하기는 어려울 것 같아"(2026-11-27)
+- .gitignore: 4 스킬, 프로젝트/_보관/삭제예정/ 추가(사용자 지시로 고침). 넣은 파일은 커밋되지 않음(check-ignore 확인)
+- maintenance_check.py v1.4: 주간 요약에 삭제예정 항목 수·크기·가장 오래된 일수(14일 이상 강조, "삭제예정 비워줘" 안내)와 git 미추적·미무시 5MB 이상 파일("커밋하지 않을 큰 파일") 줄 추가. 지우거나 옮기지 않음. 실행 exit=0(삭제예정 1개 6.7MB 2일, 큰 파일 0). 6MB 시험 파일로 감지·삭제예정 제외를 확인한 뒤 시험 파일 삭제
+- _보관/README.md, Claude outputs/README.md 설명 갱신

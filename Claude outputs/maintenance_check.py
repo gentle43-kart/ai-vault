@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-maintenance_check.py v1.3 (2026-11-27, Claude Opus 5.5; v1.3: ⑨ vault_check.py(레지스트리·기준본 CSV 지문·검증값 스크립트·옛 폴더명) 호출과 wiki_lint v1.8 머리말 형식 항목을 요약에 추가. v1.2: ⑧ 안건 작성예시 색인; v1.1 2026-11-12: wiki_lint v1.6 대응 — 요약에 broken_links_log(log 기록의 끊긴 링크, 참고)를 따로 표시하고 lint 종료 1의 사유를 적는다. lint 출력이 JSON이 아니면 '실행 실패'로 기록한다; v1.0 2026-11-11)
+maintenance_check.py v1.4 (2026-11-27, Claude Opus 5.5; v1.4: ⑩ _보관/삭제예정 남은 양·기간과 git 미추적 큰 파일(5MB 이상) 알림. v1.3: ⑨ vault_check.py(레지스트리·기준본 CSV 지문·검증값 스크립트·옛 폴더명) 호출과 wiki_lint v1.8 머리말 형식 항목을 요약에 추가. v1.2: ⑧ 안건 작성예시 색인; v1.1 2026-11-12: wiki_lint v1.6 대응 — 요약에 broken_links_log(log 기록의 끊긴 링크, 참고)를 따로 표시하고 lint 종료 1의 사유를 적는다. lint 출력이 JSON이 아니면 '실행 실패'로 기록한다; v1.0 2026-11-11)
 목적: AGENTS_절차.md 6.8절 A 단계(무인 기계 점검). 토큰을 쓰지 않고 자료창고 상태를 점검해 B(월간 정비)·C(승인 후 처리)가 읽을 결과만 만든다.
 입력: 자료창고 루트(기본 J:\\AI 자료), 검색 서버 폴더(기본 J:\\MCP\\ai-vault-mcp), SOURCE_REGISTRY.yaml, 0 wiki, 2 data_csv, git 저장소 2개, 이전 실행 결과(run_history.log, 이전 날짜의 *_check.json).
 출력: <서버 폴더>\\data\\maintenance\\{YYYY-MM-DD}_check.json, {YYYY-MM-DD}_요약.md (같은 날 다시 실행하면 덮어쓴다).
@@ -10,6 +10,7 @@ maintenance_check.py v1.3 (2026-11-27, Claude Opus 5.5; v1.3: ⑨ vault_check.py
       ③ 새 △ 통계 파일(registry stats_2026_recent의 period·notes에 파일명이 없는 것) ④ log.md 분할 필요
       ⑤ 두 저장소의 미커밋 파일·미push 커밋·가장 오래된 미push 커밋 경과일 ⑥ reindex.failed, 이번 달 B 보고서 ⑦ 직전 실행 실패·8일 넘는 공백 ⑧ 안건 작성예시 색인에 없는 예시 md(v1.2, index_drafting_examples.py --check 호출)
       ⑨ vault_check.py(v1.3): 위반은 요약에 적기만 하고 이 스크립트의 종료 코드는 바꾸지 않는다. 기준값 갱신(--baseline)은 부르지 않는다
+      ⑩ _보관/삭제예정(v1.4): 항목 수·크기·가장 오래된 일수(14일 이상이면 강조). git 미추적·미무시 파일 중 5MB 이상은 '커밋하지 않을 큰 파일'로 알린다. 지우거나 옮기지 않는다
 재현성: '@clippings 새 파일'의 기준 시각은 '오늘보다 이전 날짜의 가장 최근 *_check.json'의 실행 시각이므로 같은 날 다시 실행해도 같은 값이 나온다.
         (이전 JSON이 없으면 기준 없음으로 보고 새 파일 수는 null)
 검증값(2026-11-12 기준, lint v1.6): broken_links 0, broken_links_log 38, broken_sources 0. 2026-11-11 lint 보고 12절 수치와 대조.
@@ -202,8 +203,31 @@ try:
 except Exception as e:
     vc['error'] = str(e)[-300:]
 
+# ---------- ⑩ 삭제예정 폴더·커밋하지 않을 큰 파일(v1.4) ----------
+trash = {'items': [], 'size_mb': 0.0, 'oldest_days': None}
+td = os.path.join(VAULT, '4 스킬, 프로젝트', '_보관', '삭제예정')
+if os.path.isdir(td):
+    for n in sorted(os.listdir(td)):
+        p = os.path.join(td, n)
+        fs = [os.path.join(dp, f) for dp, _, fns in os.walk(p) for f in fns] if os.path.isdir(p) else [p]
+        size = sum(os.path.getsize(f) for f in fs)
+        days = (NOW - datetime.datetime.fromtimestamp(os.stat(p).st_ctime)).days   # Windows: 옮겨 온 시각
+        trash['items'].append({'name': n, 'files': len(fs), 'size_mb': round(size / 2**20, 1), 'days': days})
+    trash['size_mb'] = round(sum(i['size_mb'] for i in trash['items']), 1)
+    trash['oldest_days'] = max((i['days'] for i in trash['items']), default=None)
+BIG_MB = 5
+big = []
+try:
+    r = run(['git', '--no-optional-locks', '-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard', '-z'], cwd=VAULT)
+    for f in [x for x in r.stdout.split('\0') if x]:
+        fp = os.path.join(VAULT, f)
+        if os.path.isfile(fp) and os.path.getsize(fp) >= BIG_MB * 2**20:
+            big.append({'path': f, 'size_mb': round(os.path.getsize(fp) / 2**20, 1)})
+except Exception as e:
+    big = [{'error': str(e)[:200]}]
+
 # ---------- 결과 ----------
-res = dict(version='1.3', vault_check=vc, examples_index=ex_idx, run_at=NOW.isoformat(), baseline_prev_check=prev_date, history=hist, lint=lint,
+res = dict(version='1.4', trash=trash, big_untracked=big, vault_check=vc, examples_index=ex_idx, run_at=NOW.isoformat(), baseline_prev_check=prev_date, history=hist, lint=lint,
            inbox_waiting=inbox, clippings_total=clip_total, clippings_new_since_prev=clip_new,
            stats_tri_files=tri_all, stats_tri_new=new_tri, log_first_month=log_first, log_split_needed=log_split_needed,
            git=git, reindex_failed=reindex_failed, b_report_this_month=b_reports)
@@ -259,7 +283,17 @@ elif ex_idx['new'] or ex_idx['gone']:
     S.append(f"- 안건 작성예시 색인: 새 예시 md **{ex_idx['new']}건**·사라진 파일 {ex_idx['gone']}건 → C: index_drafting_examples.py --rows --only-new (" + ', '.join((ex_idx['new_list'] + ex_idx['gone_list'])[:5]) + (' 등' if ex_idx['new'] + ex_idx['gone'] > 5 else '') + ')')
 else:
     S.append('- 안건 작성예시 색인: 빠진 파일 없음')
-S.append('- reindex.failed: ' + ('**있음** → data\\index_failed.txt 확인' if reindex_failed else '없음'))
+if trash['items']:
+    S.append(f"- 삭제예정 폴더(4 스킬, 프로젝트/_보관/삭제예정, 커밋 안 됨): {len(trash['items'])}개 {trash['size_mb']}MB, 가장 오래된 것 {trash['oldest_days']}일"
+             + (' → **비울 때가 됨**' if trash['oldest_days'] >= 14 else '') + " (Claude에게 '삭제예정 비워줘' → 목록 확인 후 휴지통)")
+else:
+    S.append('- 삭제예정 폴더: 비어 있음')
+if big and 'error' in big[0]:
+    S.append(f"- 큰 파일 점검 실패: {big[0]['error']}")
+elif big:
+    S.append(f"- **커밋하지 않을 큰 파일({BIG_MB}MB 이상, git 미추적) {len(big)}개**: " + ', '.join(f"{b['path']}({b['size_mb']}MB)" for b in big[:3])
+             + (' 등' if len(big) > 3 else '') + " → 커밋하지 않는다. 지울 것이면 _보관/삭제예정으로, 계속 둘 것이면 .gitignore 추가를 Claude에게 요청")
+S.append('- reindex.failed: ' +('**있음** → data\\index_failed.txt 확인' if reindex_failed else '없음'))
 S.append(f"- 이번 달 B 보고서: " + (', '.join(b_reports) if b_reports else '없음' + ('(B는 첫째 주 수요일 14:13 실행)' )))
 S.append('')
 S.append('결과 파일: ' + os.path.join(OUT, TODAY + '_check.json'))
