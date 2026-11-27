@@ -1171,3 +1171,9 @@ type: log
 - 내용: "git 커밋(방식A)" 항목 바로 아래에 한 줄. 링크 일괄 치환·파일 일괄 이동·잠정본 덮어쓰기·폴더 이름 변경 직전에 git 커밋을 하나 만든다(방식A와 같은 대상·add 범위·메시지 규칙). 코워크는 작업 전 Claude Code 커밋을 권한다
 - 판 번호: CLAUDE.md에는 판 번호 칸이 없어 AGENTS.md(v1.56)는 그대로 둠
 - 백업: Claude outputs/schema_backup/CLAUDE_v1.56_20261127.md
+
+## [2026-11-27] setup | 선방위 election_articles.py --verify 추가, vault_check v1.1 | Claude Opus 5.5
+- 근거: 사용자 "선방위 검증 추가해줘" → grill로 확인한 사실·질문 2개 제시 → 사용자 "Use the defaults"(2026-11-27)
+- election_articles.py v1.1: --verify(검증값 8개: 02-25 1,467행, 2026 원 행 56·고유 51, 제5조 232, 제18조 193, 제10조 157, 제17조(여론조사의 보도) 150, 제17조(출처명시) 4. AGENTS_통계기준.md·스크립트 머리말의 기존 값 그대로), 불일치면 종료 코드 1. 집계 로직 그대로(옵션 없는 기본 출력이 이전 판과 바이트 단위로 같음을 확인)
+- vault_check.py v1.1: 검증 목록에 election_articles 추가(7개). 전체 실행 exit=0, 7개 모두 통과
+- README.md 설명 갱신. 주의: 선방위 투입본을 새 파일로 바꾸면 스크립트의 RECENT 경로와 2026년 검증값을 함께 고친다

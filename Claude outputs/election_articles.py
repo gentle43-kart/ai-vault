@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+election_articles.py v1.1 (2026-11-27, Claude Opus 5.5; v1.1: --verify 추가(아래 검증값과 대조, 불일치면 종료 코드 1). 집계 로직은 그대로)
 목적: 선거방송심의위원회(선방위) 의결 내역 통계 CSV에서 「선거방송심의에 관한 특별규정」 조문별
       적용 행 수·결과 분포·선거별 분포를 집계한다(AGENTS.md 7.1 "선거방송심의 통계" 기준).
 입력: 2 data_csv/통계_csv/방송/기준본_분할_csv/선방위_02-25_part01~04.csv (registry stats, 2002~2025)
@@ -124,7 +125,25 @@ def main(targets):
                             'para': dict(sorted(v['para'].items(), key=lambda t: int(re.sub(r'\D', '', t[0])))),
                             'election': dict(v['election']), 'year': {str(y): n for y, n in sorted(v['year'].items(), key=lambda t: (t[0] is None, t[0] or 0))}}
                         for k, v in sorted(stat.items(), key=lambda t: -t[1]['rows'])}}
-    print(json.dumps(out, ensure_ascii=False, indent=1))
+    return out
+
+# v1.1(2026-11-27): --verify. 검증값은 위 머리말·AGENTS_통계기준.md '선거방송심의 통계'의 값 그대로(새로 정하지 않음).
+# 선방위 투입본(RECENT)을 새 파일로 바꾸면 RECENT 경로와 2026년 값(n_2026_*, 조별 행 수)을 함께 고친다.
+VERIFY = {'n_main': 1467, 'n_2026_raw': 56, 'n_2026_unique': 51,
+          '제5조(공정성)': 232, '제18조(여론조사의 보도)': 193, '제10조(시사정보프로그램)': 157,
+          '제17조(여론조사의 보도)': 150, '제17조(출처명시)': 4}
+
+def verify():
+    out = main(set())
+    ok = True
+    for k, v in VERIFY.items():
+        got = out[k] if k.startswith('n_') else out['articles'].get(k, {}).get('rows', 0)
+        print(f"  {k}: {got:,} (기대 {v:,}) {'OK' if got == v else '불일치'}")
+        ok &= got == v
+    print('검증 결과:', '모두 일치' if ok else '불일치 있음 — 수치를 쓰지 말 것')
+    return 0 if ok else 1
 
 if __name__ == '__main__':
-    main(set(sys.argv[1:]))
+    if '--verify' in sys.argv:
+        sys.exit(verify())
+    print(json.dumps(main(set(sys.argv[1:])), ensure_ascii=False, indent=1))

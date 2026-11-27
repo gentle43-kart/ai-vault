@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-vault_check.py v1.0 (2026-11-27, Claude Opus 5.5)
+vault_check.py v1.1 (2026-11-27, Claude Opus 5.5; v1.1: 검증 목록에 election_articles.py --verify 추가, 7개)
 목적: 자료창고의 자료 쪽 규칙을 AI 없이 매번 같게 점검한다(위키 페이지 점검은 wiki_lint.py가 한다).
   G1 레지스트리: SOURCE_REGISTRY.yaml 파싱, id 중복, path·raw_source·scan_dirs 존재, duplicate_of가 가리키는 id 존재
   G2 기준본 CSV 지문: registry에서 2 data_csv/ 아래 canonical 항목(stats_2026_recent 제외)의 파일별 크기·sha1·줄 수를
@@ -14,7 +14,7 @@ vault_check.py v1.0 (2026-11-27, Claude Opus 5.5)
       --baseline을 줄 때만 <서버>\\data\\maintenance\\csv_baseline.json을 만든다(기존 파일은 csv_baseline_{YYYYMMDD-HHMMSS}.json으로 남김).
       기준값 갱신은 기준본이 바뀐 이유를 사용자가 확인한 뒤 사용자 지시로만 한다.
 종료 코드: 위반(registry·csv·verify·old_names 중 하나라도)이나 기준값 없음이면 1, 모두 없으면 0.
-검증값: 2026-11-27 첫 실행 — registry id 87개·위반 0, 검증 스크립트 6개 모두 종료 0, 옛 폴더명 0건.
+검증값: 2026-11-27 첫 실행 — registry id 87개·위반 0, 검증 스크립트 6개 모두 종료 0(v1.1부터 7개), 옛 폴더명 0건.
 사용: python -X utf8 vault_check.py [--baseline] [--skip-verify] [--vault ...] [--server ...]
 수정할 때 알아둘 곳: 검증 스크립트 목록은 VERIFY_CMDS, 옛 이름은 OLD_NAMES, 옛 이름 검색 범위는 old_name_targets().
 """
@@ -41,12 +41,13 @@ VERIFY_CMDS = [  # (이름, 스크립트 경로, 인자)
     ("sangpan_articles", os.path.join(CO, "sangpan_articles.py"), ["--verify"]),
     ("grade_articles", os.path.join(CO, "grade_articles.py"), ["--verify"]),
     ("telecom_stats", os.path.join(CO, "telecom_stats.py"), ["--verify"]),
+    ("election_articles", os.path.join(CO, "election_articles.py"), ["--verify"]),   # v1.1
     ("check_decision_parse", os.path.join(SRV, "check_decision_parse.py"), []),
 ]
 EXCLUDE_IDS = {"stats_2026_recent"}   # 매월 덮어쓰는 잠정본. 행 감소는 update_stats_2026.py가 막는다
 TEXT_EXT = (".md", ".py", ".bat", ".yaml", ".yml", ".json", ".txt")
 
-R = {"version": "1.0", "run_at": datetime.datetime.now().isoformat(timespec="seconds")}
+R = {"version": "1.1", "run_at": datetime.datetime.now().isoformat(timespec="seconds")}
 
 
 def P(rel):
