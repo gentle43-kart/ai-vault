@@ -1143,3 +1143,11 @@ type: log
 - 범위 연결표: link_ad_ranges.py 다시 실행 → J:\MCP\ai-vault-mcp\data\ad_range_links.csv 425행 → 263행. 삭제 전 실행 결과가 기존 표와 같음을 먼저 확인했고, 남긴 파일의 행은 그대로이며 고유 범위 175개(confirmed 121·none 54)와 사용자 결정 68개 범위 반영은 변화 없음
 - 검증: wiki_lint exit=0(깨진 출처·링크·머리말 0), 재색인 exit=0(삭제 26·갱신 7·실패 0), 색인에 2013·2014·2021~2023년은 연도당 1개 파일만 남음
 - 백업: Claude outputs/schema_backup/SOURCE_REGISTRY_v1.71_20261126.yaml. 옛 연결표는 세션 임시 폴더에만 둠
+
+## [2026-11-27] schema | AGENTS.md v1.55: 절차 3.2절에 기관 명칭 한 줄 추가, 그릴 스킬 신설 | Claude Opus 5.5
+- 근거: 매트 포콕 AI 코딩 워크플로 검토(2026-11-27) 인계메모의 작업 1~3. 작업 1 검토 보고(파일 수정 없음) 뒤 사용자가 작업 4 축소("Yes, shrink it")와 작업 2·3 초안("Approve both")을 승인(2026-11-27). 등급 ②
+- AGENTS_절차.md 3.2절 표 아래: "기관 명칭(v1.55)" 한 줄(현행은 방미심위·방미통위, 출범 전 사안·당시 규칙 제호·인용문은 당시 명칭). 폴더 옛 이름 4개는 현재 0건이라 문서에 넣지 않고 이후 검사 스크립트로 잡기로 함. 출범일은 확인하지 못해 문안에 넣지 않음
+- AGENTS.md: 개정일·판 번호만 갱신(v1.54 → v1.55)
+- 스킬: 4 스킬, 프로젝트/grill/SKILL.md·CHANGELOG.md 신설, 설치본 C:\Users\user\.claude\skills\grill\SKILL.md(정본과 같음). skill_catalog.py 실행 결과 grill 정상(exit 1은 기존 broadcast-review-ppt 불일치 때문)
+- 검토 결과 요지: 기존 wiki_lint.py·maintenance_check.py가 메모의 기본 후보 대부분을 이미 점검함. 빠진 것은 registry 전체 검증, 기준본 CSV 지문, 집계 검증값 회귀 테스트(작업 4에서 기존 스크립트 보강으로 진행 예정)
+- 백업: Claude outputs/schema_backup/AGENTS_v1.54_20261127.md, AGENTS_절차_v1.54_20261127.md
