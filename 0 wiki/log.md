@@ -1190,3 +1190,9 @@ type: log
 - 신설: 4 스킬, 프로젝트/_보관/README.md, 하위 폴더 백업/(이전판, {폴더명}_{날짜}판/)·삭제예정/({날짜} {설명}/, 사용자가 확인 후 지움). 빈 하위 폴더는 git에 기록되지 않음
 - vault_check.py v1.2: 옛 폴더명 검색에서 '_'로 시작하는 폴더 제외(시험 파일로 확인 후 삭제). skill_catalog.py는 이미 '_' 폴더를 제외함(--check exit=0)
 - 옮기지 않음: broadcast-review-ppt/_백업_2026-11-19판·_to_delete(CHANGELOG가 옛 위치를 가리킴. 사용자 확인 후 이동)
+
+## [2026-11-27] fix | broadcast-review-ppt 이전판·시험 결과물을 _보관으로 이동 | Claude Opus 5.5
+- 근거: 사용자 "Yes, move them"(2026-11-27, 두 폴더를 _보관으로 옮기는 제안에 대한 답)
+- 이동(파일 수 대조 4/4, 9/9, 내용 변경 없음): 4 스킬, 프로젝트/broadcast-review-ppt/_백업_2026-11-19판/ → 4 스킬, 프로젝트/_보관/백업/broadcast-review-ppt_2026-11-19판/, broadcast-review-ppt/_to_delete/ → _보관/삭제예정/2026-11-25 broadcast-review-ppt 쪽번호 시험/
+- broadcast-review-ppt/CHANGELOG.md 2026-11-25 항목의 이전판 위치를 새 경로로 고침. skill_catalog.py 재실행 --check exit=0
+- 커밋: 백업(텍스트 4개, 80KB)은 커밋, 삭제예정(pptx·png 6.7MB)은 커밋하지 않음(사용자가 확인 후 지울 예정). 그대로 둔 것: broadcast-review-ppt/자체심의PPT_테스트결과_1.pptx(옮기라는 대상에 없음)
