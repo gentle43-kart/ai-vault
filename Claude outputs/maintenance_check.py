@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-maintenance_check.py v1.1 (2026-11-12, Claude; v1.1: wiki_lint v1.6 대응 — 요약에 broken_links_log(log 기록의 끊긴 링크, 참고)를 따로 표시하고 lint 종료 1의 사유를 적는다. lint 출력이 JSON이 아니면 '실행 실패'로 기록한다; v1.0 2026-11-11)
+maintenance_check.py v1.3 (2026-11-27, Claude Opus 5.5; v1.3: ⑨ vault_check.py(레지스트리·기준본 CSV 지문·검증값 스크립트·옛 폴더명) 호출과 wiki_lint v1.8 머리말 형식 항목을 요약에 추가. v1.2: ⑧ 안건 작성예시 색인; v1.1 2026-11-12: wiki_lint v1.6 대응 — 요약에 broken_links_log(log 기록의 끊긴 링크, 참고)를 따로 표시하고 lint 종료 1의 사유를 적는다. lint 출력이 JSON이 아니면 '실행 실패'로 기록한다; v1.0 2026-11-11)
 목적: AGENTS_절차.md 6.8절 A 단계(무인 기계 점검). 토큰을 쓰지 않고 자료창고 상태를 점검해 B(월간 정비)·C(승인 후 처리)가 읽을 결과만 만든다.
 입력: 자료창고 루트(기본 J:\\AI 자료), 검색 서버 폴더(기본 J:\\MCP\\ai-vault-mcp), SOURCE_REGISTRY.yaml, 0 wiki, 2 data_csv, git 저장소 2개, 이전 실행 결과(run_history.log, 이전 날짜의 *_check.json).
 출력: <서버 폴더>\\data\\maintenance\\{YYYY-MM-DD}_check.json, {YYYY-MM-DD}_요약.md (같은 날 다시 실행하면 덮어쓴다).
@@ -9,6 +9,7 @@ maintenance_check.py v1.1 (2026-11-12, Claude; v1.1: wiki_lint v1.6 대응 — �
 점검: ① wiki_lint.py 실행(종료 0·1은 정상 실행. 1은 broken_sources·broken_links·yaml_error·sources_bad 중 하나라도 있다는 뜻이며 사유를 요약에 적는다. 그 밖의 값이나 JSON이 아닌 출력은 '실행 실패') ② @Inbox 대기 수, @clippings 새 파일 수
       ③ 새 △ 통계 파일(registry stats_2026_recent의 period·notes에 파일명이 없는 것) ④ log.md 분할 필요
       ⑤ 두 저장소의 미커밋 파일·미push 커밋·가장 오래된 미push 커밋 경과일 ⑥ reindex.failed, 이번 달 B 보고서 ⑦ 직전 실행 실패·8일 넘는 공백 ⑧ 안건 작성예시 색인에 없는 예시 md(v1.2, index_drafting_examples.py --check 호출)
+      ⑨ vault_check.py(v1.3): 위반은 요약에 적기만 하고 이 스크립트의 종료 코드는 바꾸지 않는다. 기준값 갱신(--baseline)은 부르지 않는다
 재현성: '@clippings 새 파일'의 기준 시각은 '오늘보다 이전 날짜의 가장 최근 *_check.json'의 실행 시각이므로 같은 날 다시 실행해도 같은 값이 나온다.
         (이전 JSON이 없으면 기준 없음으로 보고 새 파일 수는 null)
 검증값(2026-11-12 기준, lint v1.6): broken_links 0, broken_links_log 38, broken_sources 0. 2026-11-11 lint 보고 12절 수치와 대조.
@@ -187,8 +188,22 @@ try:
 except Exception as e:
     ex_idx['error'] = str(e)
 
+# ---------- ⑨ 자료 점검 vault_check.py(v1.3) ----------
+vc = {}
+try:
+    r = run([sys.executable, '-X', 'utf8', os.path.join(VAULT, 'Claude outputs', 'vault_check.py'), '--vault', VAULT, '--server', SERVER], timeout=1200)
+    vc['exit'] = r.returncode
+    J = json.loads(r.stdout) if r.returncode in (0, 1) else None
+    if J is None:
+        raise ValueError((r.stderr or r.stdout)[-300:])
+    vc.update(exit_reasons=J['exit_reasons'], registry=J['registry']['violations'], csv=J['csv'].get('violations', []),
+              csv_baseline_missing='baseline_missing' in J['csv'], csv_files=J['csv'].get('files'),
+              verify_failed=J['verify']['failed'], verify_n=len(J['verify']['results']), old_names=J['old_names'])
+except Exception as e:
+    vc['error'] = str(e)[-300:]
+
 # ---------- 결과 ----------
-res = dict(version='1.2', examples_index=ex_idx, run_at=NOW.isoformat(), baseline_prev_check=prev_date, history=hist, lint=lint,
+res = dict(version='1.3', vault_check=vc, examples_index=ex_idx, run_at=NOW.isoformat(), baseline_prev_check=prev_date, history=hist, lint=lint,
            inbox_waiting=inbox, clippings_total=clip_total, clippings_new_since_prev=clip_new,
            stats_tri_files=tri_all, stats_tri_new=new_tri, log_first_month=log_first, log_split_needed=log_split_needed,
            git=git, reindex_failed=reindex_failed, b_report_this_month=b_reports)
@@ -213,6 +228,21 @@ if 'error' in lint:
 else:
     bs = f"**깨진 출처 {lint['broken_sources']}건**: {lint['broken_sources_list']}" if lint['broken_sources'] else '깨진 출처 0'
     S.append(f"- lint(종료 {lint['exit']}{'; 사유: ' + ', '.join(lint['exit_reasons']) if lint['exit_reasons'] else ''}): {bs} · 〔충돌〕 {lint['conflict_marks_total']}곳({lint['conflict_marks_pages']}쪽) · 열린 항목 {lint['open_items_total']}({lint['open_items_pages']}쪽) · 깨진 링크 {lint['broken_links']}(log 기록 {lint['broken_links_log']}, 참고) · 고립 {lint['orphans']} · 색인 누락 {lint['index_missing']} · 머리말 오류 {lint['yaml_error']}")
+    if L is not None:   # v1.3: wiki_lint v1.8 머리말 형식 항목(종료 코드와 무관, 참고)
+        fmn, fmb, oal = (len(L.get(k) or {}) for k in ('fm_missing', 'fm_bad_value', 'old_article_alias_links'))
+        S.append(f"- 머리말 형식: 필수 속성 누락 {fmn}쪽 · 허용값 밖 {fmb}쪽 · '구 제n조' 별칭 링크 {oal}쪽"
+                 + (f" ({', '.join(list(L.get('fm_missing') or {})[:3])})" if fmn else ''))
+if 'error' in vc:
+    S.append(f"- **자료 점검(vault_check) 실행 실패**: {vc['error'][-200:]}")
+else:
+    def _few(xs):
+        return '; '.join(str(x.get('파일') or x.get('위치')) + ' ' + str(x.get('내용')) for x in xs[:3]) + (' 등' if len(xs) > 3 else '')
+    parts = [f"레지스트리 위반 {len(vc['registry'])}" + (f"(**{_few(vc['registry'])}**)" if vc['registry'] else ''),
+             ('**CSV 기준값 없음** → vault_check.py --baseline(사용자 지시 후)' if vc['csv_baseline_missing'] else
+              f"기준본 CSV 변동 {len(vc['csv'])}/{vc['csv_files']}개" + (f"(**{_few(vc['csv'])}** → 바뀐 이유 확인 전 기준값 갱신 금지)" if vc['csv'] else '')),
+             f"검증값 스크립트 {vc['verify_n'] - len(vc['verify_failed'])}/{vc['verify_n']} 통과" + (f"(**불일치: {', '.join(vc['verify_failed'])}**)" if vc['verify_failed'] else ''),
+             f"옛 폴더명 {len(vc['old_names'])}건" + (f"(**{_few(vc['old_names'])}**)" if vc['old_names'] else '')]
+    S.append('- 자료 점검(vault_check): ' + ' · '.join(parts))
 S.append(f"- 수신함 대기 {inbox}건 · 클리핑 새 파일 {clip_new if clip_new is not None else '기준 없음'}건(전체 {clip_total}, 기준 {prev_date or '없음'})")
 S.append('- 새 △ 파일: ' + ('감지 못함(점검 실패)' if new_tri is None else ('**' + ', '.join(new_tri) + '** → C: stats-monthly-update' if new_tri else '없음')))
 S.append(f"- log.md 첫 항목 {log_first}: " + ('**분할 필요**(C: split_log.py)' if log_split_needed else '분할 불필요'))

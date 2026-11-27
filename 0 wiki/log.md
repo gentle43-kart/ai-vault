@@ -1151,3 +1151,10 @@ type: log
 - 스킬: 4 스킬, 프로젝트/grill/SKILL.md·CHANGELOG.md 신설, 설치본 C:\Users\user\.claude\skills\grill\SKILL.md(정본과 같음). skill_catalog.py 실행 결과 grill 정상(exit 1은 기존 broadcast-review-ppt 불일치 때문)
 - 검토 결과 요지: 기존 wiki_lint.py·maintenance_check.py가 메모의 기본 후보 대부분을 이미 점검함. 빠진 것은 registry 전체 검증, 기준본 CSV 지문, 집계 검증값 회귀 테스트(작업 4에서 기존 스크립트 보강으로 진행 예정)
 - 백업: Claude outputs/schema_backup/AGENTS_v1.54_20261127.md, AGENTS_절차_v1.54_20261127.md
+
+## [2026-11-27] setup | 자료 점검 스크립트 vault_check.py 신설, wiki_lint v1.8·maintenance_check v1.3 | Claude Opus 5.5
+- 근거: 인계메모 작업 4. grill 스킬로 요구사항 질문 → 사용자 "Use the defaults" → 합의 요약 승인 "Approve, start"(2026-11-27)
+- 신설 Claude outputs/vault_check.py v1.0(읽기 전용): 레지스트리 검증, 기준본 CSV 지문(49개 파일, 기준값 J:\MCP\ai-vault-mcp\data\maintenance\csv_baseline.json, 2026-11-27 13:25 생성), 검증값 스크립트 6개 실행, 옛 폴더명 4개 검색
+- 수정: wiki_lint.py v1.8(fm_missing·fm_bad_value·old_article_alias_links 출력 추가, 종료 코드 조건 그대로), maintenance_check.py v1.3(vault_check 호출·요약 추가), sangpan_articles.py·grade_articles.py v1.1(--verify 불일치 때 종료 코드 1, 집계 로직 그대로), README.md
+- 검증: vault_check 전체 실행 exit=0(레지스트리 위반 0, CSV 변동 0/49, 검증 스크립트 6/6 일치, 옛 폴더명 0, 52초). 임시 폴더의 가짜 기준값·옛 이름 파일로 바뀜·새 파일·사라짐·옛 이름 검출 확인. maintenance_check exit=0(54초). wiki_lint exit=0, 새 항목은 fm_missing 1쪽(Untitled.md, stray와 같음) 외 0
+- 처리하지 않음: 선방위 election_articles.py 검증 추가, AGENTS_절차.md 6.8절 A 행의 점검 목록 갱신(제안 예정, 승인 후 반영)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-wiki_lint.py v1.7 (2026-11-13; v1.7: '추가 확인 필요' 절의 `- [→]` 항목(외부 확인 대기 목록으로 옮긴 것)을 external로 읽고 R['external_wait']로 따로 집계한다. 출력은 v1.6에 항목만 더했다;
+wiki_lint.py v1.8 (2026-11-27; v1.8: fm_missing(머리말 필수 9속성 누락)·fm_bad_value(domain·사례 3필드 허용값, 자리표시 날짜, 파일명 금지문자)·
+  old_article_alias_links(본문 링크가 '구 제n조' 별칭으로만 연결됨) 출력 추가. 종료 코드 조건(EXIT_KEYS)은 그대로;
+  v1.7 2026-11-13; v1.7:'추가 확인 필요' 절의 `- [→]` 항목(외부 확인 대기 목록으로 옮긴 것)을 external로 읽고 R['external_wait']로 따로 집계한다. 출력은 v1.6에 항목만 더했다;
   v1.6: 판정 정리 — ① log.md·0 wiki/log/ 조각에서 나온 끊긴 링크(옛 조 번호 등 과거 기록)는 broken_links_log(참고)로 따로 내고
   broken_links에는 내용 페이지에서 나온 것만 남긴다 ② 종료 코드 1의 조건을 broken_sources 외에 broken_links·yaml_error·sources_bad까지 넓힌다(종료 코드는 0·1만 쓴다).
   그 밖의 출력은 v1.5와 같다;
@@ -210,6 +212,29 @@ _wait = [k for k in pages if k.endswith('외부 확인 대기.md')]
 R['external_wait'] = dict(moved_marks=sum(len(v.get('external', [])) for v in open_items.values()),
                           waiting=sum(len(re.findall(r'^\s*- \[ \] ', pages[k]['body'], re.M)) for k in _wait),
                           list_pages=_wait)
+# v1.8: 머리말 형식(AGENTS_절차.md 3.1·4.1·4.2)과 '구 제n조' 별칭 링크(3.1). 출력만 하고 종료 코드에는 넣지 않는다(6.6절)
+REQ = ('type', 'title', 'sources', 'created', 'updated', 'status', 'reviewed_at', 'domain', 'tags')
+DOMAINS = {'방송심의', '통신심의', '제도·조직', '방송산업'}
+CASE_ENUM = {'decision_stage': {'소위원회', '전체회의', '기타'}, 'decision_status': {'interim', 'final', 'unknown'},
+             'judicial_status': {'none', 'pending', 'final', 'unknown'}}
+fm_targets = [k for k, v in pages.items() if v['name'] not in mgmt and not k.startswith('log' + os.sep) and v['err'] != 'no frontmatter']
+R['fm_missing'] = {k: [f for f in REQ if f not in pages[k]['fm']] for k in fm_targets if any(f not in pages[k]['fm'] for f in REQ)}
+R['fm_bad_value'] = {}
+for k in fm_targets:
+    fm, bad = pages[k]['fm'], []
+    d = fm.get('domain')
+    if d not in (None, '') and any(x not in DOMAINS for x in (d if isinstance(d, list) else [d])):
+        bad.append(f'domain: {d}')
+    if fm.get('type') == '사례':
+        bad += [f'{f}: {fm.get(f)}' for f, ok in CASE_ENUM.items() if fm.get(f) not in ok and fm.get(f) not in (None, '')]
+    bad += [f'{f}: {fm.get(f)} (자리표시 날짜)' for f in ('created', 'updated', 'reviewed_at', 'verified_at', 'effective_from', 'effective_to')
+            if re.search(r'-00(\D|$)', str(fm.get(f) or ''))]
+    if re.search(r'[\\/:*?"<>|]', pages[k]['name']):
+        bad.append('파일명 금지문자')
+    if bad:
+        R['fm_bad_value'][k] = bad
+R['old_article_alias_links'] = {k: sorted(l for l in out.get(k, ()) if l not in names and l in alias_names and '구 제' in l)
+                                for k in content if any(l not in names and l in alias_names and '구 제' in l for l in out.get(k, ()))}
 R['counts'] = dict(pages=len(pages), content=len(content), cases=len(cases), articles=len(arts))
 EXIT_KEYS = ('broken_sources', 'broken_links', 'yaml_error', 'sources_bad')
 R['exit_reasons'] = [k for k in EXIT_KEYS if R[k]]

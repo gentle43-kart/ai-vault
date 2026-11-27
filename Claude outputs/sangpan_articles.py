@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-sangpan_articles.py v1.0 (2026-11-12, Claude Sonnet 5.5) — AGENTS_통계기준.md 7.1 "상품판매방송규정 통계" 기준(v1.41, 사용자 승인 2026-11-12)
+sangpan_articles.py v1.1 (2026-11-27; v1.1: --verify 불일치 때 종료 코드 1, 집계 로직은 그대로. v1.0 2026-11-12, Claude Sonnet 5.5) —AGENTS_통계기준.md 7.1 "상품판매방송규정 통계" 기준(v1.41, 사용자 승인 2026-11-12)
 
 목적
   방송심의 의결 내역 통계 CSV에서 「상품소개 및 판매방송 심의에 관한 규정」(약칭 상품판매방송규정) 조문별
@@ -186,6 +186,9 @@ def main():
         print("\n검증(기본 집계 2012.01~2026.06, --recent 없이 실행):")
         for k, v in VERIFY.items():
             print(" %-8s 기대 %5d 실제 %5d %s" % (k, v, got[k], "OK" if v == got[k] else "불일치"))
+        ok = all(got[k] == v for k, v in VERIFY.items())
+        print("검증 결과:", "모두 일치" if ok else "불일치 있음 — 수치를 쓰지 말 것")
+        sys.exit(0 if ok else 1)   # v1.1: 불일치면 종료 코드 1(vault_check.py가 읽는다)
 
 if __name__ == "__main__":
     main()
